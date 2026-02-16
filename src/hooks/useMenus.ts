@@ -131,7 +131,7 @@ export function useUpdateMenuItem() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; dish_id?: string; side_dish?: string | null; extras?: string | null }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; dish_id?: string; side_dish?: string | null; extras?: string | null; sort_order?: number }) => {
       const { error } = await supabase
         .from("menu_items")
         .update(updates as any)
