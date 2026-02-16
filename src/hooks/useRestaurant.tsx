@@ -6,12 +6,14 @@ interface RestaurantContextType {
   restaurantId: string | null;
   restaurantName: string | null;
   loading: boolean;
+  refetch: () => void;
 }
 
 const RestaurantContext = createContext<RestaurantContextType>({
   restaurantId: null,
   restaurantName: null,
   loading: true,
+  refetch: () => {},
 });
 
 export function RestaurantProvider({ children }: { children: ReactNode }) {
@@ -20,7 +22,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   const [restaurantName, setRestaurantName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchRestaurant = async () => {
     if (!user) {
       setRestaurantId(null);
       setRestaurantName(null);
@@ -28,27 +30,36 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const fetchRestaurant = async () => {
-      const { data: membership } = await supabase
-        .from("restaurant_members")
-        .select("restaurant_id, restaurants(name)")
-        .eq("user_id", user.id)
-        .limit(1)
+    const { data: memberships } = await supabase
+      .from("restaurant_members")
+      .select("restaurant_id")
+      .eq("user_id", user.id)
+      .limit(1);
+
+    if (memberships && memberships.length > 0) {
+      const rid = memberships[0].restaurant_id;
+      setRestaurantId(rid);
+
+      const { data: restaurant } = await supabase
+        .from("restaurants")
+        .select("name")
+        .eq("id", rid)
         .single();
 
-      if (membership) {
-        setRestaurantId(membership.restaurant_id);
-        const restaurant = membership.restaurants as any;
-        setRestaurantName(restaurant?.name ?? null);
-      }
-      setLoading(false);
-    };
+      setRestaurantName(restaurant?.name ?? null);
+    } else {
+      setRestaurantId(null);
+      setRestaurantName(null);
+    }
+    setLoading(false);
+  };
 
+  useEffect(() => {
     fetchRestaurant();
   }, [user]);
 
   return (
-    <RestaurantContext.Provider value={{ restaurantId, restaurantName, loading }}>
+    <RestaurantContext.Provider value={{ restaurantId, restaurantName, loading, refetch: fetchRestaurant }}>
       {children}
     </RestaurantContext.Provider>
   );
