@@ -46,20 +46,20 @@ export default function Onboarding() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-40" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-30" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Logo */}
-      <div className="mb-8 flex items-center gap-3">
+      <div className="relative z-[1] mb-8 flex items-center gap-3">
         <ChefHat className="h-8 w-8 text-primary" />
         <h1 className="font-serif text-2xl font-bold tracking-wide text-primary">MENU MASTER</h1>
       </div>
 
-      <div className="w-full max-w-md space-y-6">
+      <div className="relative z-[1] w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <h2 className="font-serif text-2xl font-bold text-foreground">Vitajte v Menu Master</h2>
           <p className="text-muted-foreground text-sm">Nastavte si svoju reštauráciu a začnite tvoriť menu</p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-2xl shadow-black/40">
+        <div className="rounded-xl border border-border bg-card/85 backdrop-blur-sm p-6 shadow-2xl shadow-black/40">
           <div className="flex items-center gap-2 mb-6">
             <Store className="h-5 w-5 text-primary" />
             <h3 className="font-serif text-lg font-semibold text-foreground">Nová reštaurácia</h3>
