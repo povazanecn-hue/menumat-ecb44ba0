@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { Plus, Pencil, Trash2, GripVertical, FolderPlus, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, FolderPlus, Search, Eye, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,8 @@ import {
   PermanentCategoryWithItems,
 } from "@/hooks/usePermanentMenu";
 import { DISH_CATEGORIES } from "@/lib/constants";
+import { PermanentMenuPreview } from "@/components/permanent-menu/PermanentMenuPreview";
+import { useRestaurant } from "@/hooks/useRestaurant";
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
   DragEndEvent,
@@ -142,6 +144,7 @@ function SortableItem({
 export default function PermanentMenu() {
   const { data: categories = [], isLoading } = usePermanentMenu();
   const { data: allDishes = [] } = useDishes();
+  const { restaurantName } = useRestaurant();
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
@@ -276,9 +279,14 @@ export default function PermanentMenu() {
           <h1 className="font-serif text-2xl font-bold text-foreground">Jedálny lístok</h1>
           <p className="text-muted-foreground text-sm mt-1">Trvalá ponuka jedál — ťahajte pre zmenu poradia</p>
         </div>
-        <Button onClick={() => { setNewCatName(""); setCatFormOpen(true); }}>
-          <FolderPlus className="h-4 w-4 mr-1" /> Nová kategória
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          {displayCats.length > 0 && (
+            <PermanentMenuPreview categories={displayCats} restaurantName={restaurantName || "Reštaurácia"} />
+          )}
+          <Button onClick={() => { setNewCatName(""); setCatFormOpen(true); }}>
+            <FolderPlus className="h-4 w-4 mr-1" /> Nová kategória
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
