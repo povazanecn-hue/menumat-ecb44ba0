@@ -167,7 +167,7 @@ export default function Ingredients() {
             const supplierCount = ing.supplier_prices.length;
 
             return (
-              <Card key={ing.id} className="hover:shadow-sm transition-shadow">
+              <Card key={ing.id} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
                 <Collapsible open={isExpanded} onOpenChange={() => setExpandedId(isExpanded ? null : ing.id)}>
                   <CardContent className="py-3 px-4">
                     <div className="flex items-center gap-4">

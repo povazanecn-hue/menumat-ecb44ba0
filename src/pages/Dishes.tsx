@@ -152,7 +152,7 @@ export default function Dishes() {
       ) : (
         <div className="space-y-2">
           {filtered.map((dish) => (
-            <Card key={dish.id} className="hover:shadow-sm transition-shadow">
+            <Card key={dish.id} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
               <CardContent className="flex items-center gap-4 py-3 px-4">
                 {/* Category badge */}
                 <Badge variant="secondary" className="shrink-0 text-xs font-normal">

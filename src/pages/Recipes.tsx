@@ -95,10 +95,10 @@ export default function Recipes() {
       ) : (
         <div className="space-y-2">
           {filtered.map((recipe) => (
-            <Card key={recipe.id} className="hover:shadow-sm transition-shadow">
+            <Card key={recipe.id} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
               <CardContent className="flex items-center gap-4 py-3 px-4">
                 {/* R icon */}
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-serif font-bold text-sm shrink-0">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary font-serif font-bold text-sm shrink-0 border border-primary/20">
                   R
                 </div>
 
