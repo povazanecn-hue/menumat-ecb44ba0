@@ -1,4 +1,5 @@
-import { CalendarDays, FileOutput, Bell, ChefHat } from "lucide-react";
+import { CalendarDays, FileOutput, Bell } from "lucide-react";
+import { LogoBrand } from "@/components/LogoBrand";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -13,11 +14,8 @@ export function TopActionBar() {
 
       <div className="h-5 w-px bg-border" />
 
-      <div className="flex items-center gap-2 mr-auto">
-        <ChefHat className="h-5 w-5 text-primary icon-glow" />
-        <h1 className="font-serif text-lg font-semibold text-primary tracking-wide logo-glow">
-          MENU MASTER
-        </h1>
+      <div className="mr-auto">
+        <LogoBrand size="sm" />
       </div>
 
       <div className="flex items-center gap-1">

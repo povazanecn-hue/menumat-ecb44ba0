@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { ChefHat, Eye, EyeOff } from "lucide-react";
+import { LogoBrand } from "@/components/LogoBrand";
+import { Eye, EyeOff } from "lucide-react";
 import heroFood from "@/assets/hero-food.jpg";
 import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
 
@@ -80,9 +81,8 @@ export default function Auth() {
     <div className="relative flex min-h-screen flex-col items-center bg-background">
       <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Top bar */}
-      <div className="relative z-[1] flex w-full items-center justify-center gap-2 pt-6 pb-4">
-        <ChefHat className="h-7 w-7 text-primary icon-glow" />
-        <span className="font-serif text-2xl font-bold tracking-wider text-primary logo-glow">MENU MASTER</span>
+      <div className="relative z-[1] flex w-full items-center justify-center pt-6 pb-4">
+        <LogoBrand size="lg" />
       </div>
 
       {/* Hero food image */}
