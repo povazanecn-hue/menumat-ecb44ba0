@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import { sk } from "date-fns/locale";
-import { Plus, Trash2, Check, GripVertical, Wand2, FileUp, RefreshCw, Loader2, Utensils } from "lucide-react";
+import { Plus, Trash2, Check, GripVertical, Wand2, FileUp, RefreshCw, Loader2, Utensils, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +55,29 @@ export function DayMenuCard({
   const items = menu?.menu_items ?? [];
   const isPublished = menu?.status === "published";
   const isDraft = !menu || menu.status === "draft";
+
+  const [editingSideDishId, setEditingSideDishId] = useState<string | null>(null);
+  const [sideDishValue, setSideDishValue] = useState("");
+  const sideDishInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingSideDishId && sideDishInputRef.current) {
+      sideDishInputRef.current.focus();
+    }
+  }, [editingSideDishId]);
+
+  const startEditSideDish = (itemId: string, currentValue: string) => {
+    setEditingSideDishId(itemId);
+    setSideDishValue(currentValue);
+  };
+
+  const commitSideDish = () => {
+    if (editingSideDishId && onUpdateSideDish) {
+      onUpdateSideDish(editingSideDishId, sideDishValue);
+    }
+    setEditingSideDishId(null);
+    setSideDishValue("");
+  };
 
   const soups = items.filter((i) => i.dish.category === "polievka");
   const mains = items.filter((i) => i.dish.category === "hlavne_jedlo");
@@ -130,26 +153,53 @@ export function DayMenuCard({
             </div>
 
             {/* Side dish & extras display */}
-            {((item as any).side_dish || (item as any).extras || item.dish.subtype) && (
-              <div className="ml-6 mt-0.5 flex gap-2 flex-wrap">
-                {item.dish.subtype && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-secondary/50 text-secondary-foreground/70">
-                    {item.dish.subtype}
-                  </Badge>
-                )}
-                {(item as any).side_dish && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary/80">
-                    <Utensils className="h-2.5 w-2.5 mr-0.5" />
-                    {(item as any).side_dish}
-                  </Badge>
-                )}
-                {(item as any).extras && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent/80">
-                    + {(item as any).extras}
-                  </Badge>
-                )}
-              </div>
-            )}
+            <div className="ml-6 mt-0.5 flex gap-2 flex-wrap items-center">
+              {item.dish.subtype && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-secondary/50 text-secondary-foreground/70">
+                  {item.dish.subtype}
+                </Badge>
+              )}
+
+              {/* Inline side_dish editing */}
+              {editingSideDishId === item.id ? (
+                <Input
+                  ref={sideDishInputRef}
+                  value={sideDishValue}
+                  onChange={(e) => setSideDishValue(e.target.value)}
+                  onBlur={commitSideDish}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitSideDish();
+                    if (e.key === "Escape") { setEditingSideDishId(null); setSideDishValue(""); }
+                  }}
+                  className="h-5 text-[10px] px-1.5 py-0 w-28 border-primary/30"
+                  placeholder="Príloha..."
+                />
+              ) : (item as any).side_dish ? (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] px-1.5 py-0 border-primary/30 text-primary/80 cursor-pointer hover:bg-primary/10"
+                  onClick={() => onUpdateSideDish && startEditSideDish(item.id, (item as any).side_dish || "")}
+                >
+                  <Utensils className="h-2.5 w-2.5 mr-0.5" />
+                  {(item as any).side_dish}
+                  {onUpdateSideDish && <Pencil className="h-2 w-2 ml-1 opacity-50" />}
+                </Badge>
+              ) : onUpdateSideDish ? (
+                <button
+                  onClick={() => startEditSideDish(item.id, "")}
+                  className="text-[10px] text-muted-foreground/50 hover:text-primary/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5"
+                >
+                  <Utensils className="h-2.5 w-2.5" />
+                  príloha
+                </button>
+              ) : null}
+
+              {(item as any).extras && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent/80">
+                  + {(item as any).extras}
+                </Badge>
+              )}
+            </div>
           </div>
         ))
       )}
