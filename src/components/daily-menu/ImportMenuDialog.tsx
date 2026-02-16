@@ -228,7 +228,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
     [dishes]
   );
 
-  // OCR handler
+  // OCR handler — uses structured mode to extract weekly data with categories
   const handleOcrFile = useCallback(
     async (file: File) => {
       setFileName(file.name);
@@ -238,8 +238,10 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
         const buffer = await file.arrayBuffer();
         const bytes = new Uint8Array(buffer);
         let binary = "";
-        for (let i = 0; i < bytes.length; i++) {
-          binary += String.fromCharCode(bytes[i]);
+        const CHUNK = 8192;
+        for (let i = 0; i < bytes.length; i += CHUNK) {
+          const slice = bytes.subarray(i, Math.min(i + CHUNK, bytes.length));
+          binary += String.fromCharCode(...slice);
         }
         const base64 = btoa(binary);
 
@@ -248,20 +250,58 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
             fileBase64: base64,
             mimeType: file.type || "application/octet-stream",
             fileName: file.name,
+            mode: "structured", // Request structured weekly output
           },
         });
 
         if (error) throw error;
-
-        const dishNames: string[] = data?.dishes || [];
-        if (dishNames.length === 0) {
-          toast({ title: "Žiadne jedlá nenájdené", description: "AI nerozpoznalo žiadne názvy jedál v dokumente.", variant: "destructive" });
+        if (data?.error) {
+          toast({ title: "Chyba OCR", description: data.error, variant: "destructive" });
           resetState();
           return;
         }
 
-        matchNames(dishNames);
-        toast({ title: `OCR úspešný`, description: `AI rozpoznalo ${dishNames.length} jedál z dokumentu.` });
+        // Check for structured days first
+        const ocrDays: { dayName: string; dateStr: string; items: { name: string; category: string; slot: string; grammage: string; price: number | null; allergens: number[] }[] }[] = data?.days || [];
+
+        if (ocrDays.length > 0) {
+          // Map OCR results to ImportDayResult with fuzzy matching
+          const results: ImportDayResult[] = ocrDays.map((day) => ({
+            dayName: day.dayName,
+            dateStr: day.dateStr,
+            items: day.items.map((item) => {
+              const { dish, score } = findBestMatch(item.name, dishes);
+              return {
+                rawName: item.name,
+                matchedDish: dish,
+                similarity: score,
+                slot: item.slot || "Menu",
+                grammage: item.grammage || "",
+                price: item.price,
+                allergens: item.allergens || [],
+              };
+            }).filter(i => i.rawName.length > 0),
+          }));
+
+          setWeeklyData(results);
+
+          const totalItems = results.reduce((s, d) => s + d.items.length, 0);
+          const matched = results.reduce((s, d) => s + d.items.filter(i => i.matchedDish).length, 0);
+          toast({
+            title: `OCR: ${ocrDays.length} dní rozpoznaných`,
+            description: `${matched}/${totalItems} jedál priradených z databázy.`,
+          });
+        } else {
+          // Fallback: flat list of dish names
+          const dishNames: string[] = data?.dishes || [];
+          if (dishNames.length === 0) {
+            toast({ title: "Žiadne jedlá nenájdené", description: "AI nerozpoznalo žiadne názvy jedál v dokumente.", variant: "destructive" });
+            resetState();
+            return;
+          }
+          matchNames(dishNames);
+          toast({ title: `OCR úspešný`, description: `AI rozpoznalo ${dishNames.length} jedál z dokumentu.` });
+        }
       } catch (e: any) {
         console.error("OCR error:", e);
         toast({ title: "Chyba pri OCR spracovaní", description: e.message || "Nepodarilo sa spracovať súbor", variant: "destructive" });
