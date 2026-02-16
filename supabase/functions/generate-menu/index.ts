@@ -1,29 +1,38 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { dishes, recentUsage, slots, nonRepeatDays } = await req.json();
+    const { dishes, recentUsage, slots, extraSlots, nonRepeatDays } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     // Build dish list for context
     const dishList = dishes.map((d: any) =>
-      `ID:${d.id} | ${d.name} | category:${d.category} | price:${d.final_price ?? d.recommended_price}€`
+      `ID:${d.id} | ${d.name} | category:${d.category} | price:${d.final_price ?? d.recommended_price}€ | daily_menu:${d.is_daily_menu}`
     ).join("\n");
 
     // Build recent usage for non-repeat context
     const usageList = Object.entries(recentUsage || {})
       .map(([id, date]) => `ID:${id} last used:${date}`)
       .join("\n");
+
+    // Build extra category slots description
+    const extraSlotsDesc = (extraSlots || [])
+      .filter((s: any) => s.count > 0)
+      .map((s: any) => `- ${s.category}: ${s.count}`)
+      .join("\n");
+
+    const extraSlotsJsonFormat = (extraSlots || [])
+      .filter((s: any) => s.count > 0)
+      .map((s: any) => `"${s.category}": ["dish_id_1"]`)
+      .join(", ");
 
     const systemPrompt = `You are a restaurant daily menu generator for a Slovak restaurant.
 Your job is to select dishes from the available dish database to fill the requested slots.
@@ -32,13 +41,16 @@ RULES:
 1. Select exactly the requested number of dishes per category.
 2. NEVER select a dish that was used in the last ${nonRepeatDays || 14} days (check recentUsage).
 3. Only select dishes marked as is_daily_menu=true if available, otherwise use any dish of the correct category.
-4. Return ONLY a valid JSON object with dish IDs grouped by category.
-5. Do not add any explanation, only the JSON.
+4. Category mapping: polievka=soups, hlavne_jedlo=mains, dezert=desserts.
+5. For extra category slots, match the dish category exactly.
+6. Return ONLY a valid JSON object with dish IDs grouped by category.
+7. Do not add any explanation, only the JSON.
 
 REQUESTED SLOTS:
 - Soups (polievka): ${slots.soups}
 - Mains (hlavne_jedlo): ${slots.mains}
 - Desserts (dezert): ${slots.desserts}
+${extraSlotsDesc ? `\nEXTRA CATEGORY SLOTS:\n${extraSlotsDesc}` : ""}
 
 AVAILABLE DISHES:
 ${dishList}
@@ -50,7 +62,7 @@ Return format:
 {
   "soups": ["dish_id_1"],
   "mains": ["dish_id_1", "dish_id_2"],
-  "desserts": ["dish_id_1"]
+  "desserts": ["dish_id_1"]${extraSlotsJsonFormat ? `,\n  "extras": {${extraSlotsJsonFormat}}` : ""}
 }`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
