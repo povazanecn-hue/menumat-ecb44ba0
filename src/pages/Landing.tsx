@@ -20,6 +20,7 @@ import {
 import { motion } from "framer-motion";
 import heroFood from "@/assets/hero-food.jpg";
 import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
+import woodBg from "@/assets/textures/wood-bg.jpg";
 
 const features = [
   {
@@ -93,7 +94,8 @@ export default function Landing() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${woodBg})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.05]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Hero — Mobile-first full-screen layout inspired by mockup */}
       <header className="relative flex min-h-screen flex-col items-center justify-between px-0">
         {/* Top bar with logo */}

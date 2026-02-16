@@ -1,5 +1,6 @@
 import { useState } from "react";
 import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
+import woodBg from "@/assets/textures/wood-bg.jpg";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,7 +48,8 @@ export default function Onboarding() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${woodBg})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.05]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Logo */}
       <div className="relative z-[1] mb-8">
         <LogoBrand size="xl" showSubtitle />
