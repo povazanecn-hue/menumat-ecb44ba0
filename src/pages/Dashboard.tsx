@@ -396,7 +396,7 @@ export default function Dashboard() {
           isLoading ? (
             <Card key={s.label}><CardContent className="p-5"><Skeleton className="h-16 w-full" /></CardContent></Card>
           ) : (
-            <Card key={s.label} className="border-primary/10 bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
+            <Card key={s.label} className="border-primary/10 bg-card/70 backdrop-blur-sm hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
               <CardContent className="flex flex-col items-center text-center gap-2 p-5">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
                   <s.icon className="h-5 w-5" />
@@ -447,7 +447,7 @@ export default function Dashboard() {
       </div>
 
       {/* Weekly Calendar */}
-      <Card>
+      <Card className="bg-card/70 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-serif text-lg">Týždenný prehľad menu</CardTitle>
           <Button variant="ghost" size="sm" onClick={() => navigate("/daily-menu")} className="text-xs">
@@ -461,7 +461,7 @@ export default function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Cost Trend Chart */}
-        <Card>
+        <Card className="bg-card/70 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="font-serif text-lg flex items-center gap-2">
               Trend nákladov vs. cien
@@ -489,7 +489,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Quick Actions — mockup grid style */}
-        <Card>
+        <Card className="bg-card/70 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="font-serif text-lg">Rýchle akcie</CardTitle>
           </CardHeader>
@@ -514,7 +514,7 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Exports */}
-      <Card>
+      <Card className="bg-card/70 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-serif text-lg">Posledné exporty</CardTitle>
           <Button variant="ghost" size="sm" onClick={() => navigate("/exports")} className="text-xs">
