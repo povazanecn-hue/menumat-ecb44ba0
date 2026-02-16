@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,7 +81,20 @@ export default function Recipes() {
 
       {/* List */}
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Načítavam recepty...</div>
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="bg-card/60 backdrop-blur-md">
+              <CardContent className="flex items-center gap-4 py-3 px-4">
+                <Skeleton className="h-9 w-9 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-8 w-8" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
         <Card className="bg-card/60 backdrop-blur-md">
           <CardContent className="py-12 text-center">

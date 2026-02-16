@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -80,8 +81,20 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground">Načítavam nastavenia…</p>
+      <div className="space-y-6 max-w-2xl">
+        <div>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64 mt-2" />
+        </div>
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="bg-card/60 backdrop-blur-md">
+            <CardContent className="p-6 space-y-4">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }

@@ -90,7 +90,7 @@ export default function Onboarding() {
                 className="bg-secondary/50 border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button type="submit" className="w-full bg-gold-gradient" disabled={submitting}>
               {submitting ? "Vytváram..." : "Vytvoriť reštauráciu"}
             </Button>
           </form>
