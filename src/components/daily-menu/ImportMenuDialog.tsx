@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar, Camera, Wand2 } from "lucide-react";
+import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar, Camera, Wand2, RefreshCw } from "lucide-react";
 import { Dish } from "@/hooks/useDishes";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -119,6 +119,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
   const [enhancedPreview, setEnhancedPreview] = useState<string | null>(null);
   const [pendingOcrData, setPendingOcrData] = useState<{ base64: string; mimeType: string; fileName: string } | null>(null);
+  const [cameraFacing, setCameraFacing] = useState<"environment" | "user">("environment");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -608,17 +609,31 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                 <div className="grid grid-cols-2 gap-3">
                   {/* Camera capture button */}
                   <div
-                    className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors relative"
                     onClick={() => cameraInputRef.current?.click()}
                   >
                     <Camera className="h-8 w-8 text-primary mx-auto mb-2" />
                     <p className="text-sm font-medium text-foreground">Odfotiť menu</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Priamo z kamery zariadenia</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {cameraFacing === "environment" ? "Zadná kamera" : "Predná kamera"}
+                    </p>
+                    <button
+                      type="button"
+                      className="absolute top-2 right-2 p-1 rounded-md hover:bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCameraFacing((f) => f === "environment" ? "user" : "environment");
+                      }}
+                      title="Prepnúť kameru"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </button>
                     <input
                       ref={cameraInputRef}
+                      key={cameraFacing}
                       type="file"
                       accept="image/*"
-                      capture="environment"
+                      capture={cameraFacing}
                       className="hidden"
                       onChange={handleInputChange}
                     />
