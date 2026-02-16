@@ -72,7 +72,7 @@ export function LogoBrand({ size = "lg", showSubtitle = false, className }: Logo
         {/* Text block */}
         <div className="flex flex-col items-center leading-none">
           <span className={cn(
-            "font-serif font-light tracking-[0.35em] uppercase text-primary/90",
+            "font-serif font-light tracking-[0.35em] uppercase text-primary/90 logo-glow-light",
             s.menu
           )}>
             Menu
