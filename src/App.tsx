@@ -12,6 +12,7 @@ import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/Dashboard";
 import Dishes from "@/pages/Dishes";
 import DailyMenu from "@/pages/DailyMenu";
+import Recipes from "@/pages/Recipes";
 import Ingredients from "@/pages/Ingredients";
 import Exports from "@/pages/Exports";
 import Placeholder from "@/pages/Placeholder";
@@ -48,7 +49,7 @@ const App = () => (
                 <Route path="/daily-menu" element={<DailyMenu />} />
                 <Route path="/dishes" element={<Dishes />} />
                 <Route path="/ingredients" element={<Ingredients />} />
-                <Route path="/recipes" element={<Placeholder />} />
+                <Route path="/recipes" element={<Recipes />} />
                 <Route path="/shopping-list" element={<Placeholder />} />
                 <Route path="/exports" element={<Exports />} />
                 <Route path="/templates" element={<Placeholder />} />
