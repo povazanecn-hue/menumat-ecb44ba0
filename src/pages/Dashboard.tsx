@@ -159,7 +159,7 @@ function WeekCalendar({ weekDays, isLoading }: { weekDays?: WeekDay[]; isLoading
                   fill={entry.fill}
                   opacity={entry.status === "none" ? 0.3 : 1}
                   cursor="pointer"
-                  onClick={() => navigate("/daily-menu")}
+                  onClick={() => navigate(`/daily-menu?date=${format(weekDays[i].dateObj, "yyyy-MM-dd")}`)}
                 />
               ))}
             </Bar>
