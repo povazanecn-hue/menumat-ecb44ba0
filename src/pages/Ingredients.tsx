@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ import {
 import { IngredientFormDialog, IngredientFormData } from "@/components/ingredients/IngredientFormDialog";
 import { SupplierPriceDialog, SupplierPriceFormData } from "@/components/ingredients/SupplierPriceDialog";
 import { SupplierPriceTable } from "@/components/ingredients/SupplierPriceTable";
+import { WebPriceSearchDialog } from "@/components/ingredients/WebPriceSearchDialog";
 
 export default function Ingredients() {
   const { data: ingredients = [], isLoading } = useIngredients();
@@ -46,6 +47,7 @@ export default function Ingredients() {
   const [deleting, setDeleting] = useState<IngredientWithSuppliers | null>(null);
   const [supplierTarget, setSupplierTarget] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [webSearchTarget, setWebSearchTarget] = useState<IngredientWithSuppliers | null>(null);
 
   const filtered = useMemo(() => {
     return ingredients.filter((i) =>
@@ -108,6 +110,21 @@ export default function Ingredients() {
     try {
       await applySupplierPrice.mutateAsync({ ingredientId, price });
       toast({ title: `Základná cena aktualizovaná na ${price.toFixed(2)} €` });
+    } catch (e: any) {
+      toast({ title: "Chyba", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleWebPriceAdd = async (supplier: string, price: number) => {
+    if (!webSearchTarget) return;
+    try {
+      await createSupplierPrice.mutateAsync({
+        ingredient_id: webSearchTarget.id,
+        supplier_name: supplier,
+        price,
+        is_promo: false,
+        confidence: "web_scraped",
+      });
     } catch (e: any) {
       toast({ title: "Chyba", description: e.message, variant: "destructive" });
     }
@@ -210,6 +227,18 @@ export default function Ingredients() {
 
                       {/* Actions */}
                       <div className="flex gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setWebSearchTarget(ing);
+                          }}
+                          title="Hľadať ceny na webe"
+                        >
+                          <Globe className="h-3.5 w-3.5" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -326,6 +355,16 @@ export default function Ingredients() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Web Price Search Dialog */}
+      {webSearchTarget && (
+        <WebPriceSearchDialog
+          open={!!webSearchTarget}
+          onOpenChange={(open) => !open && setWebSearchTarget(null)}
+          ingredientName={webSearchTarget.name}
+          onAddPrice={handleWebPriceAdd}
+        />
+      )}
     </div>
   );
 }
