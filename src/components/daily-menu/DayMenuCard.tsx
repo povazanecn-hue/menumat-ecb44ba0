@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { sk } from "date-fns/locale";
-import { Plus, Trash2, Check, GripVertical, Wand2 } from "lucide-react";
+import { Plus, Trash2, Check, GripVertical, Wand2, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ interface DayMenuCardProps {
   onRemoveItem: (itemId: string) => void;
   onPublish: (menuId: string) => void;
   onAiGenerate?: () => void;
+  onImport?: () => void;
   isToday: boolean;
 }
 
@@ -25,6 +26,7 @@ export function DayMenuCard({
   onRemoveItem,
   onPublish,
   onAiGenerate,
+  onImport,
   isToday,
 }: DayMenuCardProps) {
   const dayName = format(date, "EEEE", { locale: sk });
@@ -135,6 +137,16 @@ export function DayMenuCard({
             >
               <Wand2 className="h-3.5 w-3.5 mr-1" />
               AI
+            </Button>
+          )}
+          {onImport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onImport}
+              title="Import z Excel/CSV"
+            >
+              <FileUp className="h-3.5 w-3.5" />
             </Button>
           )}
           {menu && items.length > 0 && isDraft && (
