@@ -161,12 +161,12 @@ export function DishFormDialog({ open, onOpenChange, dish, onSubmit, submitting,
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dish-subtype">Podtyp</Label>
+              <Label htmlFor="dish-subtype">Extra doplnok</Label>
               <Input
                 id="dish-subtype"
                 value={form.subtype ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, subtype: e.target.value || null }))}
-                placeholder="napr. bezmäsité"
+                placeholder="napr. Tatárská omáčka, Uhorkový šalátik"
               />
             </div>
           </div>
