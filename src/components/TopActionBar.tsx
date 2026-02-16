@@ -15,7 +15,7 @@ export function TopActionBar() {
       <div className="h-5 w-px bg-border" />
 
       <div className="mr-auto">
-        <LogoBrand size="sm" />
+        <LogoBrand size="md" />
       </div>
 
       <div className="flex items-center gap-1">
