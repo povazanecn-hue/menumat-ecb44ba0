@@ -8,14 +8,14 @@ export function TopActionBar() {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-card/80 backdrop-blur-sm px-4">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-card/50 backdrop-blur-md px-4">
       <SidebarTrigger />
 
       <div className="h-5 w-px bg-border" />
 
       <div className="flex items-center gap-2 mr-auto">
-        <ChefHat className="h-5 w-5 text-primary" />
-        <h1 className="font-serif text-lg font-semibold text-primary tracking-wide">
+        <ChefHat className="h-5 w-5 text-primary icon-glow" />
+        <h1 className="font-serif text-lg font-semibold text-primary tracking-wide logo-glow">
           MENU MASTER
         </h1>
       </div>

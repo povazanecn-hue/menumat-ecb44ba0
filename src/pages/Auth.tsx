@@ -81,8 +81,8 @@ export default function Auth() {
       <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Top bar */}
       <div className="relative z-[1] flex w-full items-center justify-center gap-2 pt-6 pb-4">
-        <ChefHat className="h-6 w-6 text-primary drop-shadow-[0_0_8px_hsl(40_55%_55%/0.5)]" />
-        <span className="font-serif text-lg font-bold tracking-wider text-primary">MENU MASTER</span>
+        <ChefHat className="h-7 w-7 text-primary icon-glow" />
+        <span className="font-serif text-2xl font-bold tracking-wider text-primary logo-glow">MENU MASTER</span>
       </div>
 
       {/* Hero food image */}
@@ -98,7 +98,7 @@ export default function Auth() {
       </div>
 
       {/* Form */}
-      <div className="relative z-[1] w-full max-w-md px-6 pb-8 space-y-5 flex-1 bg-card/80 backdrop-blur-sm rounded-t-2xl pt-6 border-t border-border/30">
+      <div className="relative z-[1] w-full max-w-md px-6 pb-8 space-y-5 flex-1 bg-card/60 backdrop-blur-md rounded-t-2xl pt-6 border-t border-border/30">
         {/* OAuth */}
         <div className="space-y-2">
           <Button
@@ -143,7 +143,7 @@ export default function Auth() {
             <span className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-3 text-muted-foreground">alebo</span>
+            <span className="bg-transparent px-3 text-muted-foreground">alebo</span>
           </div>
         </div>
 

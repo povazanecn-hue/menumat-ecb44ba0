@@ -49,8 +49,8 @@ export default function Onboarding() {
       <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Logo */}
       <div className="relative z-[1] mb-8 flex items-center gap-3">
-        <ChefHat className="h-8 w-8 text-primary" />
-        <h1 className="font-serif text-2xl font-bold tracking-wide text-primary">MENU MASTER</h1>
+        <ChefHat className="h-9 w-9 text-primary icon-glow" />
+        <h1 className="font-serif text-3xl font-bold tracking-wide text-primary logo-glow">MENU MASTER</h1>
       </div>
 
       <div className="relative z-[1] w-full max-w-md space-y-6">
@@ -59,7 +59,7 @@ export default function Onboarding() {
           <p className="text-muted-foreground text-sm">Nastavte si svoju reštauráciu a začnite tvoriť menu</p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card/85 backdrop-blur-sm p-6 shadow-2xl shadow-black/40">
+        <div className="rounded-xl border border-border bg-card/60 backdrop-blur-md p-6 shadow-2xl shadow-black/40">
           <div className="flex items-center gap-2 mb-6">
             <Store className="h-5 w-5 text-primary" />
             <h3 className="font-serif text-lg font-semibold text-foreground">Nová reštaurácia</h3>
@@ -74,7 +74,7 @@ export default function Onboarding() {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Klub Koliesko"
                 required
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                className="bg-secondary/50 border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <div className="space-y-1.5">
@@ -87,7 +87,7 @@ export default function Onboarding() {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Hlavná 1, Bratislava"
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                className="bg-secondary/50 border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
