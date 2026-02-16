@@ -130,8 +130,13 @@ export function DayMenuCard({
             </div>
 
             {/* Side dish & extras display */}
-            {((item as any).side_dish || (item as any).extras) && (
+            {((item as any).side_dish || (item as any).extras || item.dish.subtype) && (
               <div className="ml-6 mt-0.5 flex gap-2 flex-wrap">
+                {item.dish.subtype && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-secondary/50 text-secondary-foreground/70">
+                    {item.dish.subtype}
+                  </Badge>
+                )}
                 {(item as any).side_dish && (
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary/80">
                     <Utensils className="h-2.5 w-2.5 mr-0.5" />
