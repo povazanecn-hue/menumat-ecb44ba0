@@ -15,6 +15,7 @@ const sizeConfig = {
     line: "w-6",
     gap: "gap-1.5",
     subtitle: "text-[8px]",
+    ring: "h-9 w-9",
   },
   md: {
     icon: "h-6 w-6",
@@ -23,6 +24,7 @@ const sizeConfig = {
     line: "w-8",
     gap: "gap-2",
     subtitle: "text-[9px]",
+    ring: "h-11 w-11",
   },
   lg: {
     icon: "h-8 w-8",
@@ -31,6 +33,7 @@ const sizeConfig = {
     line: "w-10",
     gap: "gap-2.5",
     subtitle: "text-[10px]",
+    ring: "h-14 w-14",
   },
   xl: {
     icon: "h-10 w-10",
@@ -39,6 +42,7 @@ const sizeConfig = {
     line: "w-14",
     gap: "gap-3",
     subtitle: "text-xs",
+    ring: "h-[4.5rem] w-[4.5rem]",
   },
 };
 
@@ -50,17 +54,25 @@ export function LogoBrand({ size = "lg", showSubtitle = false, className }: Logo
       <div className={cn("flex items-center", s.gap)}>
         {/* Left decorative line */}
         <div className="flex items-center gap-1">
-          <span className={cn("block h-px bg-gradient-to-r from-transparent via-amber-400/70 to-yellow-600/80", s.line)} />
-          <span className="block h-1 w-1 rounded-full bg-amber-400/60" />
+          <span className={cn("block h-px bg-gradient-to-r from-transparent via-primary/70 to-primary/90", s.line)} />
+          <span className="block h-1.5 w-1.5 rounded-full bg-primary/70 shadow-[0_0_6px_hsl(40_55%_55%/0.6)]" />
         </div>
 
-        {/* Icon */}
-        <ChefHat className={cn(s.icon, "text-primary icon-glow transition-all duration-300 group-hover:drop-shadow-[0_0_8px_hsl(var(--primary)/0.6)]")} />
+        {/* Icon with glowing ring */}
+        <div className={cn(
+          "relative flex items-center justify-center rounded-full",
+          "bg-gradient-to-br from-primary/20 to-primary/5",
+          "shadow-[0_0_25px_hsl(40_55%_55%/0.4),inset_0_0_15px_hsl(40_55%_55%/0.1)]",
+          "border border-primary/30",
+          s.ring
+        )}>
+          <ChefHat className={cn(s.icon, "text-primary icon-glow")} />
+        </div>
 
         {/* Text block */}
         <div className="flex flex-col items-center leading-none">
           <span className={cn(
-            "font-serif font-light tracking-[0.35em] uppercase text-primary/80",
+            "font-serif font-light tracking-[0.35em] uppercase text-primary/90",
             s.menu
           )}>
             Menu
@@ -75,8 +87,8 @@ export function LogoBrand({ size = "lg", showSubtitle = false, className }: Logo
 
         {/* Right decorative line */}
         <div className="flex items-center gap-1">
-          <span className="block h-1 w-1 rounded-full bg-amber-400/60" />
-          <span className={cn("block h-px bg-gradient-to-l from-transparent via-amber-400/70 to-yellow-600/80", s.line)} />
+          <span className="block h-1.5 w-1.5 rounded-full bg-primary/70 shadow-[0_0_6px_hsl(40_55%_55%/0.6)]" />
+          <span className={cn("block h-px bg-gradient-to-l from-transparent via-primary/70 to-primary/90", s.line)} />
         </div>
       </div>
 

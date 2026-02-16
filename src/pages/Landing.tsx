@@ -92,7 +92,8 @@ export default function Landing() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.35]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-background/40 via-background/70 to-background" />
       {/* Hero — clean layout without food image */}
       <header className="relative flex min-h-screen flex-col items-center justify-center px-4">
         {/* Top bar with logo */}
@@ -145,7 +146,7 @@ export default function Landing() {
             <Button
               size="lg"
               variant="outline"
-              className="h-14 w-full border-primary/40 text-lg text-foreground hover:border-primary/70 hover:bg-primary/5"
+              className="h-14 w-full border-primary/40 text-lg text-foreground btn-glow-outline"
               asChild
             >
               <Link to="/auth">

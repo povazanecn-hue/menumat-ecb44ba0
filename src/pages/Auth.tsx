@@ -78,7 +78,8 @@ export default function Auth() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center bg-background">
-      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.35]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-background/40 via-background/70 to-background" />
       {/* Top bar */}
       <div className="relative z-[1] flex w-full items-center justify-center pt-8 pb-6">
         <LogoBrand size="lg" />
