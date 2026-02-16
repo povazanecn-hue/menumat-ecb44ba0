@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Search, Pencil, Trash2, BookOpen, TrendingUp, AlertTriangle } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, BookOpen, TrendingUp, AlertTriangle, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { useDishRecipeIds } from "@/hooks/useRecipes";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { useCanViewFinancials } from "@/hooks/useUserRole";
 import { DishFormDialog, DishFormData } from "@/components/dishes/DishFormDialog";
+import { WordImportDialog } from "@/components/dishes/WordImportDialog";
 import { RecipeDetailDialog } from "@/components/recipes/RecipeDetailDialog";
 import { DISH_CATEGORIES, ALLERGENS } from "@/lib/constants";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,6 +60,7 @@ export default function Dishes() {
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [deletingDish, setDeletingDish] = useState<Dish | null>(null);
   const [recipeTarget, setRecipeTarget] = useState<{ id: string; name: string } | null>(null);
+  const [wordImportOpen, setWordImportOpen] = useState(false);
   const [defaultMargin, setDefaultMargin] = useState(100);
   const [defaultVat, setDefaultVat] = useState(20);
 
@@ -136,10 +138,16 @@ export default function Dishes() {
             {dishes.length} jedál v databáze
           </p>
         </div>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus className="h-4 w-4 mr-1" />
-          Nové jedlo
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setWordImportOpen(true)}>
+            <FileUp className="h-4 w-4 mr-1" />
+            Import z Word
+          </Button>
+          <Button onClick={() => setFormOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Nové jedlo
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -379,6 +387,14 @@ export default function Dishes() {
           dishName={recipeTarget.name}
         />
       )}
+
+      {/* Word Import Dialog */}
+      <WordImportDialog
+        open={wordImportOpen}
+        onOpenChange={setWordImportOpen}
+        existingDishNames={dishes.map(d => d.name)}
+        onImported={() => {/* react-query auto-refetches */}}
+      />
     </div>
   );
 }
