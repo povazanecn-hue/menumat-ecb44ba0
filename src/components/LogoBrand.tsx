@@ -46,7 +46,7 @@ export function LogoBrand({ size = "lg", showSubtitle = false, className }: Logo
   const s = sizeConfig[size];
 
   return (
-    <div className={cn("flex flex-col items-center", className)}>
+    <div className={cn("flex flex-col items-center transition-transform duration-300 hover:scale-105 group cursor-pointer", className)}>
       <div className={cn("flex items-center", s.gap)}>
         {/* Left decorative line */}
         <div className="flex items-center gap-1">
@@ -55,7 +55,7 @@ export function LogoBrand({ size = "lg", showSubtitle = false, className }: Logo
         </div>
 
         {/* Icon */}
-        <ChefHat className={cn(s.icon, "text-primary icon-glow")} />
+        <ChefHat className={cn(s.icon, "text-primary icon-glow transition-all duration-300 group-hover:drop-shadow-[0_0_8px_hsl(var(--primary)/0.6)]")} />
 
         {/* Text block */}
         <div className="flex flex-col items-center leading-none">
