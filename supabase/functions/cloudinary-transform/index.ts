@@ -144,7 +144,8 @@ async function handleOcr(
 ) {
   // Re-upload with ocr detection enabled
   const timestamp = Math.floor(Date.now() / 1000);
-  const toSign = `ocr=adv_ocr&public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+  const ocrPublicId = `menugen/ocr_${timestamp}`;
+  const toSign = `ocr=adv_ocr&overwrite=true&public_id=${ocrPublicId}&timestamp=${timestamp}${apiSecret}`;
   const signature = await sha1Hex(toSign);
 
   const sourceUrl = imageUrl || `https://res.cloudinary.com/${cloudName}/image/upload/${publicId}`;
@@ -154,7 +155,7 @@ async function handleOcr(
   form.append("api_key", apiKey);
   form.append("timestamp", timestamp.toString());
   form.append("signature", signature);
-  form.append("public_id", publicId);
+  form.append("public_id", ocrPublicId);
   form.append("ocr", "adv_ocr");
   form.append("overwrite", "true");
 
@@ -195,17 +196,26 @@ async function handleAnalyze(
   const authHeader = "Basic " + btoa(`${apiKey}:${apiSecret}`);
   const uri = imageUrl || `https://res.cloudinary.com/${cloudName}/image/upload/${publicId || "sample"}`;
 
-  const resp = await fetch(`https://api.cloudinary.com/v2/${cloudName}/analysis/analyze/uri`, {
+  // Use ai_vision_general for prompted analysis, captioning as fallback
+  const model = options.prompt ? "ai_vision_general" : "captioning";
+  const body: Record<string, any> = {
+    source: { uri },
+  };
+  if (options.prompt) {
+    body.prompts = [options.prompt];
+  }
+
+  const resp = await fetch(`https://api.cloudinary.com/v2/analysis/${cloudName}/analyze/${model}`, {
     method: "POST",
     headers: { Authorization: authHeader, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      source: { uri },
-      analysis_type: "captioning",
-      parameters: options.prompt ? { prompt: options.prompt } : {},
-    }),
+    body: JSON.stringify(body),
   });
 
-  return await resp.json();
+  const data = await resp.json();
+  if (!resp.ok) {
+    throw new Error(`Analyze API error: ${resp.status} - ${JSON.stringify(data)}`);
+  }
+  return data;
 }
 
 // ── Upload helper ────────────────────────────────────────────────────
