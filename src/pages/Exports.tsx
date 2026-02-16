@@ -6,10 +6,13 @@ import { usePublishedMenus } from "@/hooks/useExports";
 import { ExportActions } from "@/components/exports/ExportActions";
 import { ExportHistoryTable } from "@/components/exports/ExportHistoryTable";
 import { MenuPreview } from "@/components/exports/MenuPreview";
+import { useTemplateSettings } from "@/hooks/useTemplates";
 
 export default function Exports() {
   const { data: menus, isLoading } = usePublishedMenus();
+  const { data: templateSettings } = useTemplateSettings();
   const [selectedMenuId, setSelectedMenuId] = useState<string>("");
+  const [activeTemplate, setActiveTemplate] = useState<string>("");
 
   const selectedMenu = menus?.find((m: any) => m.id === selectedMenuId) ?? null;
 
@@ -61,8 +64,8 @@ export default function Exports() {
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <MenuPreview menu={selectedMenu} />
-            <ExportActions menu={selectedMenu} />
+            <MenuPreview menu={selectedMenu} templateStyle={activeTemplate || templateSettings?.primary_template || "country"} />
+            <ExportActions menu={selectedMenu} onTemplateChange={setActiveTemplate} />
           </div>
         </TabsContent>
 

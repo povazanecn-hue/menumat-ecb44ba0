@@ -1,12 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DISH_CATEGORIES } from "@/lib/constants";
+import { TEMPLATE_PRESETS } from "@/hooks/useTemplates";
 
 interface MenuPreviewProps {
   menu: any;
+  templateStyle?: string;
 }
 
-export function MenuPreview({ menu }: MenuPreviewProps) {
+export function MenuPreview({ menu, templateStyle = "country" }: MenuPreviewProps) {
+  const preset = TEMPLATE_PRESETS.find((p) => p.id === templateStyle) ?? TEMPLATE_PRESETS[0];
+  const { previewColors } = preset;
+
   if (!menu) {
     return (
       <Card>
@@ -43,39 +48,68 @@ export function MenuPreview({ menu }: MenuPreviewProps) {
     : "";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="font-serif text-lg">Náhľad menu</CardTitle>
-        <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
-        <Badge variant={menu.status === "published" ? "default" : "secondary"} className="w-fit">
-          {menu.status === "published" ? "Publikované" : "Koncept"}
-        </Badge>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {Object.entries(groups).map(([cat, catItems]) => (
-          <div key={cat}>
-            <h4 className="font-serif font-semibold text-sm text-accent uppercase tracking-wider mb-2">
-              {DISH_CATEGORIES[cat] || cat}
-            </h4>
-            <div className="space-y-1.5">
-              {catItems.map((item: any) => (
-                <div key={item.id} className="flex justify-between items-baseline text-sm">
-                  <span>
-                    {item.dish?.name}
-                    {item.dish?.grammage && (
-                      <span className="text-muted-foreground ml-1">({item.dish.grammage})</span>
-                    )}
-                  </span>
-                  <span className="font-semibold ml-4 whitespace-nowrap">{getPrice(item)}</span>
-                </div>
-              ))}
+    <Card className="overflow-hidden">
+      <div
+        className="rounded-lg"
+        style={{ background: previewColors.bg, color: previewColors.text }}
+      >
+        <div className="p-5 pb-3 text-center border-b" style={{ borderColor: `${previewColors.accent}30` }}>
+          <h2
+            className="font-serif text-xl font-bold tracking-wide uppercase"
+            style={{ color: previewColors.accent }}
+          >
+            Denné Menu
+          </h2>
+          <p className="text-sm mt-1 capitalize opacity-75">{dateStr}</p>
+          <Badge
+            className="mt-2 text-[10px]"
+            style={{
+              background: `${previewColors.accent}20`,
+              color: previewColors.accent,
+              border: `1px solid ${previewColors.accent}40`,
+            }}
+          >
+            {menu.status === "published" ? "Publikované" : "Koncept"}
+          </Badge>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {Object.entries(groups).map(([cat, catItems]) => (
+            <div key={cat}>
+              <h4
+                className="font-serif font-semibold text-xs uppercase tracking-[0.15em] mb-2 pb-1"
+                style={{ color: previewColors.accent, borderBottom: `2px solid ${previewColors.accent}40` }}
+              >
+                {DISH_CATEGORIES[cat] || cat}
+              </h4>
+              <div className="space-y-1.5">
+                {catItems.map((item: any) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-baseline text-sm py-0.5"
+                    style={{ borderBottom: `1px dotted ${previewColors.accent}25` }}
+                  >
+                    <span>
+                      {item.dish?.name}
+                      {item.dish?.grammage && (
+                        <span className="ml-1 opacity-60 text-xs">({item.dish.grammage})</span>
+                      )}
+                    </span>
+                    <span className="font-bold ml-4 whitespace-nowrap">{getPrice(item)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-        {!items.length && (
-          <p className="text-sm text-muted-foreground text-center">Toto menu nemá žiadne jedlá.</p>
-        )}
-      </CardContent>
+          ))}
+          {!items.length && (
+            <p className="text-sm text-center opacity-50">Toto menu nemá žiadne jedlá.</p>
+          )}
+        </div>
+
+        <div className="px-5 py-3 text-center opacity-40">
+          <p className="text-[10px] uppercase tracking-widest">Šablóna: {preset.name}</p>
+        </div>
+      </div>
     </Card>
   );
 }

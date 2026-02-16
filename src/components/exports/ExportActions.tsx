@@ -11,6 +11,7 @@ import { useTemplateSettings } from "@/hooks/useTemplates";
 
 interface ExportActionsProps {
   menu: any;
+  onTemplateChange?: (template: string) => void;
 }
 
 const TEMPLATES = [
@@ -19,7 +20,7 @@ const TEMPLATES = [
   { value: "modern", label: "Moderný" },
 ];
 
-export function ExportActions({ menu }: ExportActionsProps) {
+export function ExportActions({ menu, onTemplateChange }: ExportActionsProps) {
   const { data: templateSettings } = useTemplateSettings();
   const [template, setTemplate] = useState("country");
   const [loading, setLoading] = useState<string | null>(null);
@@ -99,7 +100,7 @@ export function ExportActions({ menu }: ExportActionsProps) {
       <CardContent className="space-y-4">
         <div>
           <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Šablóna</label>
-          <Select value={template} onValueChange={setTemplate}>
+          <Select value={template} onValueChange={(v) => { setTemplate(v); onTemplateChange?.(v); }}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
