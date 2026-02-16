@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
 import { addWeeks, format, isToday } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Dish } from "@/hooks/useDishes";
+import { Dish, useDishes } from "@/hooks/useDishes";
 import {
   useWeekMenus,
   useUpsertMenu,
@@ -19,15 +19,19 @@ import {
 } from "@/hooks/useMenus";
 import { DayMenuCard } from "@/components/daily-menu/DayMenuCard";
 import { DishPickerDialog } from "@/components/daily-menu/DishPickerDialog";
+import { AiMenuDialog } from "@/components/daily-menu/AiMenuDialog";
 
 export default function DailyMenu() {
   const { toast } = useToast();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [pickerDate, setPickerDate] = useState<Date | null>(null);
+  const [aiDate, setAiDate] = useState<Date | null>(null);
+  const [aiApplying, setAiApplying] = useState(false);
 
   const weekdays = getWeekdays(weekStart);
   const { data: menus = [], isLoading } = useWeekMenus(weekStart);
   const { data: recentUsage = {} } = useRecentDishUsage(14);
+  const { data: allDishes = [] } = useDishes();
 
   const upsertMenu = useUpsertMenu();
   const addMenuItem = useAddMenuItem();
@@ -98,6 +102,27 @@ export default function DailyMenu() {
     }
   };
 
+  // AI generation: apply selected dish IDs to the chosen day
+  const handleAiApply = async (dishIds: string[]) => {
+    if (!aiDate) return;
+    setAiApplying(true);
+    try {
+      const dateKey = formatDateKey(aiDate);
+      const menuId = await upsertMenu.mutateAsync(dateKey);
+      const menu = getMenuForDate(aiDate);
+      let sortOrder = (menu?.menu_items?.length ?? 0) + 1;
+      for (const dishId of dishIds) {
+        await addMenuItem.mutateAsync({ menuId, dishId, sortOrder });
+        sortOrder++;
+      }
+      toast({ title: `${dishIds.length} jedál pridaných cez AI` });
+    } catch (e: any) {
+      toast({ title: "Chyba", description: e.message, variant: "destructive" });
+    } finally {
+      setAiApplying(false);
+    }
+  };
+
   const weekLabel = `${format(weekdays[0], "d. MMM", { locale: sk })} – ${format(
     weekdays[4],
     "d. MMM yyyy",
@@ -164,6 +189,7 @@ export default function DailyMenu() {
               onAddDish={() => setPickerDate(date)}
               onRemoveItem={handleRemoveItem}
               onPublish={handlePublish}
+              onAiGenerate={() => setAiDate(date)}
               isToday={isToday(date)}
             />
           ))}
@@ -178,6 +204,17 @@ export default function DailyMenu() {
         recentUsage={recentUsage}
         alreadyAdded={pickerAlreadyAdded}
         nonRepeatDays={14}
+      />
+
+      {/* AI generator */}
+      <AiMenuDialog
+        open={!!aiDate}
+        onOpenChange={(open) => !open && setAiDate(null)}
+        dishes={allDishes}
+        recentUsage={recentUsage}
+        nonRepeatDays={14}
+        onApply={handleAiApply}
+        isApplying={aiApplying}
       />
     </div>
   );
