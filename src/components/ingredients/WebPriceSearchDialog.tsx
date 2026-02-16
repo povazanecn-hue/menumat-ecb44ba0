@@ -26,7 +26,7 @@ interface SearchResult {
 }
 
 const SEARCH_SITES = [
-  { label: "Všetky", value: "" },
+  { label: "Všetky", value: "all" },
   { label: "Lidl", value: "site:lidl.sk" },
   { label: "Kaufland", value: "site:kaufland.sk" },
   { label: "Billa", value: "site:billa.sk" },
@@ -41,7 +41,7 @@ export function WebPriceSearchDialog({
 }: WebPriceSearchDialogProps) {
   const { toast } = useToast();
   const [query, setQuery] = useState(`${ingredientName} cena`);
-  const [siteFilter, setSiteFilter] = useState("");
+  const [siteFilter, setSiteFilter] = useState("all");
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [manualPrice, setManualPrice] = useState<Record<number, string>>({});
@@ -56,7 +56,7 @@ export function WebPriceSearchDialog({
     setExtractedInfo({});
 
     try {
-      const fullQuery = siteFilter ? `${query} ${siteFilter}` : query;
+      const fullQuery = siteFilter && siteFilter !== "all" ? `${query} ${siteFilter}` : query;
       const response = await firecrawlApi.search(fullQuery, {
         limit: 8,
         lang: "sk",
