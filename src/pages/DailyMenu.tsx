@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
-import { addWeeks, format, isToday } from "date-fns";
+import { useState, useCallback, useEffect } from "react";
+import { addWeeks, format, isToday, parseISO } from "date-fns";
 import { sk } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Dish, useDishes } from "@/hooks/useDishes";
@@ -24,7 +25,14 @@ import { ImportMenuDialog } from "@/components/daily-menu/ImportMenuDialog";
 
 export default function DailyMenu() {
   const { toast } = useToast();
-  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
+  const [searchParams] = useSearchParams();
+  const [weekStart, setWeekStart] = useState(() => {
+    const dateParam = searchParams.get("date");
+    if (dateParam) {
+      try { return getWeekStart(parseISO(dateParam)); } catch { /* ignore */ }
+    }
+    return getWeekStart(new Date());
+  });
   const [pickerDate, setPickerDate] = useState<Date | null>(null);
   const [aiDate, setAiDate] = useState<Date | null>(null);
   const [aiApplying, setAiApplying] = useState(false);
