@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DISH_CATEGORIES } from "@/lib/constants";
-import { TEMPLATE_PRESETS } from "@/hooks/useTemplates";
+import { TEMPLATE_PRESETS, FontConfig, loadGoogleFonts } from "@/hooks/useTemplates";
 import woodBg from "@/assets/textures/wood-bg.jpg";
 import woodHeader from "@/assets/textures/wood-header.jpg";
 
@@ -9,11 +10,17 @@ interface MenuPreviewProps {
   menu: any;
   templateStyle?: string;
   showFinancials?: boolean;
+  fonts?: FontConfig;
 }
 
-export function MenuPreview({ menu, templateStyle = "country", showFinancials = false }: MenuPreviewProps) {
+export function MenuPreview({ menu, templateStyle = "country", showFinancials = false, fonts }: MenuPreviewProps) {
   const preset = TEMPLATE_PRESETS.find((p) => p.id === templateStyle) ?? TEMPLATE_PRESETS[0];
+  const f = fonts ?? preset.defaultFonts;
   const { previewColors } = preset;
+
+  useEffect(() => {
+    loadGoogleFonts([f.heading, f.body]);
+  }, [f.heading, f.body]);
 
   if (!menu) {
     return (
@@ -85,12 +92,12 @@ export function MenuPreview({ menu, templateStyle = "country", showFinancials = 
           }}
         >
           <h2
-            className="font-serif text-xl font-bold tracking-wide uppercase"
-            style={{ color: previewColors.accent }}
+            className="font-bold tracking-wide uppercase"
+            style={{ color: previewColors.accent, fontFamily: `'${f.heading}', serif`, fontSize: `${f.headingSize}px` }}
           >
             Denné Menu
           </h2>
-          <p className="text-sm mt-1 capitalize opacity-75">{dateStr}</p>
+          <p className="mt-1 capitalize opacity-75" style={{ fontFamily: `'${f.body}', sans-serif`, fontSize: `${f.bodySize}px` }}>{dateStr}</p>
           <Badge
             className="mt-2 text-[10px]"
             style={{
@@ -107,8 +114,8 @@ export function MenuPreview({ menu, templateStyle = "country", showFinancials = 
           {Object.entries(groups).map(([cat, catItems]) => (
             <div key={cat}>
               <h4
-                className="font-serif font-semibold text-xs uppercase tracking-[0.15em] mb-2 pb-1"
-                style={{ color: previewColors.accent, borderBottom: `2px solid ${previewColors.accent}40` }}
+                className="font-semibold uppercase tracking-[0.15em] mb-2 pb-1"
+                style={{ color: previewColors.accent, borderBottom: `2px solid ${previewColors.accent}40`, fontFamily: `'${f.heading}', serif`, fontSize: `${Math.round(f.bodySize * 0.85)}px` }}
               >
                 {DISH_CATEGORIES[cat] || cat}
               </h4>
@@ -116,17 +123,20 @@ export function MenuPreview({ menu, templateStyle = "country", showFinancials = 
                 {catItems.map((item: any) => (
                   <div
                     key={item.id}
-                    className="text-sm py-0.5"
-                    style={{ borderBottom: `1px dotted ${previewColors.accent}25` }}
+                    className="py-0.5"
+                    style={{ borderBottom: `1px dotted ${previewColors.accent}25`, fontFamily: `'${f.body}', sans-serif` }}
                   >
                     <div className="flex justify-between items-baseline">
-                      <span>
+                      <span style={{ fontSize: `${f.bodySize}px` }}>
                         {item.dish?.name}
+                        {item.side_dish && (
+                          <span className="ml-1 opacity-70" style={{ fontSize: `${f.bodySize - 1}px` }}>+ {item.side_dish}</span>
+                        )}
                         {item.dish?.grammage && (
-                          <span className="ml-1 opacity-60 text-xs">({item.dish.grammage})</span>
+                          <span className="ml-1 opacity-60" style={{ fontSize: `${f.bodySize - 2}px` }}>({item.dish.grammage})</span>
                         )}
                       </span>
-                      <span className="font-bold ml-4 whitespace-nowrap">{getPrice(item)}</span>
+                      <span className="font-bold ml-4 whitespace-nowrap" style={{ fontSize: `${f.priceSize}px` }}>{getPrice(item)}</span>
                     </div>
                     {showFinancials && (
                       <div className="flex gap-3 text-[10px] opacity-50 mt-0.5">
