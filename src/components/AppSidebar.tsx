@@ -8,6 +8,7 @@ import {
   FileOutput,
   Palette,
   Settings,
+  ChefHat,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -41,21 +42,19 @@ const toolsNav = [
 export function AppSidebar() {
   return (
     <Sidebar>
-      <SidebarHeader className="px-4 py-5">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-serif font-bold text-lg">
-            M
-          </div>
+      <SidebarHeader className="px-4 py-5 border-b border-sidebar-border">
+        <div className="flex items-center gap-2.5">
+          <ChefHat className="h-7 w-7 text-sidebar-primary" />
           <div className="flex flex-col">
-            <span className="font-serif font-semibold text-sm text-sidebar-foreground">MenuGen</span>
-            <span className="text-xs text-sidebar-foreground/60">Správa reštaurácie</span>
+            <span className="font-serif font-bold text-sm tracking-wider text-sidebar-primary">MENU MASTER</span>
+            <span className="text-[10px] text-sidebar-foreground/50">Správa reštaurácie</span>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50 uppercase text-[10px] tracking-wider">
+          <SidebarGroupLabel className="text-sidebar-foreground/40 uppercase text-[10px] tracking-widest font-semibold">
             Hlavné
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -66,8 +65,8 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/dashboard"}
-                      className="text-sidebar-foreground/80 hover:text-sidebar-foreground"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      className="text-sidebar-foreground/70 hover:text-sidebar-primary transition-colors"
+                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium border-l-2 border-sidebar-primary"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -80,7 +79,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50 uppercase text-[10px] tracking-wider">
+          <SidebarGroupLabel className="text-sidebar-foreground/40 uppercase text-[10px] tracking-widest font-semibold">
             Nástroje
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -90,8 +89,8 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink
                       to={item.url}
-                      className="text-sidebar-foreground/80 hover:text-sidebar-foreground"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      className="text-sidebar-foreground/70 hover:text-sidebar-primary transition-colors"
+                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium border-l-2 border-sidebar-primary"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -105,7 +104,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="px-4 py-3 border-t border-sidebar-border">
-        <p className="text-[10px] text-sidebar-foreground/40">MenuGen v1.0</p>
+        <p className="text-[10px] text-sidebar-foreground/30 tracking-wide">MENU MASTER v1.0</p>
       </SidebarFooter>
     </Sidebar>
   );
