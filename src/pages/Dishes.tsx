@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,11 +17,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useDishes, useCreateDish, useUpdateDish, useDeleteDish, Dish } from "@/hooks/useDishes";
+import { useDishRecipeIds } from "@/hooks/useRecipes";
+import { useRestaurant } from "@/hooks/useRestaurant";
 import { DishFormDialog, DishFormData } from "@/components/dishes/DishFormDialog";
+import { RecipeDetailDialog } from "@/components/recipes/RecipeDetailDialog";
 import { DISH_CATEGORIES, ALLERGENS } from "@/lib/constants";
 
 export default function Dishes() {
   const { data: dishes = [], isLoading } = useDishes();
+  const { restaurantId } = useRestaurant();
+  const { data: recipeIds = new Set() } = useDishRecipeIds(restaurantId);
   const createDish = useCreateDish();
   const updateDish = useUpdateDish();
   const deleteDish = useDeleteDish();
@@ -33,7 +38,7 @@ export default function Dishes() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [deletingDish, setDeletingDish] = useState<Dish | null>(null);
-
+  const [recipeTarget, setRecipeTarget] = useState<{ id: string; name: string } | null>(null);
   const filtered = useMemo(() => {
     return dishes.filter((d) => {
       const matchSearch = d.name.toLowerCase().includes(search.toLowerCase());
@@ -164,6 +169,15 @@ export default function Dishes() {
                     {dish.is_permanent_offer && (
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0">SP</Badge>
                     )}
+                    {recipeIds.has(dish.id) && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] px-1.5 py-0 border-primary/40 text-primary cursor-pointer hover:bg-primary/10"
+                        onClick={() => setRecipeTarget({ id: dish.id, name: dish.name })}
+                      >
+                        <BookOpen className="h-3 w-3 mr-0.5" />R
+                      </Badge>
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground flex gap-2 mt-0.5">
                     {dish.grammage && <span>{dish.grammage}</span>}
@@ -187,6 +201,15 @@ export default function Dishes() {
 
                 {/* Actions */}
                 <div className="flex gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    title="Recept"
+                    onClick={() => setRecipeTarget({ id: dish.id, name: dish.name })}
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -244,6 +267,16 @@ export default function Dishes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Recipe Detail Dialog */}
+      {recipeTarget && (
+        <RecipeDetailDialog
+          open={!!recipeTarget}
+          onOpenChange={(open) => !open && setRecipeTarget(null)}
+          dishId={recipeTarget.id}
+          dishName={recipeTarget.name}
+        />
+      )}
     </div>
   );
 }
