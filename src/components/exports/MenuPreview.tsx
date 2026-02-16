@@ -135,6 +135,9 @@ export function MenuPreview({ menu, templateStyle = "country", showFinancials = 
                         {item.dish?.grammage && (
                           <span className="ml-1 opacity-60" style={{ fontSize: `${f.bodySize - 2}px` }}>({item.dish.grammage})</span>
                         )}
+                        {item.dish?.subtype && (
+                          <span className="ml-1 opacity-60" style={{ fontSize: `${f.bodySize - 2}px` }}>[{item.dish.subtype}]</span>
+                        )}
                       </span>
                       <span className="font-bold ml-4 whitespace-nowrap" style={{ fontSize: `${f.priceSize}px` }}>{getPrice(item)}</span>
                     </div>
