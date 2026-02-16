@@ -241,7 +241,7 @@ export default function Dashboard() {
           isLoading ? (
             <Card key={s.label}><CardContent className="p-6"><Skeleton className="h-16 w-full" /></CardContent></Card>
           ) : (
-            <Card key={s.label} className="hover:shadow-md transition-shadow">
+            <Card key={s.label} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
                 <s.icon className="h-4 w-4 text-muted-foreground" />
