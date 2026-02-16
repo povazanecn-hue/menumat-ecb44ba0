@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { sk } from "date-fns/locale";
-import { Plus, Trash2, Check, GripVertical, Wand2, FileUp, RefreshCw, Loader2, Utensils, Pencil } from "lucide-react";
+import { Plus, Trash2, Check, GripVertical, Wand2, FileUp, RefreshCw, Loader2, Utensils, Pencil, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,10 +61,18 @@ function SortableMenuItem({
   startEditSideDish,
   commitSideDish,
   cancelEditSideDish,
+  editingExtrasId,
+  extrasValue,
+  setExtrasValue,
+  extrasInputRef,
+  startEditExtras,
+  commitExtras,
+  cancelEditExtras,
   onRemoveItem,
   onRegenerateDish,
   onRegenerateSideDish,
   onUpdateSideDish,
+  onUpdateExtras,
   regenerating,
 }: {
   item: MenuItem;
@@ -75,10 +83,18 @@ function SortableMenuItem({
   startEditSideDish: (id: string, val: string) => void;
   commitSideDish: () => void;
   cancelEditSideDish: () => void;
+  editingExtrasId: string | null;
+  extrasValue: string;
+  setExtrasValue: (v: string) => void;
+  extrasInputRef: React.RefObject<HTMLInputElement>;
+  startEditExtras: (id: string, val: string) => void;
+  commitExtras: () => void;
+  cancelEditExtras: () => void;
   onRemoveItem: (id: string) => void;
   onRegenerateDish?: (itemId: string, dishId: string, dishName: string, category: string) => void;
   onRegenerateSideDish?: (itemId: string, dishName: string) => void;
   onUpdateSideDish?: (itemId: string, sideDish: string) => void;
+  onUpdateExtras?: (itemId: string, extras: string) => void;
   regenerating?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
@@ -186,11 +202,38 @@ function SortableMenuItem({
           </button>
         ) : null}
 
-        {(item as any).extras && (
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent/80">
+        {editingExtrasId === item.id ? (
+          <Input
+            ref={extrasInputRef}
+            value={extrasValue}
+            onChange={(e) => setExtrasValue(e.target.value)}
+            onBlur={commitExtras}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitExtras();
+              if (e.key === "Escape") cancelEditExtras();
+            }}
+            className="h-5 text-[10px] px-1.5 py-0 w-28 border-accent/30"
+            placeholder="Extra..."
+          />
+        ) : (item as any).extras ? (
+          <Badge
+            variant="outline"
+            className="text-[10px] px-1.5 py-0 border-accent/30 text-accent/80 cursor-pointer hover:bg-accent/10"
+            onClick={() => onUpdateExtras && startEditExtras(item.id, (item as any).extras || "")}
+          >
+            <Sparkles className="h-2.5 w-2.5 mr-0.5" />
             + {(item as any).extras}
+            {onUpdateExtras && <Pencil className="h-2 w-2 ml-1 opacity-50" />}
           </Badge>
-        )}
+        ) : onUpdateExtras ? (
+          <button
+            onClick={() => startEditExtras(item.id, "")}
+            className="text-[10px] text-muted-foreground/50 hover:text-accent/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5"
+          >
+            <Sparkles className="h-2.5 w-2.5" />
+            extra
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -224,11 +267,21 @@ export function DayMenuCard({
   const [sideDishValue, setSideDishValue] = useState("");
   const sideDishInputRef = useRef<HTMLInputElement>(null);
 
+  const [editingExtrasId, setEditingExtrasId] = useState<string | null>(null);
+  const [extrasValue, setExtrasValue] = useState("");
+  const extrasInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (editingSideDishId && sideDishInputRef.current) {
       sideDishInputRef.current.focus();
     }
   }, [editingSideDishId]);
+
+  useEffect(() => {
+    if (editingExtrasId && extrasInputRef.current) {
+      extrasInputRef.current.focus();
+    }
+  }, [editingExtrasId]);
 
   const startEditSideDish = (itemId: string, currentValue: string) => {
     setEditingSideDishId(itemId);
@@ -246,6 +299,24 @@ export function DayMenuCard({
   const cancelEditSideDish = () => {
     setEditingSideDishId(null);
     setSideDishValue("");
+  };
+
+  const startEditExtras = (itemId: string, currentValue: string) => {
+    setEditingExtrasId(itemId);
+    setExtrasValue(currentValue);
+  };
+
+  const commitExtras = () => {
+    if (editingExtrasId && onUpdateExtras) {
+      onUpdateExtras(editingExtrasId, extrasValue);
+    }
+    setEditingExtrasId(null);
+    setExtrasValue("");
+  };
+
+  const cancelEditExtras = () => {
+    setEditingExtrasId(null);
+    setExtrasValue("");
   };
 
   // Sort items by sort_order for display
@@ -324,10 +395,18 @@ export function DayMenuCard({
                   startEditSideDish={startEditSideDish}
                   commitSideDish={commitSideDish}
                   cancelEditSideDish={cancelEditSideDish}
+                  editingExtrasId={editingExtrasId}
+                  extrasValue={extrasValue}
+                  setExtrasValue={setExtrasValue}
+                  extrasInputRef={extrasInputRef}
+                  startEditExtras={startEditExtras}
+                  commitExtras={commitExtras}
+                  cancelEditExtras={cancelEditExtras}
                   onRemoveItem={onRemoveItem}
                   onRegenerateDish={onRegenerateDish}
                   onRegenerateSideDish={onRegenerateSideDish}
                   onUpdateSideDish={onUpdateSideDish}
+                  onUpdateExtras={onUpdateExtras}
                   regenerating={regenerating}
                 />
               ))}
