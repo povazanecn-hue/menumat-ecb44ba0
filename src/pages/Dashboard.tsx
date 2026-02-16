@@ -7,8 +7,29 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { sk } from "date-fns/locale";
+import { Bar, BarChart, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { cn } from "@/lib/utils";
+
+interface WeekDay {
+  label: string;
+  date: string;
+  dateObj: Date;
+  status: "none" | "draft" | "published";
+  itemCount: number;
+}
+
+function getWeekDays(): { days: Date[]; monday: string; friday: string } {
+  const now = new Date();
+  const monday = startOfWeek(now, { weekStartsOn: 1 });
+  const days = Array.from({ length: 5 }, (_, i) => addDays(monday, i));
+  return {
+    days,
+    monday: format(days[0], "yyyy-MM-dd"),
+    friday: format(days[4], "yyyy-MM-dd"),
+  };
+}
 
 function useDashboardData() {
   const { restaurantId } = useRestaurant();
@@ -20,13 +41,15 @@ function useDashboardData() {
 
       const today = format(new Date(), "yyyy-MM-dd");
       const weekAgo = format(new Date(Date.now() - 7 * 86400000), "yyyy-MM-dd");
+      const { days, monday, friday } = getWeekDays();
 
-      const [dishRes, ingredientRes, todayMenuRes, exportsRes, recentExportsRes] = await Promise.all([
+      const [dishRes, ingredientRes, todayMenuRes, exportsRes, recentExportsRes, weekMenusRes] = await Promise.all([
         supabase.from("dishes").select("id", { count: "exact", head: true }).eq("restaurant_id", restaurantId),
         supabase.from("ingredients").select("id", { count: "exact", head: true }).eq("restaurant_id", restaurantId),
         supabase.from("menus").select("id, status, menu_items(id)").eq("restaurant_id", restaurantId).eq("menu_date", today).maybeSingle(),
         supabase.from("menu_exports").select("id, menu:menus!inner(restaurant_id)").eq("menu.restaurant_id", restaurantId).gte("created_at", weekAgo + "T00:00:00"),
         supabase.from("menu_exports").select("id, format, template_name, created_at, menu:menus!inner(menu_date, restaurant_id)").eq("menu.restaurant_id", restaurantId).order("created_at", { ascending: false }).limit(5),
+        supabase.from("menus").select("menu_date, status, menu_items(id)").eq("restaurant_id", restaurantId).gte("menu_date", monday).lte("menu_date", friday),
       ]);
 
       const todayMenu = todayMenuRes.data;
@@ -43,6 +66,20 @@ function useDashboardData() {
         }
       }
 
+      // Build week calendar data
+      const weekMenus = weekMenusRes.data ?? [];
+      const weekDays: WeekDay[] = days.map((d) => {
+        const dateStr = format(d, "yyyy-MM-dd");
+        const menu = weekMenus.find((m: any) => m.menu_date === dateStr);
+        return {
+          label: format(d, "EEE", { locale: sk }),
+          date: format(d, "d.M."),
+          dateObj: d,
+          status: menu ? (menu.status === "published" ? "published" : "draft") : "none",
+          itemCount: menu ? (menu.menu_items?.length ?? 0) : 0,
+        };
+      });
+
       return {
         dishCount: dishRes.count ?? 0,
         ingredientCount: ingredientRes.count ?? 0,
@@ -51,6 +88,7 @@ function useDashboardData() {
         hasTodayMenu: !!todayMenu,
         exportsThisWeek: exportsRes.data?.length ?? 0,
         recentExports: (recentExportsRes.data ?? []) as any[],
+        weekDays,
       };
     },
     enabled: !!restaurantId,
@@ -63,6 +101,109 @@ const FORMAT_LABELS: Record<string, string> = {
   excel: "Excel",
   webflow: "Web embed",
 };
+
+const STATUS_CONFIG = {
+  none: { color: "hsl(var(--muted))", label: "Žiadne" },
+  draft: { color: "hsl(var(--accent))", label: "Rozpracované" },
+  published: { color: "hsl(var(--primary))", label: "Publikované" },
+};
+
+function WeekCalendar({ weekDays, isLoading }: { weekDays?: WeekDay[]; isLoading: boolean }) {
+  const navigate = useNavigate();
+
+  if (isLoading) {
+    return <Skeleton className="h-48 w-full" />;
+  }
+
+  if (!weekDays) return null;
+
+  const chartData = weekDays.map((d) => ({
+    ...d,
+    value: d.status === "none" ? 0.3 : d.itemCount || 1,
+    fill: STATUS_CONFIG[d.status].color,
+  }));
+
+  const isToday = (d: WeekDay) => isSameDay(d.dateObj, new Date());
+
+  return (
+    <div className="space-y-3">
+      <div className="h-36">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} barSize={32}>
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis hide />
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const d = payload[0].payload as WeekDay & { fill: string };
+                return (
+                  <div className="rounded-lg border bg-background px-3 py-2 text-xs shadow-md">
+                    <p className="font-medium">{d.date} ({d.label})</p>
+                    <p className="text-muted-foreground">
+                      {STATUS_CONFIG[d.status].label}
+                      {d.itemCount > 0 && ` — ${d.itemCount} jedál`}
+                    </p>
+                  </div>
+                );
+              }}
+            />
+            <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+              {chartData.map((entry, i) => (
+                <Cell
+                  key={i}
+                  fill={entry.fill}
+                  opacity={entry.status === "none" ? 0.3 : 1}
+                  cursor="pointer"
+                  onClick={() => navigate("/daily-menu")}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Day labels with status dots */}
+      <div className="flex justify-between px-2">
+        {weekDays.map((d) => (
+          <div key={d.date} className="flex flex-col items-center gap-1">
+            <span className={cn(
+              "text-[10px] leading-none",
+              isToday(d) ? "font-bold text-primary" : "text-muted-foreground"
+            )}>
+              {d.date}
+            </span>
+            <div
+              className={cn(
+                "h-2 w-2 rounded-full",
+                d.status === "published" && "bg-primary",
+                d.status === "draft" && "bg-accent",
+                d.status === "none" && "bg-muted-foreground/20"
+              )}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 justify-center text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-full bg-primary" /> Publikované
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-full bg-accent" /> Rozpracované
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/20" /> Žiadne
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { data, isLoading } = useDashboardData();
@@ -115,6 +256,19 @@ export default function Dashboard() {
           )
         )}
       </div>
+
+      {/* Weekly Calendar */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="font-serif text-lg">Týždenný prehľad menu</CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/daily-menu")} className="text-xs">
+            Denné menu <ArrowRight className="h-3 w-3 ml-1" />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <WeekCalendar weekDays={data?.weekDays} isLoading={isLoading} />
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Quick Actions */}
