@@ -161,49 +161,69 @@
 /* Gold gradient utility for buttons */
 @layer utilities {
   .bg-gold-gradient {
-    background: linear-gradient(135deg, hsl(40 60% 45%), hsl(38 50% 60%));
+    background: linear-gradient(135deg, hsl(40 60% 45%), hsl(42 65% 55%), hsl(38 50% 60%));
+    box-shadow: 0 0 20px hsl(40 55% 55% / 0.3), 0 4px 15px hsl(40 55% 55% / 0.2);
+    transition: all 0.3s ease;
   }
   .bg-gold-gradient:hover {
-    background: linear-gradient(135deg, hsl(40 60% 40%), hsl(38 50% 55%));
+    background: linear-gradient(135deg, hsl(40 65% 50%), hsl(42 70% 60%), hsl(38 55% 65%));
+    box-shadow: 0 0 30px hsl(40 55% 55% / 0.5), 0 6px 25px hsl(40 55% 55% / 0.35);
+    transform: translateY(-1px);
   }
 
   .logo-glow {
     text-shadow:
-      0 0 10px hsl(40 55% 55% / 0.6),
-      0 0 30px hsl(40 55% 55% / 0.3),
-      0 0 60px hsl(40 55% 55% / 0.15);
+      0 0 10px hsl(40 55% 55% / 0.7),
+      0 0 30px hsl(40 55% 55% / 0.4),
+      0 0 60px hsl(40 55% 55% / 0.2),
+      0 0 100px hsl(40 55% 55% / 0.1);
     animation: logo-pulse 3s ease-in-out infinite;
   }
 
   .icon-glow {
-    filter: drop-shadow(0 0 12px hsl(40 55% 55% / 0.7))
-            drop-shadow(0 0 30px hsl(40 55% 55% / 0.3));
+    filter: drop-shadow(0 0 12px hsl(40 55% 55% / 0.8))
+            drop-shadow(0 0 30px hsl(40 55% 55% / 0.4))
+            drop-shadow(0 0 50px hsl(40 55% 55% / 0.15));
     animation: icon-pulse 3s ease-in-out infinite;
+  }
+
+  .btn-glow-outline {
+    box-shadow: 0 0 10px hsl(40 55% 55% / 0.15), inset 0 0 10px hsl(40 55% 55% / 0.05);
+    transition: all 0.3s ease;
+  }
+  .btn-glow-outline:hover {
+    box-shadow: 0 0 20px hsl(40 55% 55% / 0.3), inset 0 0 15px hsl(40 55% 55% / 0.1);
+    border-color: hsl(40 55% 55% / 0.6);
+    transform: translateY(-1px);
   }
 }
 
 @keyframes logo-pulse {
   0%, 100% {
     text-shadow:
-      0 0 10px hsl(40 55% 55% / 0.6),
-      0 0 30px hsl(40 55% 55% / 0.3),
-      0 0 60px hsl(40 55% 55% / 0.15);
+      0 0 10px hsl(40 55% 55% / 0.7),
+      0 0 30px hsl(40 55% 55% / 0.4),
+      0 0 60px hsl(40 55% 55% / 0.2),
+      0 0 100px hsl(40 55% 55% / 0.1);
   }
   50% {
     text-shadow:
-      0 0 15px hsl(40 55% 55% / 0.8),
-      0 0 40px hsl(40 55% 55% / 0.5),
-      0 0 80px hsl(40 55% 55% / 0.25);
+      0 0 20px hsl(40 55% 55% / 0.9),
+      0 0 50px hsl(40 55% 55% / 0.6),
+      0 0 90px hsl(40 55% 55% / 0.3),
+      0 0 130px hsl(40 55% 55% / 0.15);
   }
 }
 
 @keyframes icon-pulse {
   0%, 100% {
-    filter: drop-shadow(0 0 12px hsl(40 55% 55% / 0.7))
-            drop-shadow(0 0 30px hsl(40 55% 55% / 0.3));
+    filter: drop-shadow(0 0 12px hsl(40 55% 55% / 0.8))
+            drop-shadow(0 0 30px hsl(40 55% 55% / 0.4))
+            drop-shadow(0 0 50px hsl(40 55% 55% / 0.15));
   }
   50% {
-    filter: drop-shadow(0 0 18px hsl(40 55% 55% / 0.9))
-            drop-shadow(0 0 40px hsl(40 55% 55% / 0.5));
+    filter: drop-shadow(0 0 20px hsl(40 55% 55% / 1))
+            drop-shadow(0 0 45px hsl(40 55% 55% / 0.6))
+            drop-shadow(0 0 70px hsl(40 55% 55% / 0.25));
   }
 }

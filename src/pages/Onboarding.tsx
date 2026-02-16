@@ -47,7 +47,8 @@ export default function Onboarding() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.35]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-background/40 via-background/70 to-background" />
       {/* Logo */}
       <div className="relative z-[1] mb-8">
         <LogoBrand size="xl" showSubtitle />
