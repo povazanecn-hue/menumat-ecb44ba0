@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Monitor, Printer, FileSpreadsheet, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { exportTV, exportPDF, exportExcel, exportWebEmbed } from "@/lib/exportUtils";
 import { useSaveExport, type ExportFormat } from "@/hooks/useExports";
+import { useTemplateSettings } from "@/hooks/useTemplates";
 
 interface ExportActionsProps {
   menu: any;
@@ -18,9 +19,17 @@ const TEMPLATES = [
 ];
 
 export function ExportActions({ menu }: ExportActionsProps) {
+  const { data: templateSettings } = useTemplateSettings();
   const [template, setTemplate] = useState("country");
   const [loading, setLoading] = useState<string | null>(null);
   const saveExport = useSaveExport();
+
+  // Sync default template from saved settings
+  useEffect(() => {
+    if (templateSettings?.primary_template) {
+      setTemplate(templateSettings.primary_template);
+    }
+  }, [templateSettings]);
 
   const handleExport = async (format: ExportFormat) => {
     if (!menu) return;
