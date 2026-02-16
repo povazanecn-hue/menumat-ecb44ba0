@@ -132,36 +132,35 @@ export function exportExcel(menu: ExportMenu) {
   XLSX.writeFile(wb, `menu-kitchen-${menu.menu_date}.xlsx`);
 }
 
-// ─── Webflow / Web embed ───
-export function exportWebEmbed(menu: ExportMenu): string {
-  const groups = groupItems(menu.menu_items);
-  const dateLabel = formatDate(menu.menu_date);
+// ─── Webflow / Web embed (idempotent publish) ───
+export async function exportWebEmbed(menu: ExportMenu): Promise<{ url: string; embedSnippet: string }> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data: { session } } = await supabase.auth.getSession();
 
-  let cards = "";
-  for (const [cat, items] of Object.entries(groups)) {
-    for (const item of items) {
-      cards += `<div class="menugen-item" data-category="${cat}" data-date="${menu.menu_date}">
-  <span class="menugen-category">${DISH_CATEGORIES[cat] || cat}</span>
-  <span class="menugen-name">${item.dish.name}</span>
-  ${item.dish.grammage ? `<span class="menugen-grammage">${item.dish.grammage}</span>` : ""}
-  ${item.dish.allergens.length ? `<span class="menugen-allergens">A: ${getAllergenStr(item.dish.allergens)}</span>` : ""}
-  <span class="menugen-price">${getPrice(item)}</span>
-</div>`;
+  const resp = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/publish-embed`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify({ menuId: menu.id }),
     }
+  );
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || "Chyba pri publikovaní embed");
   }
 
-  const embed = `<!-- MenuGen Embed: ${menu.menu_date} -->
-<div class="menugen-embed" data-menu-id="${menu.id}" data-date="${menu.menu_date}">
-<div class="menugen-header">
-  <h2 class="menugen-title">Denné menu</h2>
-  <p class="menugen-date">${dateLabel}</p>
-</div>
-${cards}
-</div>`;
+  const result = await resp.json();
 
-  // Copy to clipboard
-  navigator.clipboard.writeText(embed).catch(() => {});
-  return embed;
+  // Copy embed snippet to clipboard
+  navigator.clipboard.writeText(result.embedSnippet).catch(() => {});
+
+  return result;
 }
 
 function downloadBlob(blob: Blob, filename: string) {

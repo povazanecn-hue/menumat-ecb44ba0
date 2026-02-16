@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Monitor, Printer, FileSpreadsheet, Globe, Loader2 } from "lucide-react";
+import { Monitor, Printer, FileSpreadsheet, Globe, Loader2, ExternalLink, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { exportTV, exportPDF, exportExcel, exportWebEmbed } from "@/lib/exportUtils";
 import { useSaveExport, type ExportFormat } from "@/hooks/useExports";
@@ -22,19 +23,26 @@ export function ExportActions({ menu }: ExportActionsProps) {
   const { data: templateSettings } = useTemplateSettings();
   const [template, setTemplate] = useState("country");
   const [loading, setLoading] = useState<string | null>(null);
+  const [embedResult, setEmbedResult] = useState<{ url: string; embedSnippet: string } | null>(null);
   const saveExport = useSaveExport();
 
-  // Sync default template from saved settings
   useEffect(() => {
     if (templateSettings?.primary_template) {
       setTemplate(templateSettings.primary_template);
     }
   }, [templateSettings]);
 
+  // Reset embed result when menu changes
+  useEffect(() => {
+    setEmbedResult(null);
+  }, [menu?.id]);
+
   const handleExport = async (format: ExportFormat) => {
     if (!menu) return;
     setLoading(format);
     try {
+      let fileUrl: string | undefined;
+
       switch (format) {
         case "tv":
           exportTV(menu, template);
@@ -45,15 +53,22 @@ export function ExportActions({ menu }: ExportActionsProps) {
         case "excel":
           exportExcel(menu);
           break;
-        case "webflow":
-          exportWebEmbed(menu);
-          toast({ title: "Embed kód skopírovaný do schránky" });
+        case "webflow": {
+          const result = await exportWebEmbed(menu);
+          setEmbedResult(result);
+          fileUrl = result.url;
+          toast({
+            title: "Web embed publikovaný",
+            description: "Embed kód skopírovaný do schránky. URL je naživo.",
+          });
           break;
+        }
       }
       await saveExport.mutateAsync({
         menuId: menu.id,
         format,
         templateName: format === "excel" ? undefined : template,
+        fileUrl,
       });
       if (format !== "webflow") {
         toast({ title: "Export úspešný", description: `Formát: ${format.toUpperCase()}` });
@@ -70,7 +85,7 @@ export function ExportActions({ menu }: ExportActionsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-serif text-lg">Export akccie</CardTitle>
+        <CardTitle className="font-serif text-lg">Export akcie</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -128,6 +143,63 @@ export function ExportActions({ menu }: ExportActionsProps) {
             <span className="text-xs">Web embed</span>
           </Button>
         </div>
+
+        {/* Embed result with live URL */}
+        {embedResult && (
+          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+            <div className="flex items-center gap-2">
+              <Globe className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Web embed publikovaný</span>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Live URL</label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={embedResult.url}
+                  className="text-xs h-8 font-mono"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 shrink-0"
+                  onClick={() => window.open(embedResult.url, "_blank")}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Embed kód (iframe)</label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={embedResult.embedSnippet}
+                  className="text-xs h-8 font-mono"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 shrink-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(embedResult.embedSnippet);
+                    toast({ title: "Embed kód skopírovaný" });
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              Rovnaký dátum = rovnaká URL. Opätovné publikovanie aktualizuje obsah bez vytvárania duplicít.
+            </p>
+          </div>
+        )}
 
         {disabled && (
           <p className="text-xs text-muted-foreground text-center">
