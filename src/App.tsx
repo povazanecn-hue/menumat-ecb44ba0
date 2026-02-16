@@ -18,6 +18,7 @@ import Ingredients from "@/pages/Ingredients";
 import Exports from "@/pages/Exports";
 import Templates from "@/pages/Templates";
 import Settings from "@/pages/Settings";
+import Landing from "@/pages/Landing";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,7 +58,7 @@ const App = () => (
                 <Route path="/templates" element={<Templates />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<Landing />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </RestaurantProvider>
