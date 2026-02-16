@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Plus, Search, Pencil, Trash2, BookOpen } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Plus, Search, Pencil, Trash2, BookOpen, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import { useRestaurant } from "@/hooks/useRestaurant";
 import { DishFormDialog, DishFormData } from "@/components/dishes/DishFormDialog";
 import { RecipeDetailDialog } from "@/components/recipes/RecipeDetailDialog";
 import { DISH_CATEGORIES, ALLERGENS } from "@/lib/constants";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Dishes() {
   const { data: dishes = [], isLoading } = useDishes();
@@ -39,6 +40,26 @@ export default function Dishes() {
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [deletingDish, setDeletingDish] = useState<Dish | null>(null);
   const [recipeTarget, setRecipeTarget] = useState<{ id: string; name: string } | null>(null);
+  const [defaultMargin, setDefaultMargin] = useState(100);
+  const [defaultVat, setDefaultVat] = useState(20);
+
+  // Load restaurant settings for default margin/VAT
+  useEffect(() => {
+    if (!restaurantId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("restaurants")
+        .select("settings")
+        .eq("id", restaurantId)
+        .single();
+      if (data?.settings) {
+        const s = data.settings as Record<string, unknown>;
+        if (typeof s.default_margin === "number") setDefaultMargin(s.default_margin);
+        if (typeof s.vat_rate === "number") setDefaultVat(s.vat_rate);
+      }
+    })();
+  }, [restaurantId]);
+
   const filtered = useMemo(() => {
     return dishes.filter((d) => {
       const matchSearch = d.name.toLowerCase().includes(search.toLowerCase());
@@ -151,85 +172,123 @@ export default function Dishes() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {filtered.map((dish) => (
-            <Card key={dish.id} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
-              <CardContent className="flex items-center gap-4 py-3 px-4">
-                {/* Category badge */}
-                <Badge variant="secondary" className="shrink-0 text-xs font-normal">
-                  {DISH_CATEGORIES[dish.category] ?? dish.category}
-                </Badge>
+          {filtered.map((dish) => {
+            const costWithVat = dish.cost * (1 + dish.vat_rate / 100);
+            const activePrice = dish.final_price ?? dish.recommended_price;
+            const marginPercent = costWithVat > 0
+              ? Math.round(((activePrice - costWithVat) / costWithVat) * 100)
+              : 0;
 
-                {/* Name + meta */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium truncate">{dish.name}</span>
-                    {dish.is_daily_menu && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">DM</Badge>
-                    )}
-                    {dish.is_permanent_offer && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">SP</Badge>
-                    )}
-                    {recipeIds.has(dish.id) && (
+            return (
+              <Card key={dish.id} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
+                <CardContent className="flex items-center gap-4 py-3 px-4">
+                  {/* Category badge */}
+                  <Badge variant="secondary" className="shrink-0 text-xs font-normal">
+                    {DISH_CATEGORIES[dish.category] ?? dish.category}
+                  </Badge>
+
+                  {/* Name + meta */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium truncate">{dish.name}</span>
+                      {dish.is_daily_menu && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">DM</Badge>
+                      )}
+                      {dish.is_permanent_offer && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">SP</Badge>
+                      )}
+                      {recipeIds.has(dish.id) && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0 border-primary/40 text-primary cursor-pointer hover:bg-primary/10"
+                          onClick={() => setRecipeTarget({ id: dish.id, name: dish.name })}
+                        >
+                          <BookOpen className="h-3 w-3 mr-0.5" />R
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground flex gap-2 mt-0.5">
+                      {dish.grammage && <span>{dish.grammage}</span>}
+                      {dish.allergens.length > 0 && (
+                        <span>Alergény: {dish.allergens.join(", ")}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3-column pricing */}
+                  <div className="hidden sm:flex items-center gap-3 shrink-0">
+                    {/* Cost */}
+                    <div className="text-right">
+                      <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Náklady</p>
+                      <p className="text-xs tabular-nums text-muted-foreground">{costWithVat.toFixed(2)} €</p>
+                    </div>
+                    {/* Recommended */}
+                    <div className="text-right">
+                      <p className="text-[9px] uppercase tracking-wider text-primary/70">Dopor.</p>
+                      <p className="text-xs tabular-nums text-primary/70">{formatPrice(dish.recommended_price)}</p>
+                    </div>
+                    {/* Final */}
+                    <div className="text-right min-w-[60px]">
+                      <p className="text-[9px] uppercase tracking-wider text-accent">Finálna</p>
+                      <p className="text-sm font-bold tabular-nums text-foreground">
+                        {formatPrice(dish.final_price ?? dish.recommended_price)}
+                      </p>
+                    </div>
+                    {/* Margin indicator */}
+                    {dish.cost > 0 && (
                       <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 border-primary/40 text-primary cursor-pointer hover:bg-primary/10"
-                        onClick={() => setRecipeTarget({ id: dish.id, name: dish.name })}
+                        variant="secondary"
+                        className={`text-[9px] px-1.5 py-0.5 shrink-0 ${
+                          marginPercent < 30
+                            ? "border-destructive/30 text-destructive"
+                            : "border-primary/20 text-primary"
+                        }`}
                       >
-                        <BookOpen className="h-3 w-3 mr-0.5" />R
+                        <TrendingUp className="h-2.5 w-2.5 mr-0.5" />
+                        {marginPercent}%
                       </Badge>
                     )}
                   </div>
-                  <div className="text-xs text-muted-foreground flex gap-2 mt-0.5">
-                    {dish.grammage && <span>{dish.grammage}</span>}
-                    {dish.allergens.length > 0 && (
-                      <span>Alergény: {dish.allergens.join(", ")}</span>
-                    )}
-                  </div>
-                </div>
 
-                {/* Price */}
-                <div className="text-right shrink-0">
-                  <div className="font-semibold text-sm">
-                    {formatPrice(dish.final_price ?? dish.recommended_price)}
-                  </div>
-                  {dish.final_price != null && dish.recommended_price > 0 && (
-                    <div className="text-[10px] text-muted-foreground line-through">
-                      {formatPrice(dish.recommended_price)}
+                  {/* Mobile: simple price */}
+                  <div className="sm:hidden text-right shrink-0">
+                    <div className="font-semibold text-sm">
+                      {formatPrice(dish.final_price ?? dish.recommended_price)}
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                {/* Actions */}
-                <div className="flex gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    title="Recept"
-                    onClick={() => setRecipeTarget({ id: dish.id, name: dish.name })}
-                  >
-                    <BookOpen className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setEditingDish(dish)}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => setDeletingDish(dish)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  {/* Actions */}
+                  <div className="flex gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="Recept"
+                      onClick={() => setRecipeTarget({ id: dish.id, name: dish.name })}
+                    >
+                      <BookOpen className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setEditingDish(dish)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => setDeletingDish(dish)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -239,6 +298,8 @@ export default function Dishes() {
         onOpenChange={setFormOpen}
         onSubmit={handleCreate}
         submitting={createDish.isPending}
+        defaultMargin={defaultMargin}
+        defaultVat={defaultVat}
       />
 
       {/* Edit Dialog */}
@@ -248,6 +309,8 @@ export default function Dishes() {
         dish={editingDish}
         onSubmit={handleUpdate}
         submitting={updateDish.isPending}
+        defaultMargin={defaultMargin}
+        defaultVat={defaultVat}
       />
 
       {/* Delete Confirmation */}
