@@ -7,6 +7,7 @@ export interface TemplatePreset {
   name: string;
   description: string;
   style: "country" | "minimal" | "modern";
+  useTexture?: boolean;
   previewColors: {
     bg: string;
     text: string;
@@ -21,11 +22,12 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
     name: "Vidiecky / Rustikálny",
     description: "Teplé farby, drevené textúry, tradičný vzhľad pre klasickú reštauráciu.",
     style: "country",
+    useTexture: true,
     previewColors: {
-      bg: "hsl(36 33% 95%)",
-      text: "hsl(24 30% 20%)",
-      accent: "hsl(24 30% 30%)",
-      card: "hsl(36 30% 99%)",
+      bg: "hsl(24 20% 18%)",
+      text: "hsl(36 50% 88%)",
+      accent: "hsl(40 55% 55%)",
+      card: "hsl(36 30% 92%)",
     },
   },
   {

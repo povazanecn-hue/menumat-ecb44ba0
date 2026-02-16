@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DISH_CATEGORIES } from "@/lib/constants";
 import { TEMPLATE_PRESETS } from "@/hooks/useTemplates";
+import woodBg from "@/assets/textures/wood-bg.jpg";
+import woodHeader from "@/assets/textures/wood-header.jpg";
 
 interface MenuPreviewProps {
   menu: any;
@@ -62,10 +64,26 @@ export function MenuPreview({ menu, templateStyle = "country", showFinancials = 
   return (
     <Card className="overflow-hidden">
       <div
-        className="rounded-lg"
-        style={{ background: previewColors.bg, color: previewColors.text }}
+        className="rounded-lg bg-cover bg-center"
+        style={{
+          background: preset.useTexture
+            ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url(${woodBg})`
+            : previewColors.bg,
+          backgroundSize: "cover",
+          color: preset.useTexture ? previewColors.text : previewColors.text,
+        }}
       >
-        <div className="p-5 pb-3 text-center border-b" style={{ borderColor: `${previewColors.accent}30` }}>
+        <div
+          className="p-5 pb-3 text-center border-b bg-cover bg-center"
+          style={{
+            borderColor: `${previewColors.accent}30`,
+            ...(preset.useTexture ? {
+              background: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.4)), url(${woodHeader})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            } : {}),
+          }}
+        >
           <h2
             className="font-serif text-xl font-bold tracking-wide uppercase"
             style={{ color: previewColors.accent }}
