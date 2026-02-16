@@ -158,6 +158,8 @@ function WeekCalendar({ weekDays, isLoading }: { weekDays?: WeekDay[]; isLoading
                   key={i}
                   fill={entry.fill}
                   opacity={entry.status === "none" ? 0.3 : 1}
+                  stroke={isToday(weekDays[i]) ? "hsl(var(--primary))" : "none"}
+                  strokeWidth={isToday(weekDays[i]) ? 2.5 : 0}
                   cursor="pointer"
                   onClick={() => navigate(`/daily-menu?date=${format(weekDays[i].dateObj, "yyyy-MM-dd")}`)}
                 />
