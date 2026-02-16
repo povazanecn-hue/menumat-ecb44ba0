@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -166,9 +167,23 @@ export default function Ingredients() {
 
       {/* List */}
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Načítavam ingrediencie...</div>
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i} className="bg-card/60 backdrop-blur-md">
+              <CardContent className="flex items-center gap-4 py-3 px-4">
+                <Skeleton className="h-7 w-7 rounded" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-5 w-20" />
+                <Skeleton className="h-8 w-8" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
-        <Card>
+        <Card className="bg-card/60 backdrop-blur-md">
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
               {ingredients.length === 0
@@ -184,7 +199,7 @@ export default function Ingredients() {
             const supplierCount = ing.supplier_prices.length;
 
             return (
-              <Card key={ing.id} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
+              <Card key={ing.id} className="bg-card/60 backdrop-blur-md border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
                 <Collapsible open={isExpanded} onOpenChange={() => setExpandedId(isExpanded ? null : ing.id)}>
                   <CardContent className="py-3 px-4">
                     <div className="flex items-center gap-4">

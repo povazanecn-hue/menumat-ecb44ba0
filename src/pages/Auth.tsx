@@ -10,7 +10,6 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { LogoBrand } from "@/components/LogoBrand";
 import { Eye, EyeOff } from "lucide-react";
-import heroFood from "@/assets/hero-food.jpg";
 import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
 
 const ROLE_OPTIONS = [
@@ -81,24 +80,12 @@ export default function Auth() {
     <div className="relative flex min-h-screen flex-col items-center bg-background">
       <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Top bar */}
-      <div className="relative z-[1] flex w-full items-center justify-center pt-6 pb-4">
+      <div className="relative z-[1] flex w-full items-center justify-center pt-8 pb-6">
         <LogoBrand size="lg" />
       </div>
 
-      {/* Hero food image */}
-      <div className="relative z-[1] w-full max-w-md px-6 mb-6">
-        <div className="relative overflow-hidden rounded-2xl border border-primary/15 shadow-[0_15px_40px_rgba(0,0,0,0.4)]">
-          <img
-            src={heroFood}
-            alt="Fine dining"
-            className="w-full aspect-[4/3] object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
-        </div>
-      </div>
-
       {/* Form */}
-      <div className="relative z-[1] w-full max-w-md px-6 pb-8 space-y-5 flex-1 bg-card/60 backdrop-blur-md rounded-t-2xl pt-6 border-t border-border/30">
+      <div className="relative z-[1] w-full max-w-md mx-6 mb-8 space-y-5 bg-card/60 backdrop-blur-md rounded-2xl p-6 border border-border/30 shadow-2xl shadow-black/30">
         {/* OAuth */}
         <div className="space-y-2">
           <Button
