@@ -530,6 +530,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_restaurant_with_owner: {
+        Args: { _address?: string; _name: string }
+        Returns: string
+      }
       get_user_restaurant_ids: { Args: { _user_id: string }; Returns: string[] }
       is_restaurant_member: {
         Args: { _restaurant_id: string; _user_id: string }
