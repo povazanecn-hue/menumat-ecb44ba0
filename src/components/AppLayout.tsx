@@ -3,16 +3,26 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { TopActionBar } from "@/components/TopActionBar";
 import { OliviaAssistant } from "@/components/OliviaAssistant";
 import { Outlet } from "react-router-dom";
-import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
+import woodBg from "@/assets/textures/wood-bg.jpg";
+import woodPlanks from "@/assets/textures/wood-planks.jpg";
 
 export function AppLayout() {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full relative">
-        {/* Subtle illustrated background at 20% opacity */}
+        {/* Wood texture background for dashboard — matching dark wood mockup style */}
         <div
-          className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20"
-          style={{ backgroundImage: `url(${kolieskoKresba})` }}
+          className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-15"
+          style={{ backgroundImage: `url(${woodBg})` }}
+        />
+        <div
+          className="fixed inset-0 z-0 pointer-events-none opacity-10"
+          style={{
+            backgroundImage: `url(${woodPlanks})`,
+            backgroundSize: '600px',
+            backgroundRepeat: 'repeat',
+            mixBlendMode: 'overlay',
+          }}
         />
         <AppSidebar />
         <div className="flex flex-1 flex-col relative z-[1]">
