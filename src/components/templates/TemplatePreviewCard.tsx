@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TemplatePreset } from "@/hooks/useTemplates";
 import { DISH_CATEGORIES } from "@/lib/constants";
+import woodBg from "@/assets/textures/wood-bg.jpg";
 
 interface TemplatePreviewCardProps {
   preset: TemplatePreset;
@@ -33,8 +34,14 @@ export function TemplatePreviewCard({
     <Card className={`overflow-hidden transition-all hover:shadow-lg hover:shadow-primary/5 ${isPrimary ? "ring-2 ring-primary" : isSecondary ? "ring-2 ring-accent" : "border-border hover:border-primary/20"}`}>
       {/* Mini preview */}
       <div
-        className="p-4 space-y-2"
-        style={{ background: previewColors.bg, color: previewColors.text }}
+        className="p-4 space-y-2 bg-cover bg-center"
+        style={{
+          background: preset.useTexture
+            ? `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.5)), url(${woodBg})`
+            : previewColors.bg,
+          backgroundSize: "cover",
+          color: preset.useTexture ? "hsl(36 50% 88%)" : previewColors.text,
+        }}
       >
         <div className="text-center mb-3">
           <div
