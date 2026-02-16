@@ -12,6 +12,7 @@ import { LogoBrand } from "@/components/LogoBrand";
 import { Eye, EyeOff } from "lucide-react";
 import heroFood from "@/assets/hero-food.jpg";
 import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
+import woodBg from "@/assets/textures/wood-bg.jpg";
 
 const ROLE_OPTIONS = [
   { value: "owner", label: "Šéf" },
@@ -79,7 +80,8 @@ export default function Auth() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center bg-background">
-      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${woodBg})` }} />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.05]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Top bar */}
       <div className="relative z-[1] flex w-full items-center justify-center pt-6 pb-4">
         <LogoBrand size="lg" />
