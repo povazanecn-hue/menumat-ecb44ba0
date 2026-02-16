@@ -1,7 +1,6 @@
 import { CalendarDays, FileOutput, Bell } from "lucide-react";
 import { LogoBrand } from "@/components/LogoBrand";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 
@@ -41,9 +40,6 @@ export function TopActionBar() {
 
         <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary h-8 w-8">
           <Bell className="h-4 w-4" />
-          <Badge className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px]">
-            0
-          </Badge>
         </Button>
       </div>
     </header>

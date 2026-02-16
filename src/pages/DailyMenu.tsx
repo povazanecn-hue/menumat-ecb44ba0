@@ -4,6 +4,8 @@ import { sk } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { Dish, useDishes } from "@/hooks/useDishes";
@@ -334,7 +336,7 @@ export default function DailyMenu() {
             Týždenný prehľad pondelok – piatok
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {hasAnyItems && (
             <Button variant="outline" onClick={handleWeeklyPrint} title="Tlač týždňa na A4">
               <Printer className="h-4 w-4 mr-1.5" />
@@ -391,7 +393,19 @@ export default function DailyMenu() {
 
       {/* Day cards */}
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Načítavam menu...</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i} className="bg-card/60 backdrop-blur-md">
+              <CardContent className="p-4 space-y-3">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-8 w-full mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {weekdays.map((date) => (
