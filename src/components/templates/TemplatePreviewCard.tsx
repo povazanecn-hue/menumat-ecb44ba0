@@ -30,7 +30,7 @@ export function TemplatePreviewCard({
   const { previewColors } = preset;
 
   return (
-    <Card className={`overflow-hidden transition-shadow hover:shadow-md ${isPrimary ? "ring-2 ring-primary" : isSecondary ? "ring-2 ring-accent" : ""}`}>
+    <Card className={`overflow-hidden transition-all hover:shadow-lg hover:shadow-primary/5 ${isPrimary ? "ring-2 ring-primary" : isSecondary ? "ring-2 ring-accent" : "border-border hover:border-primary/20"}`}>
       {/* Mini preview */}
       <div
         className="p-4 space-y-2"
