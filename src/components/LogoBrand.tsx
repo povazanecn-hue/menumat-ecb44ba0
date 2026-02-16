@@ -50,8 +50,8 @@ export function LogoBrand({ size = "lg", showSubtitle = false, className }: Logo
       <div className={cn("flex items-center", s.gap)}>
         {/* Left decorative line */}
         <div className="flex items-center gap-1">
-          <span className={cn("block h-px bg-gradient-to-r from-transparent to-primary/60", s.line)} />
-          <span className="block h-1 w-1 rounded-full bg-primary/50" />
+          <span className={cn("block h-px bg-gradient-to-r from-transparent via-amber-400/70 to-yellow-600/80", s.line)} />
+          <span className="block h-1 w-1 rounded-full bg-amber-400/60" />
         </div>
 
         {/* Icon */}
@@ -75,8 +75,8 @@ export function LogoBrand({ size = "lg", showSubtitle = false, className }: Logo
 
         {/* Right decorative line */}
         <div className="flex items-center gap-1">
-          <span className="block h-1 w-1 rounded-full bg-primary/50" />
-          <span className={cn("block h-px bg-gradient-to-l from-transparent to-primary/60", s.line)} />
+          <span className="block h-1 w-1 rounded-full bg-amber-400/60" />
+          <span className={cn("block h-px bg-gradient-to-l from-transparent via-amber-400/70 to-yellow-600/80", s.line)} />
         </div>
       </div>
 
