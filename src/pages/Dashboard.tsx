@@ -383,29 +383,30 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-2xl font-bold text-foreground">
-          {restaurantName ? `${restaurantName} — Dashboard` : "Dashboard"}
+          Dashboard
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">Prehľad vašej reštaurácie</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          {restaurantName ? `${restaurantName} — ` : ""}Prehľad vašej reštaurácie
+        </p>
       </div>
 
-      {/* Primary Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Primary Stats — mockup-inspired cards with gold icon circles */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {stats.map((s) =>
           isLoading ? (
-            <Card key={s.label}><CardContent className="p-6"><Skeleton className="h-16 w-full" /></CardContent></Card>
+            <Card key={s.label}><CardContent className="p-5"><Skeleton className="h-16 w-full" /></CardContent></Card>
           ) : (
-            <Card key={s.label} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-                <s.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
+            <Card key={s.label} className="border-primary/10 bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
+              <CardContent className="flex flex-col items-center text-center gap-2 p-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                  <s.icon className="h-5 w-5" />
+                </div>
                 {s.badge ? (
-                  <Badge variant={s.badge} className="text-sm">{s.value}</Badge>
+                  <Badge variant={s.badge} className="text-sm mt-1">{s.value}</Badge>
                 ) : (
                   <div className="text-2xl font-bold font-serif">{s.value}</div>
                 )}
-                <p className="text-xs text-muted-foreground mt-1">{s.desc}</p>
+                <p className="text-xs text-muted-foreground leading-tight">{s.label}</p>
               </CardContent>
             </Card>
           )
@@ -487,7 +488,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
+        {/* Quick Actions — mockup grid style */}
         <Card>
           <CardHeader>
             <CardTitle className="font-serif text-lg">Rýchle akcie</CardTitle>
@@ -498,11 +499,13 @@ export default function Dashboard() {
                 <Button
                   key={a.label}
                   variant="outline"
-                  className="flex flex-col items-center gap-1.5 h-auto py-4"
+                  className="flex flex-col items-center gap-2 h-auto py-5 border-primary/15 hover:border-primary/40 hover:bg-primary/5"
                   onClick={() => navigate(a.path)}
                 >
-                  <a.icon className="h-5 w-5" />
-                  <span className="text-xs">{a.label}</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <a.icon className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-medium">{a.label}</span>
                 </Button>
               ))}
             </div>
