@@ -4,10 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, AlertTriangle, Plus } from "lucide-react";
+import { Search, AlertTriangle, Plus, ShieldAlert } from "lucide-react";
 import { useDishes, Dish } from "@/hooks/useDishes";
 import { DISH_CATEGORIES } from "@/lib/constants";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DishPickerDialogProps {
   open: boolean;
@@ -31,6 +41,7 @@ export function DishPickerDialog({
   const { data: dishes = [] } = useDishes();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [confirmDish, setConfirmDish] = useState<Dish | null>(null);
 
   const filtered = useMemo(() => {
     return dishes
@@ -41,6 +52,15 @@ export function DishPickerDialog({
   }, [dishes, search, categoryFilter, alreadyAdded]);
 
   const isRecentlyUsed = (dishId: string) => !!recentUsage[dishId];
+
+  const handleDishClick = (dish: Dish) => {
+    if (isRecentlyUsed(dish.id)) {
+      setConfirmDish(dish);
+    } else {
+      onSelect(dish);
+      onOpenChange(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,11 +105,12 @@ export function DishPickerDialog({
               return (
                 <div
                   key={dish.id}
-                  className="flex items-center gap-3 px-3 py-2 rounded-md border border-border hover:bg-secondary/50 transition-colors cursor-pointer group"
-                  onClick={() => {
-                    onSelect(dish);
-                    onOpenChange(false);
-                  }}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md border transition-colors cursor-pointer group ${
+                    recentDate
+                      ? "border-destructive/40 bg-destructive/5 hover:bg-destructive/10"
+                      : "border-border hover:bg-secondary/50"
+                  }`}
+                  onClick={() => handleDishClick(dish)}
                 >
                   <Badge variant="secondary" className="text-[10px] shrink-0">
                     {DISH_CATEGORIES[dish.category] ?? dish.category}
@@ -119,6 +140,38 @@ export function DishPickerDialog({
             })
           )}
         </div>
+
+        {/* Confirmation dialog for recently used dishes */}
+        <AlertDialog open={!!confirmDish} onOpenChange={(open) => !open && setConfirmDish(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <ShieldAlert className="h-5 w-5 text-destructive" />
+                Jedlo bolo nedávno použité
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                <strong>{confirmDish?.name}</strong> bolo naposledy v menu dňa{" "}
+                <strong>{confirmDish ? recentUsage[confirmDish.id] : ""}</strong> (menej ako{" "}
+                {nonRepeatDays} dní). Naozaj ho chcete pridať?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Zrušiť</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => {
+                  if (confirmDish) {
+                    onSelect(confirmDish);
+                    setConfirmDish(null);
+                    onOpenChange(false);
+                  }
+                }}
+              >
+                Pridať aj tak
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

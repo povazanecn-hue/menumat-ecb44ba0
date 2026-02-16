@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp } from "lucide-react
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useRestaurant } from "@/hooks/useRestaurant";
 import { Dish, useDishes } from "@/hooks/useDishes";
 import {
   useWeekMenus,
@@ -25,6 +26,8 @@ import { ImportMenuDialog } from "@/components/daily-menu/ImportMenuDialog";
 
 export default function DailyMenu() {
   const { toast } = useToast();
+  const { settings } = useRestaurant();
+  const nonRepeatDays = settings.non_repeat_days;
   const [searchParams] = useSearchParams();
   const [weekStart, setWeekStart] = useState(() => {
     const dateParam = searchParams.get("date");
@@ -41,7 +44,7 @@ export default function DailyMenu() {
 
   const weekdays = getWeekdays(weekStart);
   const { data: menus = [], isLoading } = useWeekMenus(weekStart);
-  const { data: recentUsage = {} } = useRecentDishUsage(14);
+  const { data: recentUsage = {} } = useRecentDishUsage(nonRepeatDays);
   const { data: allDishes = [] } = useDishes();
 
   const upsertMenu = useUpsertMenu();
@@ -236,7 +239,7 @@ export default function DailyMenu() {
         onSelect={handleAddDish}
         recentUsage={recentUsage}
         alreadyAdded={pickerAlreadyAdded}
-        nonRepeatDays={14}
+        nonRepeatDays={nonRepeatDays}
       />
 
       {/* AI generator */}
@@ -245,7 +248,7 @@ export default function DailyMenu() {
         onOpenChange={(open) => !open && setAiDate(null)}
         dishes={allDishes}
         recentUsage={recentUsage}
-        nonRepeatDays={14}
+        nonRepeatDays={nonRepeatDays}
         onApply={handleAiApply}
         isApplying={aiApplying}
       />
