@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { sk } from "date-fns/locale";
-import { Plus, Trash2, Check, GripVertical } from "lucide-react";
+import { Plus, Trash2, Check, GripVertical, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ interface DayMenuCardProps {
   onAddDish: () => void;
   onRemoveItem: (itemId: string) => void;
   onPublish: (menuId: string) => void;
+  onAiGenerate?: () => void;
   isToday: boolean;
 }
 
@@ -23,6 +24,7 @@ export function DayMenuCard({
   onAddDish,
   onRemoveItem,
   onPublish,
+  onAiGenerate,
   isToday,
 }: DayMenuCardProps) {
   const dayName = format(date, "EEEE", { locale: sk });
@@ -123,8 +125,18 @@ export function DayMenuCard({
             onClick={onAddDish}
           >
             <Plus className="h-3.5 w-3.5 mr-1" />
-            Pridať jedlo
+            Pridať
           </Button>
+          {onAiGenerate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onAiGenerate}
+            >
+              <Wand2 className="h-3.5 w-3.5 mr-1" />
+              AI
+            </Button>
+          )}
           {menu && items.length > 0 && isDraft && (
             <Button
               size="sm"
