@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { useAuth } from "@/hooks/useAuth";
 
-export type AppRole = "owner" | "manager" | "staff";
+export type AppRole = "owner" | "manager" | "head_chef" | "staff";
 
 export function useUserRole() {
   const { user } = useAuth();
@@ -29,6 +29,17 @@ export function useUserRole() {
 /** Returns true if user can see financial data (cost, margin, recommended price) */
 export function useCanViewFinancials() {
   const { data: role } = useUserRole();
-  // staff (Chef) cannot see financial columns
-  return role !== "staff";
+  return role === "owner" || role === "manager";
+}
+
+/** Returns true if user can assign proposals and export */
+export function useCanManageMenu() {
+  const { data: role } = useUserRole();
+  return role === "owner" || role === "manager";
+}
+
+/** Returns true if user is owner */
+export function useIsOwner() {
+  const { data: role } = useUserRole();
+  return role === "owner";
 }

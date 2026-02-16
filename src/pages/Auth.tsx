@@ -4,10 +4,18 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ChefHat, Eye, EyeOff } from "lucide-react";
+
+const ROLE_OPTIONS = [
+  { value: "owner", label: "Šéf" },
+  { value: "manager", label: "Prevádzkar" },
+  { value: "head_chef", label: "Hl. Kuchár" },
+  { value: "staff", label: "Kuchár" },
+] as const;
 
 export default function Auth() {
   const { session, loading } = useAuth();
@@ -15,6 +23,7 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [selectedRole, setSelectedRole] = useState("owner");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
@@ -44,7 +53,7 @@ export default function Auth() {
           email,
           password,
           options: {
-            data: { full_name: fullName },
+            data: { full_name: fullName, app_role: selectedRole },
             emailRedirectTo: window.location.origin,
           },
         });
@@ -131,17 +140,32 @@ export default function Auth() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div className="space-y-1.5">
-                <Label htmlFor="fullName" className="text-foreground">Meno</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Ján Novák"
-                  required={!isLogin}
-                  className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                />
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="fullName" className="text-foreground">Meno</Label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Ján Novák"
+                    required={!isLogin}
+                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-foreground">Vaša pozícia</Label>
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger className="bg-secondary border-border text-foreground">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLE_OPTIONS.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-foreground">E-mail</Label>
