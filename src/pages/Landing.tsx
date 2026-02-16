@@ -2,6 +2,7 @@ import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { LogoBrand } from "@/components/LogoBrand";
 import {
   ChefHat,
   UtensilsCrossed,
@@ -97,13 +98,12 @@ export default function Landing() {
       <header className="relative flex min-h-screen flex-col items-center justify-between px-0">
         {/* Top bar with logo */}
         <motion.div
-          className="relative z-10 flex w-full items-center justify-center gap-2 pt-8 pb-4"
+          className="relative z-10 flex w-full items-center justify-center pt-8 pb-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <ChefHat className="h-8 w-8 text-primary icon-glow" />
-          <span className="font-serif text-2xl font-bold tracking-wider text-primary logo-glow">MENU MASTER</span>
+          <LogoBrand size="xl" />
         </motion.div>
 
         {/* Hero food image */}
