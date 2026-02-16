@@ -120,3 +120,41 @@ export function useRemovePermanentItem() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["permanent-menu"] }),
   });
 }
+
+export function useReorderCategories() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (items: { id: string; sort_order: number }[]) => {
+      const promises = items.map((item) =>
+        supabase
+          .from("permanent_menu_categories")
+          .update({ sort_order: item.sort_order })
+          .eq("id", item.id)
+      );
+      const results = await Promise.all(promises);
+      const err = results.find((r) => r.error);
+      if (err?.error) throw err.error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["permanent-menu"] }),
+  });
+}
+
+export function useReorderItems() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (items: { id: string; sort_order: number }[]) => {
+      const promises = items.map((item) =>
+        supabase
+          .from("permanent_menu_items")
+          .update({ sort_order: item.sort_order })
+          .eq("id", item.id)
+      );
+      const results = await Promise.all(promises);
+      const err = results.find((r) => r.error);
+      if (err?.error) throw err.error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["permanent-menu"] }),
+  });
+}
