@@ -11,6 +11,7 @@ import Auth from "@/pages/Auth";
 import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/Dashboard";
 import Dishes from "@/pages/Dishes";
+import DailyMenu from "@/pages/DailyMenu";
 import Placeholder from "@/pages/Placeholder";
 import NotFound from "@/pages/NotFound";
 
@@ -42,7 +43,7 @@ const App = () => (
                 }
               >
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/daily-menu" element={<Placeholder />} />
+                <Route path="/daily-menu" element={<DailyMenu />} />
                 <Route path="/dishes" element={<Dishes />} />
                 <Route path="/ingredients" element={<Placeholder />} />
                 <Route path="/recipes" element={<Placeholder />} />
