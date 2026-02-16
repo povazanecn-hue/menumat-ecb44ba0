@@ -24,46 +24,13 @@ export default function Onboarding() {
     setSubmitting(true);
 
     try {
-      // Create restaurant — use RPC or raw insert without .select() 
-      // since SELECT policy requires membership which doesn't exist yet
-      const { data: restaurants, error: restError } = await supabase
-        .from("restaurants")
-        .insert({ name, address })
-        .select("id");
+      const { error } = await supabase.rpc("create_restaurant_with_owner", {
+        _name: name,
+        _address: address || null,
+      });
+      if (error) throw error;
 
-      // If .select() fails due to RLS, try fetching the restaurant by name as fallback
-      let restaurantId: string;
-
-      if (restError) {
-        // The insert may have succeeded but SELECT failed due to RLS
-        // Try to find it via a different approach - insert membership first won't work either
-        // Let's use a workaround: insert without select, then query
-        const { data: inserted, error: insertErr } = await supabase
-          .from("restaurants")
-          .insert({ name, address });
-        
-        if (insertErr) throw insertErr;
-
-        // We can't query it yet either since we're not a member
-        // Use the service role approach - let's rethink this flow
-        throw new Error("Nepodarilo sa vytvoriť reštauráciu. Skúste to znova.");
-      }
-
-      restaurantId = restaurants[0].id;
-
-      // Add user as owner
-      const { error: memberError } = await supabase
-        .from("restaurant_members")
-        .insert({
-          restaurant_id: restaurantId,
-          user_id: user.id,
-          role: "owner",
-        });
-      if (memberError) throw memberError;
-
-      // Refetch restaurant context
       await refetch();
-
       toast({ title: "Reštaurácia vytvorená!", description: `${name} je pripravená.` });
       navigate("/dashboard");
     } catch (error: any) {
