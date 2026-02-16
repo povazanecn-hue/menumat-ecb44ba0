@@ -10,6 +10,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ChefHat, Eye, EyeOff } from "lucide-react";
 import heroFood from "@/assets/hero-food.jpg";
+import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
 
 const ROLE_OPTIONS = [
   { value: "owner", label: "Šéf" },
@@ -76,7 +77,8 @@ export default function Auth() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-background">
+    <div className="relative flex min-h-screen flex-col items-center bg-background">
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Top bar */}
       <div className="flex w-full items-center justify-center gap-2 pt-6 pb-4">
         <ChefHat className="h-6 w-6 text-primary drop-shadow-[0_0_8px_hsl(40_55%_55%/0.5)]" />

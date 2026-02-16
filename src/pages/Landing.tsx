@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import heroFood from "@/assets/hero-food.jpg";
+import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
 
 const features = [
   {
@@ -90,7 +91,8 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-hidden">
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Hero — Mobile-first full-screen layout inspired by mockup */}
       <header className="relative flex min-h-screen flex-col items-center justify-between px-0">
         {/* Top bar with logo */}
