@@ -228,6 +228,10 @@ export default function Auth() {
             {isLogin ? "Nemáte účet? Zaregistrujte sa" : "Máte účet? Prihláste sa"}
           </button>
         </div>
+
+        <p className="text-center text-[11px] text-muted-foreground/70 pt-4">
+          Powered by <span className="font-semibold text-primary">N-[vision]</span> | <span className="font-semibold text-primary">N-oLiMiT gastro</span> | Pre gastro s budúcnosťou!
+        </p>
       </div>
     </div>
   );

@@ -296,8 +296,13 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 px-4 py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Menu Master. Všetky práva vyhradené.
+      <footer className="border-t border-border/50 px-4 py-3 text-center">
+        <p className="text-xs text-muted-foreground mb-1">
+          © {new Date().getFullYear()} Menu Master. Všetky práva vyhradené.
+        </p>
+        <p className="text-[11px] text-muted-foreground/70">
+          Powered by <span className="font-semibold text-primary">N-[vision]</span> | <span className="font-semibold text-primary">N-oLiMiT gastro</span> | Pre gastro s budúcnosťou!
+        </p>
       </footer>
     </div>
   );
