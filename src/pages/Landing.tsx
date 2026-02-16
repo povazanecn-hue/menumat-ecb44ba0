@@ -17,6 +17,7 @@ import {
   LogIn,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import heroFood from "@/assets/hero-food.jpg";
 
 const features = [
   {
@@ -52,26 +53,10 @@ const features = [
 ];
 
 const steps = [
-  {
-    num: "01",
-    title: "Importuj & plň databázu",
-    desc: "Nahrajte jedlá, suroviny a recepty — ručne alebo importom.",
-  },
-  {
-    num: "02",
-    title: "Generujte menu",
-    desc: "AI alebo manuálne zostavte denné menu s pravidlami a kategóriami.",
-  },
-  {
-    num: "03",
-    title: "Exportujte & publikujte",
-    desc: "TV obrazovky, PDF, Excel pre kuchyňu, web embed — všetky formáty.",
-  },
-  {
-    num: "04",
-    title: "AI Recept book & Sklad",
-    desc: "Recepty, nákupné zoznamy a cenová inteligencia — automaticky.",
-  },
+  { num: "01", title: "Importuj & plň databázu", desc: "Nahrajte jedlá, suroviny a recepty — ručne alebo importom." },
+  { num: "02", title: "Generujte menu", desc: "AI alebo manuálne zostavte denné menu s pravidlami a kategóriami." },
+  { num: "03", title: "Exportujte & publikujte", desc: "TV obrazovky, PDF, Excel pre kuchyňu, web embed — všetky formáty." },
+  { num: "04", title: "AI Recept book & Sklad", desc: "Recepty, nákupné zoznamy a cenová inteligencia — automaticky." },
 ];
 
 const containerStagger = {
@@ -106,85 +91,79 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      {/* Hero */}
-      <header className="relative flex min-h-screen flex-col items-center justify-center px-4 text-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-primary/3 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(40_55%_55%/0.06)_0%,transparent_70%)]" />
-
+      {/* Hero — Mobile-first full-screen layout inspired by mockup */}
+      <header className="relative flex min-h-screen flex-col items-center justify-between px-0">
+        {/* Top bar with logo */}
         <motion.div
-          className="relative z-10 flex max-w-4xl flex-col items-center space-y-8"
+          className="relative z-10 flex w-full items-center justify-center gap-2 pt-8 pb-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <ChefHat className="h-7 w-7 text-primary drop-shadow-[0_0_8px_hsl(40_55%_55%/0.6)]" />
+          <span className="font-serif text-xl font-bold tracking-wider text-primary">MENU MASTER</span>
+        </motion.div>
+
+        {/* Hero food image */}
+        <motion.div
+          className="relative z-10 w-full max-w-lg px-6"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+        >
+          <div className="relative mx-auto overflow-hidden rounded-3xl border border-primary/20 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+            <img
+              src={heroFood}
+              alt="Fine dining"
+              className="w-full aspect-square object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+          </div>
+        </motion.div>
+
+        {/* Title and CTAs */}
+        <motion.div
+          className="relative z-10 flex flex-col items-center space-y-6 px-6 pb-12 pt-6 text-center"
           initial="hidden"
           animate="visible"
           variants={containerStagger}
         >
-          {/* Glowing logo */}
-          <motion.div variants={scaleIn} className="relative">
-            <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-2xl" />
-            <div className="relative mx-auto flex h-28 w-28 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 shadow-[0_0_40px_hsl(40_55%_55%/0.3),inset_0_0_20px_hsl(40_55%_55%/0.1)]">
-              <ChefHat className="h-14 w-14 text-primary drop-shadow-[0_0_8px_hsl(40_55%_55%/0.6)]" />
-            </div>
-          </motion.div>
-
-          {/* Title */}
           <motion.h1
             variants={fadeUp}
-            className="font-serif text-6xl font-bold tracking-tight sm:text-8xl lg:text-9xl"
+            className="font-serif text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl"
           >
-            <span className="bg-gold-gradient bg-clip-text text-transparent drop-shadow-[0_0_20px_hsl(40_55%_55%/0.4)]">
-              MENU
-            </span>
+            <span className="text-foreground">Vytvorte</span>
+            <br />
+            <span className="bg-gold-gradient bg-clip-text text-transparent">dokonalé menu</span>
           </motion.h1>
 
-          {/* Description */}
           <motion.p
             variants={fadeUp}
-            className="mx-auto max-w-2xl text-xl leading-relaxed text-muted-foreground sm:text-2xl"
+            className="mx-auto max-w-md text-base leading-relaxed text-muted-foreground"
           >
-            Kompletný AI nástroj pre reštaurácie — od databázy jedál cez generovanie denného menu
-            až po exporty na TV, web a tlač.{" "}
+            Kompletný AI nástroj pre reštaurácie — od databázy jedál cez generovanie menu
+            až po exporty.{" "}
             <span className="font-semibold text-primary">Za minúty, nie hodiny.</span>
           </motion.p>
 
-          {/* Feature icon strip */}
-          <motion.div
-            variants={containerStagger}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-wrap items-center justify-center gap-5 py-4"
-          >
-            {features.map((f, i) => (
-              <motion.div
-                key={f.title}
-                variants={scaleIn}
-                whileHover={{ scale: 1.2, rotate: 5 }}
-                className="group relative flex h-14 w-14 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 text-primary transition-all duration-300 hover:border-primary/50 hover:bg-primary/15 hover:shadow-[0_0_20px_hsl(40_55%_55%/0.25)]"
-              >
-                <f.icon className="h-7 w-7 transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(40_55%_55%/0.6)]" />
-                <span className="pointer-events-none absolute -bottom-7 whitespace-nowrap text-[10px] font-medium text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                  {f.title}
-                </span>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* CTA Buttons */}
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-wrap items-center justify-center gap-4 pt-4"
-          >
-            <Button size="lg" className="h-14 px-10 text-lg shadow-[0_0_20px_hsl(40_55%_55%/0.3)]" asChild>
+          {/* Gold gradient CTA buttons — matching mockup style */}
+          <motion.div variants={fadeUp} className="flex w-full max-w-sm flex-col gap-3">
+            <Button
+              size="lg"
+              className="h-14 w-full text-lg font-semibold bg-gold-gradient border-0 text-primary-foreground shadow-[0_4px_20px_hsl(40_55%_55%/0.35)] hover:shadow-[0_6px_30px_hsl(40_55%_55%/0.5)]"
+              asChild
+            >
               <Link to="/auth">
                 <Sparkles className="mr-2 h-5 w-5" />
                 Vyskúšať zadarmo
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="h-14 border-primary/30 px-10 text-lg hover:border-primary/60 hover:shadow-[0_0_15px_hsl(40_55%_55%/0.15)]" asChild>
-              <Link to="/auth">
-                <UserPlus className="mr-2 h-5 w-5" />
-                Zaregistruj sa
-              </Link>
-            </Button>
-            <Button size="lg" variant="ghost" className="h-14 px-10 text-lg text-muted-foreground hover:text-foreground" asChild>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-14 w-full border-primary/40 text-lg text-foreground hover:border-primary/70 hover:bg-primary/5"
+              asChild
+            >
               <Link to="/auth">
                 <LogIn className="mr-2 h-5 w-5" />
                 Prihlásiť sa
@@ -194,8 +173,33 @@ export default function Landing() {
         </motion.div>
       </header>
 
-      {/* Features */}
-      <section className="mx-auto max-w-6xl px-4 py-24">
+      {/* Feature icon strip */}
+      <section className="py-12 px-4">
+        <motion.div
+          className="flex flex-wrap items-center justify-center gap-5"
+          variants={containerStagger}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+        >
+          {features.map((f) => (
+            <motion.div
+              key={f.title}
+              variants={scaleIn}
+              whileHover={{ scale: 1.15, rotate: 3 }}
+              className="group relative flex h-14 w-14 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 text-primary transition-all duration-300 hover:border-primary/50 hover:bg-primary/15 hover:shadow-[0_0_20px_hsl(40_55%_55%/0.25)]"
+            >
+              <f.icon className="h-7 w-7 transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(40_55%_55%/0.6)]" />
+              <span className="pointer-events-none absolute -bottom-7 whitespace-nowrap text-[10px] font-medium text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                {f.title}
+              </span>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* Features grid */}
+      <section className="mx-auto max-w-6xl px-4 py-20">
         <motion.h2
           className="mb-14 text-center font-serif text-3xl font-bold sm:text-5xl"
           initial={{ opacity: 0, y: 20 }}
@@ -276,7 +280,11 @@ export default function Landing() {
             Pripojte sa k reštauráciám, ktoré už používajú Menu na efektívnu tvorbu
             a publikovanie denného menu.
           </p>
-          <Button size="lg" className="h-14 px-10 text-lg shadow-[0_0_20px_hsl(40_55%_55%/0.3)]" asChild>
+          <Button
+            size="lg"
+            className="h-14 px-10 text-lg bg-gold-gradient border-0 text-primary-foreground shadow-[0_4px_20px_hsl(40_55%_55%/0.35)]"
+            asChild
+          >
             <Link to="/auth">
               Vyskúšať zadarmo
               <ArrowRight className="ml-2 h-5 w-5" />
