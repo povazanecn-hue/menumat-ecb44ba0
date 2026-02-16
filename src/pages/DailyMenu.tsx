@@ -169,6 +169,14 @@ export default function DailyMenu() {
     }
   };
 
+  const handleUpdateSideDish = async (itemId: string, sideDish: string) => {
+    try {
+      await updateMenuItem.mutateAsync({ id: itemId, side_dish: sideDish || null });
+    } catch (e: any) {
+      toast({ title: "Chyba", description: e.message, variant: "destructive" });
+    }
+  };
+
   const handlePublish = async (menuId: string) => {
     try {
       await updateStatus.mutateAsync({ id: menuId, status: "published" });
@@ -383,6 +391,7 @@ export default function DailyMenu() {
               }
               onRegenerateSideDish={handleRegenerateSideDish}
               onRegenerateDay={() => handleRegenerateDay(date)}
+              onUpdateSideDish={handleUpdateSideDish}
             />
           ))}
         </div>
