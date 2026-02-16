@@ -1,4 +1,5 @@
 import { useState } from "react";
+import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,7 +45,8 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
+      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-20" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
       {/* Logo */}
       <div className="mb-8 flex items-center gap-3">
         <ChefHat className="h-8 w-8 text-primary" />
