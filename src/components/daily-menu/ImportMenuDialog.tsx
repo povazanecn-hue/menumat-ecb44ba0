@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar, Camera, Wand2 } from "lucide-react";
 import { Dish } from "@/hooks/useDishes";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCloudinary } from "@/hooks/useCloudinary";
 import * as XLSX from "xlsx";
 import { parseKolieskoExcel, parseKolieskoCSV, type KolieskoDay, type KolieskoMenuItem } from "@/lib/kolieskoImport";
 
@@ -103,13 +106,16 @@ const OCR_ACCEPT = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp";
 
 export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyWeekly, isApplying }: ImportMenuDialogProps) {
   const { toast } = useToast();
+  const cloudinary = useCloudinary();
   // Simple mode (flat list)
   const [rows, setRows] = useState<ParsedRow[]>([]);
   // Koliesko mode (structured weekly)
   const [weeklyData, setWeeklyData] = useState<ImportDayResult[] | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [ocrProgressMessage, setOcrProgressMessage] = useState<string>("AI spracováva dokument...");
   const [importMode, setImportMode] = useState<"koliesko" | "excel" | "ocr">("koliesko");
+  const [useEnhance, setUseEnhance] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = () => {
@@ -117,6 +123,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
     setWeeklyData(null);
     setFileName(null);
     setIsOcrProcessing(false);
+    setOcrProgressMessage("AI spracováva dokument...");
   };
 
   const matchNames = (names: string[]) => {
@@ -245,13 +252,40 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
         }
         const base64 = btoa(binary);
 
+        const isImage = /^image\/(jpeg|jpg|png|webp)/.test(file.type);
+        let enhancedUrl: string | null = null;
+
+        // Step 1: Cloudinary enhance for images
+        if (useEnhance && isImage) {
+          setOcrProgressMessage("Vylepšujem kvalitu fotky (Cloudinary)...");
+          try {
+            const dataUrl = `data:${file.type};base64,${base64}`;
+            const result = await cloudinary.enhance(dataUrl);
+            if (result?.url) {
+              enhancedUrl = result.url;
+            }
+          } catch (enhanceErr) {
+            console.warn("Cloudinary enhance failed, falling back to direct OCR:", enhanceErr);
+          }
+        }
+
+        // Step 2: AI OCR
+        setOcrProgressMessage("AI rozpoznáva jedlá...");
+
+        const ocrBody: Record<string, any> = {
+          mimeType: file.type || "application/octet-stream",
+          fileName: file.name,
+          mode: "structured",
+        };
+
+        if (enhancedUrl) {
+          ocrBody.imageUrl = enhancedUrl;
+        } else {
+          ocrBody.fileBase64 = base64;
+        }
+
         const { data, error } = await supabase.functions.invoke("ocr-menu-import", {
-          body: {
-            fileBase64: base64,
-            mimeType: file.type || "application/octet-stream",
-            fileName: file.name,
-            mode: "structured", // Request structured weekly output
-          },
+          body: ocrBody,
         });
 
         if (error) throw error;
@@ -457,7 +491,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                 </div>
               </TabsContent>
 
-              <TabsContent value="ocr" className="mt-3">
+              <TabsContent value="ocr" className="mt-3 space-y-3">
                 <div
                   className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
                   onDragOver={(e) => e.preventDefault()}
@@ -465,11 +499,11 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <div className="flex items-center justify-center gap-3 mb-3">
+                    <Camera className="h-8 w-8 text-muted-foreground" />
                     <FileText className="h-8 w-8 text-muted-foreground" />
-                    <Image className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <p className="text-sm font-medium text-foreground">PDF, Word alebo obrázok</p>
-                  <p className="text-xs text-muted-foreground mt-1">AI rozpozná názvy jedál (.pdf, .docx, .jpg, .png)</p>
+                  <p className="text-sm font-medium text-foreground">PDF, Word alebo fotka papierového menu</p>
+                  <p className="text-xs text-muted-foreground mt-1">AI rozpozná názvy jedál, kategórie, ceny a alergény</p>
                   <Badge variant="secondary" className="mt-2 gap-1">
                     <Sparkles className="h-3 w-3" />
                     AI OCR
@@ -482,14 +516,32 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                     onChange={handleInputChange}
                   />
                 </div>
+                <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <Wand2 className="h-4 w-4 text-primary" />
+                    <Label htmlFor="enhance-toggle" className="text-xs cursor-pointer">
+                      Vylepšiť kvalitu fotky (Cloudinary)
+                    </Label>
+                  </div>
+                  <Switch
+                    id="enhance-toggle"
+                    checked={useEnhance}
+                    onCheckedChange={setUseEnhance}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {useEnhance
+                    ? "Obrázky sa automaticky vylepšia (ostrenie, kontrast) pre lepšie rozpoznávanie."
+                    : "Priamy upload do AI bez predspracovania."}
+                </p>
               </TabsContent>
             </Tabs>
           </div>
         ) : isOcrProcessing ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm font-medium text-foreground">AI spracováva dokument...</p>
-            <p className="text-xs text-muted-foreground">{fileName}</p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm font-medium text-foreground">{ocrProgressMessage}</p>
+          <p className="text-xs text-muted-foreground">{fileName}</p>
           </div>
         ) : weeklyData ? (
           /* ─── Koliesko weekly results ─── */
