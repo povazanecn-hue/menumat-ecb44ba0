@@ -18,7 +18,6 @@ import {
   LogIn,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import heroFood from "@/assets/hero-food.jpg";
 import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
 
 const features = [
@@ -94,11 +93,11 @@ export default function Landing() {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.65]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
-      {/* Hero — Mobile-first full-screen layout inspired by mockup */}
-      <header className="relative flex min-h-screen flex-col items-center justify-between px-0">
+      {/* Hero — clean layout without food image */}
+      <header className="relative flex min-h-screen flex-col items-center justify-center px-4">
         {/* Top bar with logo */}
         <motion.div
-          className="relative z-10 flex w-full items-center justify-center pt-8 pb-4"
+          className="absolute top-0 left-0 right-0 z-10 flex w-full items-center justify-center pt-8 pb-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -106,26 +105,9 @@ export default function Landing() {
           <LogoBrand size="xl" />
         </motion.div>
 
-        {/* Hero food image */}
-        <motion.div
-          className="relative z-10 w-full max-w-lg px-6"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-        >
-          <div className="relative mx-auto overflow-hidden rounded-3xl border border-primary/20 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-            <img
-              src={heroFood}
-              alt="Fine dining"
-              className="w-full aspect-square object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-          </div>
-        </motion.div>
-
         {/* Title and CTAs */}
         <motion.div
-          className="relative z-10 flex flex-col items-center space-y-6 px-6 pb-12 pt-6 text-center"
+          className="relative z-10 flex flex-col items-center space-y-6 px-6 text-center mt-16"
           initial="hidden"
           animate="visible"
           variants={containerStagger}
