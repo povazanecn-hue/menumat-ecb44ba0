@@ -177,6 +177,18 @@ export default function DailyMenu() {
     }
   };
 
+  const handleReorderItems = async (reorderedIds: { id: string; sort_order: number }[]) => {
+    try {
+      await Promise.all(
+        reorderedIds.map(({ id, sort_order }) =>
+          updateMenuItem.mutateAsync({ id, sort_order })
+        )
+      );
+    } catch (e: any) {
+      toast({ title: "Chyba pri radení", description: e.message, variant: "destructive" });
+    }
+  };
+
   const handlePublish = async (menuId: string) => {
     try {
       await updateStatus.mutateAsync({ id: menuId, status: "published" });
@@ -392,6 +404,7 @@ export default function DailyMenu() {
               onRegenerateSideDish={handleRegenerateSideDish}
               onRegenerateDay={() => handleRegenerateDay(date)}
               onUpdateSideDish={handleUpdateSideDish}
+              onReorderItems={handleReorderItems}
             />
           ))}
         </div>
