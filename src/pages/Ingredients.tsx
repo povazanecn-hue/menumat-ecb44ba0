@@ -115,7 +115,7 @@ export default function Ingredients() {
     }
   };
 
-  const handleWebPriceAdd = async (supplier: string, price: number) => {
+  const handleWebPriceAdd = async (supplier: string, price: number, confidence: string) => {
     if (!webSearchTarget) return;
     try {
       await createSupplierPrice.mutateAsync({
@@ -123,7 +123,7 @@ export default function Ingredients() {
         supplier_name: supplier,
         price,
         is_promo: false,
-        confidence: "web_scraped",
+        confidence,
       });
     } catch (e: any) {
       toast({ title: "Chyba", description: e.message, variant: "destructive" });

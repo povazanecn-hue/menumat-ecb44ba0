@@ -15,7 +15,7 @@ interface WebPriceSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   ingredientName: string;
-  onAddPrice: (supplier: string, price: number) => void;
+  onAddPrice: (supplier: string, price: number, confidence: string) => void;
 }
 
 interface SearchResult {
@@ -135,7 +135,8 @@ export function WebPriceSearchDialog({
       return;
     }
     const supplier = extractSupplierName(url);
-    onAddPrice(supplier, price);
+    const confidence = extractedInfo[index] ? "ai_extracted" : "web_scraped";
+    onAddPrice(supplier, price, confidence);
     toast({ title: `Cena ${price.toFixed(2)} € od ${supplier} pridaná` });
   };
 
