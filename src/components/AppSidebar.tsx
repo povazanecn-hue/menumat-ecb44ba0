@@ -10,9 +10,13 @@ import {
   Settings,
   ClipboardList,
   ClipboardCheck,
+  LogOut,
 } from "lucide-react";
 import { LogoBrand } from "@/components/LogoBrand";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -44,6 +48,14 @@ const toolsNav = [
 ];
 
 export function AppSidebar() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="px-4 py-5 border-b border-sidebar-border">
@@ -101,7 +113,23 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-4 py-3 border-t border-sidebar-border">
+      <SidebarFooter className="px-4 py-3 border-t border-sidebar-border space-y-2">
+        {user && (
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] text-sidebar-foreground/60 truncate" title={user.email}>
+              {user.email}
+            </p>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 text-sidebar-foreground/50 hover:text-destructive"
+              onClick={handleLogout}
+              title="Odhlásiť sa"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
         <p className="text-[10px] text-sidebar-foreground/30 tracking-wide">MENU MASTER v1.0</p>
         <p className="text-[9px] text-sidebar-foreground/40 leading-tight">
           Powered by <span className="font-semibold text-sidebar-primary/70">N-[vision]</span> | <span className="font-semibold text-sidebar-primary/70">N-oLiMiT gastro</span>
