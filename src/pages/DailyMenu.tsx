@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { addWeeks, format, isToday, parseISO } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,7 @@ import {
   useUpsertMenu,
   useAddMenuItem,
   useRemoveMenuItem,
+  useUpdateMenuItem,
   useUpdateMenuStatus,
   useRecentDishUsage,
   getWeekStart,
@@ -19,6 +20,7 @@ import {
   formatDateKey,
   MenuWithItems,
 } from "@/hooks/useMenus";
+import { useMenuRegenerate } from "@/hooks/useMenuRegenerate";
 import { DayMenuCard } from "@/components/daily-menu/DayMenuCard";
 import { DishPickerDialog } from "@/components/daily-menu/DishPickerDialog";
 import { AiMenuDialog } from "@/components/daily-menu/AiMenuDialog";
@@ -55,7 +57,82 @@ export default function DailyMenu() {
   const upsertMenu = useUpsertMenu();
   const addMenuItem = useAddMenuItem();
   const removeMenuItem = useRemoveMenuItem();
+  const updateMenuItem = useUpdateMenuItem();
   const updateStatus = useUpdateMenuStatus();
+
+  // AI Regeneration
+  const { loading: regenerating, regenerateSideDish, regenerateDish, regenerateDay, regenerateWeek } =
+    useMenuRegenerate({ dishes: allDishes, recentUsage, nonRepeatDays });
+
+  const handleRegenerateSideDish = async (itemId: string, dishName: string) => {
+    const result = await regenerateSideDish(dishName);
+    if (result?.side_dish) {
+      await updateMenuItem.mutateAsync({ id: itemId, side_dish: result.side_dish });
+      toast({ title: `Príloha: ${result.side_dish}` });
+    }
+  };
+
+  const handleRegenerateDish = async (date: Date, itemId: string, dishId: string, dishName: string, category: string) => {
+    const result = await regenerateDish(dishId, dishName, category);
+    if (result?.dish_id) {
+      await updateMenuItem.mutateAsync({
+        id: itemId,
+        dish_id: result.dish_id,
+        side_dish: result.side_dish || null,
+      });
+      const newDish = allDishes.find(d => d.id === result.dish_id);
+      toast({ title: `Nahradené: ${newDish?.name ?? "nové jedlo"}` });
+    }
+  };
+
+  const handleRegenerateDay = async (date: Date) => {
+    const result = await regenerateDay();
+    if (!result) return;
+    const dateKey = formatDateKey(date);
+    const menuId = await upsertMenu.mutateAsync(dateKey);
+    // Remove existing items first
+    const menu = getMenuForDate(date);
+    if (menu?.menu_items) {
+      for (const item of menu.menu_items) {
+        await removeMenuItem.mutateAsync(item.id);
+      }
+    }
+    // Add new items
+    const allIds = [...(result.soups || []), ...(result.mains || []), ...(result.desserts || [])];
+    let sortOrder = 1;
+    for (const dishId of allIds) {
+      await addMenuItem.mutateAsync({ menuId, dishId, sortOrder });
+      sortOrder++;
+    }
+    toast({ title: `Deň pregenerovaný (${allIds.length} jedál)` });
+  };
+
+  const handleRegenerateWeek = async () => {
+    const result = await regenerateWeek();
+    if (!result?.days) return;
+    let totalAdded = 0;
+    for (let i = 0; i < Math.min(result.days.length, 5); i++) {
+      const day = result.days[i];
+      const targetDate = weekdays[i];
+      const dateKey = formatDateKey(targetDate);
+      const menuId = await upsertMenu.mutateAsync(dateKey);
+      // Remove existing
+      const menu = getMenuForDate(targetDate);
+      if (menu?.menu_items) {
+        for (const item of menu.menu_items) {
+          await removeMenuItem.mutateAsync(item.id);
+        }
+      }
+      const allIds = [...(day.soups || []), ...(day.mains || []), ...(day.desserts || [])];
+      let sortOrder = 1;
+      for (const dishId of allIds) {
+        await addMenuItem.mutateAsync({ menuId, dishId, sortOrder });
+        sortOrder++;
+        totalAdded++;
+      }
+    }
+    toast({ title: `Týždeň pregenerovaný (${totalAdded} jedál)` });
+  };
 
   const getMenuForDate = (date: Date): MenuWithItems | undefined => {
     const key = formatDateKey(date);
@@ -240,6 +317,15 @@ export default function DailyMenu() {
             <FileUp className="h-4 w-4 mr-1.5" />
             Import
           </Button>
+          <Button
+            variant="outline"
+            onClick={handleRegenerateWeek}
+            disabled={regenerating}
+            title="Pregenerovať celý týždeň cez AI"
+          >
+            {regenerating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1.5" />}
+            AI Týždeň
+          </Button>
           <Button onClick={handlePublishAll} variant="default">
             Publikovať všetky koncepty
           </Button>
@@ -291,6 +377,12 @@ export default function DailyMenu() {
               onAiGenerate={() => setAiDate(date)}
               onImport={() => setImportDate(date)}
               isToday={isToday(date)}
+              regenerating={regenerating}
+              onRegenerateDish={(itemId, dishId, dishName, category) =>
+                handleRegenerateDish(date, itemId, dishId, dishName, category)
+              }
+              onRegenerateSideDish={handleRegenerateSideDish}
+              onRegenerateDay={() => handleRegenerateDay(date)}
             />
           ))}
         </div>

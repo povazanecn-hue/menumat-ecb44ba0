@@ -195,25 +195,31 @@ export type Database = {
         Row: {
           created_at: string
           dish_id: string
+          extras: string | null
           id: string
           menu_id: string
           override_price: number | null
+          side_dish: string | null
           sort_order: number
         }
         Insert: {
           created_at?: string
           dish_id: string
+          extras?: string | null
           id?: string
           menu_id: string
           override_price?: number | null
+          side_dish?: string | null
           sort_order?: number
         }
         Update: {
           created_at?: string
           dish_id?: string
+          extras?: string | null
           id?: string
           menu_id?: string
           override_price?: number | null
+          side_dish?: string | null
           sort_order?: number
         }
         Relationships: [

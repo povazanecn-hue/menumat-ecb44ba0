@@ -126,6 +126,22 @@ export function useRemoveMenuItem() {
   });
 }
 
+/** Update a menu item (side_dish, extras, dish_id, etc.) */
+export function useUpdateMenuItem() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string; dish_id?: string; side_dish?: string | null; extras?: string | null }) => {
+      const { error } = await supabase
+        .from("menu_items")
+        .update(updates as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menus"] }),
+  });
+}
+
 /** Update menu status */
 export function useUpdateMenuStatus() {
   const qc = useQueryClient();

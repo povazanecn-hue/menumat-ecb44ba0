@@ -65,7 +65,7 @@ export default function Exports() {
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <MenuPreview menu={selectedMenu} templateStyle={activeTemplate || templateSettings?.primary_template || "country"} showFinancials={showFinancials} />
+            <MenuPreview menu={selectedMenu} templateStyle={activeTemplate || templateSettings?.primary_template || "country"} showFinancials={showFinancials} fonts={templateSettings?.fonts} />
             <ExportActions menu={selectedMenu} onTemplateChange={setActiveTemplate} onShowFinancialsChange={setShowFinancials} />
           </div>
         </TabsContent>
