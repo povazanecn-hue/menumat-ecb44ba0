@@ -94,7 +94,7 @@ export default function Settings() {
       </div>
 
       {/* Restaurant Profile */}
-      <Card>
+      <Card className="bg-card/60 backdrop-blur-md">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Store className="h-5 w-5 text-primary" />
@@ -115,7 +115,7 @@ export default function Settings() {
       </Card>
 
       {/* Pricing Defaults */}
-      <Card>
+      <Card className="bg-card/60 backdrop-blur-md">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Percent className="h-5 w-5 text-primary" />
@@ -179,7 +179,7 @@ export default function Settings() {
       </Card>
 
       {/* Non-repeat rule */}
-      <Card>
+      <Card className="bg-card/60 backdrop-blur-md">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <CalendarOff className="h-5 w-5 text-primary" />
