@@ -95,6 +95,10 @@ export default function Onboarding() {
             </Button>
           </form>
         </div>
+
+        <p className="text-center text-[11px] text-muted-foreground/70 mt-6">
+          Powered by <span className="font-semibold text-primary">N-[vision]</span> | <span className="font-semibold text-primary">N-oLiMiT gastro</span> | Pre gastro s budúcnosťou!
+        </p>
       </div>
     </div>
   );
