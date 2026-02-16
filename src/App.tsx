@@ -17,7 +17,7 @@ import Recipes from "@/pages/Recipes";
 import Ingredients from "@/pages/Ingredients";
 import Exports from "@/pages/Exports";
 import Templates from "@/pages/Templates";
-import Placeholder from "@/pages/Placeholder";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,7 +55,7 @@ const App = () => (
                 <Route path="/shopping-list" element={<ShoppingList />} />
                 <Route path="/exports" element={<Exports />} />
                 <Route path="/templates" element={<Templates />} />
-                <Route path="/settings" element={<Placeholder />} />
+                <Route path="/settings" element={<Settings />} />
               </Route>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<NotFound />} />
