@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Globe, Loader2, ExternalLink, Plus } from "lucide-react";
+import { Search, Globe, Loader2, ExternalLink, Plus, Sparkles } from "lucide-react";
 import { firecrawlApi } from "@/lib/api/firecrawl";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface WebPriceSearchDialogProps {
@@ -44,11 +45,15 @@ export function WebPriceSearchDialog({
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [manualPrice, setManualPrice] = useState<Record<number, string>>({});
+  const [extracting, setExtracting] = useState<Record<number, boolean>>({});
+  const [extractedInfo, setExtractedInfo] = useState<Record<number, string>>({});
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearching(true);
     setResults([]);
+    setManualPrice({});
+    setExtractedInfo({});
 
     try {
       const fullQuery = siteFilter ? `${query} ${siteFilter}` : query;
@@ -61,6 +66,12 @@ export function WebPriceSearchDialog({
 
       if (response.success && response.data) {
         setResults(response.data);
+        // Auto-extract prices from results with markdown
+        response.data.forEach((result: SearchResult, idx: number) => {
+          if (result.markdown && result.markdown.length > 50) {
+            extractPrice(idx, result.markdown, result.url);
+          }
+        });
       } else {
         toast({
           title: "Chyba vyhľadávania",
@@ -76,6 +87,27 @@ export function WebPriceSearchDialog({
       });
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  const extractPrice = async (index: number, markdown: string, url: string) => {
+    setExtracting((prev) => ({ ...prev, [index]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-price", {
+        body: { markdown, ingredientName, url },
+      });
+
+      if (!error && data?.price && data.price > 0) {
+        setManualPrice((prev) => ({ ...prev, [index]: data.price.toFixed(2) }));
+        const info = data.product
+          ? `${data.product}${data.unit ? ` / ${data.unit}` : ""}`
+          : "";
+        setExtractedInfo((prev) => ({ ...prev, [index]: info }));
+      }
+    } catch {
+      // Silently fail — user can still enter price manually
+    } finally {
+      setExtracting((prev) => ({ ...prev, [index]: false }));
     }
   };
 
@@ -159,7 +191,7 @@ export function WebPriceSearchDialog({
         {results.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">
-              {results.length} výsledkov — zadajte nájdenú cenu a pridajte ju k dodávateľovi
+              {results.length} výsledkov — AI automaticky extrahuje ceny z obsahu stránok
             </p>
             {results.map((result, idx) => (
               <Card key={idx} className="border-border">
@@ -175,9 +207,23 @@ export function WebPriceSearchDialog({
                         {result.title || result.url}
                         <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
-                      <Badge variant="secondary" className="text-[10px] mt-1">
-                        {extractSupplierName(result.url)}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Badge variant="secondary" className="text-[10px]">
+                          {extractSupplierName(result.url)}
+                        </Badge>
+                        {extracting[idx] && (
+                          <Badge variant="outline" className="text-[10px] gap-1">
+                            <Sparkles className="h-2.5 w-2.5 animate-pulse" />
+                            AI extrahuje cenu...
+                          </Badge>
+                        )}
+                        {!extracting[idx] && extractedInfo[idx] && (
+                          <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            {extractedInfo[idx]}
+                          </Badge>
+                        )}
+                      </div>
                       {result.description && (
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                           {result.description}
@@ -186,7 +232,6 @@ export function WebPriceSearchDialog({
                     </div>
                   </div>
 
-                  {/* Extracted markdown preview */}
                   {result.markdown && (
                     <details className="text-xs">
                       <summary className="text-muted-foreground cursor-pointer hover:text-foreground">
@@ -198,7 +243,6 @@ export function WebPriceSearchDialog({
                     </details>
                   )}
 
-                  {/* Add price action */}
                   <div className="flex items-center gap-2 pt-1 border-t border-border">
                     <Input
                       type="number"
@@ -211,6 +255,12 @@ export function WebPriceSearchDialog({
                         setManualPrice((prev) => ({ ...prev, [idx]: e.target.value }))
                       }
                     />
+                    {!extracting[idx] && manualPrice[idx] && (
+                      <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
+                        <Sparkles className="h-2.5 w-2.5 mr-0.5" />
+                        AI
+                      </Badge>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
@@ -220,6 +270,17 @@ export function WebPriceSearchDialog({
                       <Plus className="h-3 w-3" />
                       Pridať cenu
                     </Button>
+                    {result.markdown && !manualPrice[idx] && !extracting[idx] && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-xs gap-1"
+                        onClick={() => extractPrice(idx, result.markdown!, result.url)}
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        Extrahovať
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
