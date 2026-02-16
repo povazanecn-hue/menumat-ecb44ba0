@@ -1,25 +1,30 @@
 
-# Zobraziť Extra doplnok v dennom menu karte
 
-## Zmena
+# Inline editácia prílohy (side_dish) v menu karte
 
-V komponente `src/components/daily-menu/DayMenuCard.tsx` sa pri každom jedle zobrazí jeho `subtype` (Extra doplnok) ako Badge vedľa existujúcich side_dish a extras badge-ov.
+## Zmeny
 
-### Konkrétna úprava
+### 1. DayMenuCard.tsx - Inline input pre side_dish
+- Nahradiť statický Badge pre `side_dish` editovateľným inline inputom
+- Kliknutím na Badge alebo na ikonu ceruzky sa zobrazí malý Input
+- Po strate fokusu (onBlur) alebo Enter sa zavolá `onUpdateSideDish`
+- Ak je side_dish prázdny, zobrazí sa malé tlačidlo/placeholder "Pridať prílohu" pri hover
+- Lokálny stav `editingSideDish` na sledovanie ktorý item sa edituje
 
-V sekcii kde sa vypisuje názov jedla (riadok ~82), pridať za názov jedla a alergény aj zobrazenie `item.dish.subtype` ak existuje -- napríklad ako malý text v zátvorke alebo Badge.
-
-Taktiež v `MenuPreview.tsx` (exportový náhľad) pridať subtype vedľa názvu jedla, aby sa zobrazoval aj v náhľade pre export.
+### 2. DailyMenu.tsx - Pripojenie handlera
+- Pridať handler `handleUpdateSideDish` ktorý zavolá `updateMenuItem.mutateAsync({ id, side_dish })`
+- Predať `onUpdateSideDish` prop do `DayMenuCard`
 
 ## Technické detaily
 
-### DayMenuCard.tsx (riadok ~130, sekcia side_dish/extras badges)
-- Pridať nový Badge pre `item.dish.subtype` ak nie je prázdny
-- Štýl: `text-[10px]` s ikonou, podobne ako existujúce badge-y pre side_dish
+### DayMenuCard.tsx
+- Nový lokálny stav: `editingSideDishId: string | null` a `sideDishValue: string`
+- Pri kliknutí na Badge side_dish: nastaviť editing stav na item.id, naplniť value
+- Zobraziť Input namiesto Badge keď `editingSideDishId === item.id`
+- onBlur / onKeyDown Enter: zavolať `onUpdateSideDish(itemId, value)`, resetovať editing stav
+- Ak item nemá side_dish: zobraziť malú ikonu Utensils s textom "príloha" pri hover
 
-### MenuPreview.tsx (riadok ~115, pri dish name)
-- Za `item.dish.grammage` pridať zobrazenie `item.dish?.subtype` ak existuje
-- Formát: malý text v hranatých zátvorkách alebo oddelený bodkou
+### DailyMenu.tsx
+- Handler: `const handleUpdateSideDish = async (itemId: string, sideDish: string) => { await updateMenuItem.mutateAsync({ id: itemId, side_dish: sideDish || null }); }`
+- Predať do DayMenuCard: `onUpdateSideDish={handleUpdateSideDish}`
 
-### Žiadne databázové zmeny
-- Pole `subtype` už existuje v tabuľke `dishes` a je súčasťou query cez `dishes(*)` join
