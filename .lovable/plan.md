@@ -1,57 +1,98 @@
 
 
-# Integrácia Cloudinary OCR do import flow
+# Redizajn vsetkych stranok Menu Master
 
-## Prehľad
+## Suhrn zmien
 
-Pridanie Cloudinary spracovania obrázkov do existujúceho OCR import tabu v `ImportMenuDialog`. Keď používateľ odfotí papierové menu, obrázok sa najprv vylepší cez Cloudinary (auto-enhance, upscale) pre lepšiu kvalitu rozpoznávania, a potom sa pošle do AI OCR pipeline (Gemini 2.5 Flash).
+Uzivatel chce:
+1. **Priehladnejsie okna/karty** - vidiet pozadie cez ne
+2. **Vyraznejsi napis MENU MASTER** - svietiaci, glowing efekt
+3. **Moderne prevedenie** so zachovanim rustikalnych prvkov
 
-## Prečo nie čistý Cloudinary OCR?
+---
 
-Cloudinary `adv_ocr` add-on extrahuje len surový text bez štruktúry. Súčasný AI pipeline (Gemini) vie extrahovať štruktúrované dáta (dni, kategórie, ceny, alergény). Najlepší výsledok sa dosiahne kombináciou:
-1. **Cloudinary** - vylepšenie kvality fotky (ostrenie, kontrast, upscale)
-2. **Gemini AI** - inteligentné štruktúrované rozpoznávanie jedál
+## Stranka 1: Landing (/)
 
-## Zmeny
+**Pozadie:** Koliesko kresba 65% opacity (bez zmeny)
 
-### 1. ImportMenuDialog.tsx - Nový OCR režim "Fotka menu"
+**Zmeny:**
+- Logo "MENU MASTER" - vacsie, s vyraznym zlatym glowing efektom (`text-shadow` + `drop-shadow` animacia)
+- Hero karta s jedlom - jemne zaoblene okraje, subtilny glow border
+- Feature karty - `bg-card/60 backdrop-blur-md` namiesto plneho `bg-card`
+- "Ako to funguje" sekcia - `bg-card/40 backdrop-blur-sm` namiesto `bg-card/50`
+- CTA tlacidla - silnejsi glow shadow na hover
 
-V OCR tabe pridať prepínač medzi:
-- **Štandard OCR** (súčasný priamy upload do AI) 
-- **Fotka papierového menu** (Cloudinary enhance -> AI OCR)
+---
 
-Pri výbere "Fotka menu":
-- Obrázok sa najprv odošle na Cloudinary cez `cloudinary-transform` edge function s akciou `enhance`
-- Vylepšený obrázok URL sa potom pošle do `ocr-menu-import` edge function
-- Zobrazí sa progress: "Vylepšujem kvalitu fotky..." -> "AI rozpoznáva jedlá..."
+## Stranka 2: Auth (/auth)
 
-### 2. ocr-menu-import edge function - podpora URL vstupu
+**Pozadie:** Koliesko kresba 65% opacity
 
-Pridať alternatívny vstup `imageUrl` (URL vylepšeného obrázka z Cloudinary) popri existujúcom `fileBase64`. Ak je poskytnutý `imageUrl`, použije sa priamo ako image_url v AI požiadavke namiesto base64.
+**Zmeny:**
+- Logo hore - vacsie (text-2xl), silny glow efekt, pulsujuci drop-shadow
+- Formularove okno - `bg-card/60 backdrop-blur-md` namiesto `bg-card/80`
+- Okno bude viac priehladne, pozadie cez neho priesvita
+- Separator "alebo" - `bg-transparent` namiesto `bg-background`
+- Tlacidla OAuth - `bg-secondary/60` s backdrop-blur
 
-### 3. UI zmeny v OCR tabe
+---
 
-- Pridať ikonu kamery a text "Odfotené papierové menu" ako sub-voľbu
-- Toggle/checkbox "Vylepšiť kvalitu (Cloudinary)" - defaultne zapnutý pre obrázky
-- Indikátor dvojkrokového spracovania s progress stavmi
+## Stranka 3: Onboarding (/onboarding)
 
-## Technické detaily
+**Pozadie:** Koliesko kresba 65% opacity
 
-### ImportMenuDialog.tsx
-- Import `useCloudinary` hooku
-- Nový stav: `useEnhance: boolean` (default true pre obrázky)
-- V `handleOcrFile`: ak `useEnhance` a súbor je obrázok (jpg/png/webp):
-  1. Upload base64 ako data URL
-  2. Zavolať `cloudinary.enhance(dataUrl)`
-  3. Ak úspešné, poslať výslednú URL do `ocr-menu-import` s `imageUrl` parametrom
-  4. Ak zlyhá, fallback na priamy base64 upload (štandardný flow)
+**Zmeny:**
+- Logo "MENU MASTER" - vacsie (text-3xl), glow efekt s animaciou
+- Karta "Nova restauracia" - `bg-card/60 backdrop-blur-md` namiesto `bg-card/85`
+- Nadpis "Vitajte v Menu Master" - svetlejsi s text-shadow glow
+- Input polia - `bg-secondary/50` namiesto `bg-secondary`
 
-### ocr-menu-import/index.ts
-- Pridať `imageUrl` do vstupných parametrov
-- Ak je `imageUrl` prítomný, použiť ho ako `image_url` v OpenAI/Gemini vision požiadavke
-- Base64 flow ostáva ako fallback
+---
 
-### Žiadne databázové zmeny
-- Využíva existujúce Cloudinary secrets (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)
-- Využíva existujúcu `cloudinary-transform` edge function
+## Stranka 4: Dashboard a vsetky chranene stranky (AppLayout)
+
+**Pozadie:** Drevene textury (wood-bg + wood-planks) - zostava
+
+**Zmeny:**
+- TopActionBar - `bg-card/50 backdrop-blur-md` namiesto `bg-card/80`
+- Logo v top bare - glow efekt, vacsi drop-shadow
+- Sidebar - `bg-sidebar-background/90` s backdrop-blur
+- Vsetky Card komponenty na Dashboard - pridany `bg-card/70 backdrop-blur-sm` cez dedicnu triedu
+
+---
+
+## Globalny glow efekt pre logo
+
+Nova CSS utilita v `index.css`:
+```css
+.logo-glow {
+  text-shadow: 
+    0 0 10px hsl(40 55% 55% / 0.6),
+    0 0 30px hsl(40 55% 55% / 0.3),
+    0 0 60px hsl(40 55% 55% / 0.15);
+}
+
+.icon-glow {
+  filter: drop-shadow(0 0 12px hsl(40 55% 55% / 0.7))
+          drop-shadow(0 0 30px hsl(40 55% 55% / 0.3));
+}
+```
+
+---
+
+## Technicke detaily
+
+### Subory na upravu:
+1. `src/index.css` - pridanie `.logo-glow` a `.icon-glow` utilit
+2. `src/pages/Landing.tsx` - vacsie logo + glow, priehladnejsie karty
+3. `src/pages/Auth.tsx` - vacsie logo + glow, priehladnejsie okno formulara
+4. `src/pages/Onboarding.tsx` - vacsie logo + glow, priehladnejsie okno
+5. `src/components/TopActionBar.tsx` - glow logo, priehladnejsi bar
+6. `src/components/AppSidebar.tsx` - glow logo v sidebar headeri
+7. `src/pages/Dashboard.tsx` - priehladnejsie karty (volitelne)
+
+### Princip zmien:
+- Vsetky okna/kontajnery: znizenie opacity pozadia na 50-60% + `backdrop-blur-md`
+- Vsetky loga: aplikovanie `.logo-glow` a `.icon-glow` tried
+- Ziadne zmeny v logike, len vizualne CSS upravy
 
