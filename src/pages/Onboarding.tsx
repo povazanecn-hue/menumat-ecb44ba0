@@ -18,6 +18,8 @@ export default function Onboarding() {
   const [address, setAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const userRole = (user?.user_metadata?.app_role as string) || "owner";
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -27,6 +29,7 @@ export default function Onboarding() {
       const { error } = await supabase.rpc("create_restaurant_with_owner", {
         _name: name,
         _address: address || null,
+        _role: userRole as any,
       });
       if (error) throw error;
 

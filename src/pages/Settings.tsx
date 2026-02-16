@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Store, Percent, CalendarOff, Receipt } from "lucide-react";
+import { MemberManagement } from "@/components/settings/MemberManagement";
 
 interface RestaurantSettings {
   default_margin: number;
@@ -203,6 +204,9 @@ export default function Settings() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Member Management (owner only) */}
+      <MemberManagement />
 
       {/* Save */}
       <div className="flex justify-end pb-8">

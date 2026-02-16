@@ -239,6 +239,92 @@ export type Database = {
           },
         ]
       }
+      menu_proposal_assignments: {
+        Row: {
+          assigned_by: string
+          created_at: string
+          id: string
+          menu_date: string
+          proposal_id: string
+        }
+        Insert: {
+          assigned_by: string
+          created_at?: string
+          id?: string
+          menu_date: string
+          proposal_id: string
+        }
+        Update: {
+          assigned_by?: string
+          created_at?: string
+          id?: string
+          menu_date?: string
+          proposal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_proposal_assignments_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "menu_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_proposals: {
+        Row: {
+          category: Database["public"]["Enums"]["dish_category"]
+          created_at: string
+          dish_id: string | null
+          dish_name: string
+          id: string
+          note: string | null
+          proposed_by: string
+          restaurant_id: string
+          status: string
+          target_week_start: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["dish_category"]
+          created_at?: string
+          dish_id?: string | null
+          dish_name: string
+          id?: string
+          note?: string | null
+          proposed_by: string
+          restaurant_id: string
+          status?: string
+          target_week_start: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["dish_category"]
+          created_at?: string
+          dish_id?: string | null
+          dish_name?: string
+          id?: string
+          note?: string | null
+          proposed_by?: string
+          restaurant_id?: string
+          status?: string
+          target_week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_proposals_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_proposals_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menus: {
         Row: {
           created_at: string
@@ -536,10 +622,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      create_restaurant_with_owner: {
-        Args: { _address?: string; _name: string }
-        Returns: string
-      }
+      create_restaurant_with_owner:
+        | { Args: { _address?: string; _name: string }; Returns: string }
+        | {
+            Args: {
+              _address?: string
+              _name: string
+              _role?: Database["public"]["Enums"]["app_role"]
+            }
+            Returns: string
+          }
       get_user_restaurant_ids: { Args: { _user_id: string }; Returns: string[] }
       is_restaurant_member: {
         Args: { _restaurant_id: string; _user_id: string }
@@ -547,7 +639,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "owner" | "manager" | "staff"
+      app_role: "owner" | "manager" | "staff" | "head_chef"
       dish_category:
         | "polievka"
         | "hlavne_jedlo"
@@ -687,7 +779,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["owner", "manager", "staff"],
+      app_role: ["owner", "manager", "staff", "head_chef"],
       dish_category: [
         "polievka",
         "hlavne_jedlo",
