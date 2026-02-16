@@ -23,8 +23,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { fileBase64, mimeType, fileName, mode } = await req.json();
-    if (!fileBase64) {
+    const { fileBase64, mimeType, fileName, mode, imageUrl } = await req.json();
+    if (!fileBase64 && !imageUrl) {
       return new Response(JSON.stringify({ dishes: [], error: "No file provided" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -83,8 +83,14 @@ Do not add any explanation, only the JSON array.`;
       },
     ];
 
-    // For images, PDFs, and docx - include as inline data for vision model
-    if (isImage || isPdf || isDocx) {
+    // If we have a pre-processed image URL (e.g. from Cloudinary enhance), use it directly
+    if (imageUrl) {
+      userContent.unshift({
+        type: "image_url",
+        image_url: { url: imageUrl },
+      });
+    } else if (isImage || isPdf || isDocx) {
+      // For images, PDFs, and docx - include as inline data for vision model
       userContent.unshift({
         type: "image_url",
         image_url: {
