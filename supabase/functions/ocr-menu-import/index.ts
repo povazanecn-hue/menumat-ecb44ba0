@@ -6,8 +6,8 @@ const corsHeaders = {
 
 interface OcrMenuItem {
   name: string;
-  category: string; // polievka, hlavne_jedlo, dezert, etc.
-  slot: string;     // "Polievka", "Menu 1", "Dezert", etc.
+  category: string;
+  slot: string;
   grammage: string;
   price: number | null;
   allergens: number[];
@@ -17,6 +17,60 @@ interface OcrDay {
   dayName: string;
   dateStr: string;
   items: OcrMenuItem[];
+}
+
+async function callAI(apiKey: string, messages: any[]) {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages,
+      stream: false,
+    }),
+  });
+  return response;
+}
+
+function parseJsonFromAI(content: string): any {
+  let jsonStr = content;
+  const match = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (match) jsonStr = match[1];
+  jsonStr = jsonStr.trim();
+  return JSON.parse(jsonStr);
+}
+
+function cleanStructuredDays(parsed: any): OcrDay[] {
+  const days: OcrDay[] = [];
+  const arr = Array.isArray(parsed) ? parsed : (parsed.days || [parsed]);
+
+  for (const day of arr) {
+    if (!day.dayName && !day.items) continue;
+    const cleanItems: OcrMenuItem[] = (day.items || [])
+      .filter((item: any) => item.name && item.name.trim().length > 0)
+      .map((item: any) => ({
+        name: String(item.name).trim(),
+        category: item.category || "hlavne_jedlo",
+        slot: item.slot || "Menu",
+        grammage: item.grammage || "",
+        price: typeof item.price === "number" ? item.price : null,
+        allergens: Array.isArray(item.allergens)
+          ? item.allergens.filter((a: number) => a >= 1 && a <= 14)
+          : [],
+      }));
+
+    if (cleanItems.length > 0) {
+      days.push({
+        dayName: day.dayName || "Neznámy",
+        dateStr: day.dateStr || "",
+        items: cleanItems,
+      });
+    }
+  }
+  return days;
 }
 
 Deno.serve(async (req) => {
@@ -40,17 +94,78 @@ Deno.serve(async (req) => {
       || fileName?.toLowerCase().endsWith(".docx")
       || fileName?.toLowerCase().endsWith(".doc");
 
-    // Structured mode: extract weekly menu with days, categories, prices
     const structuredMode = mode === "structured";
 
-    const structuredPrompt = `Analyzuj tento dokument, ktorý obsahuje denné menu reštaurácie (týždenný jedálny lístok).
-Extrahuj VŠETKY jedlá rozdelené podľa DŇA (Pondelok-Piatok).
+    // === PASS 1: Raw OCR extraction ===
+    const rawOcrPrompt = `Extrahuj CELÝ text z tohto ${isPdf ? "PDF dokumentu" : isImage ? "obrázka" : "dokumentu"} presne tak, ako je napísaný.
+Zachovaj pôvodnú štruktúru vrátane riadkov, čísel, cien, alergénov.
+Neupravuj, neopravuj preklepy, len prepíš text čo najvernejšie.
+Vráť IBA surový text, žiadne JSON, žiadne vysvetlenia.`;
+
+    const userContent: any[] = [{ type: "text", text: rawOcrPrompt }];
+
+    if (imageUrl) {
+      userContent.unshift({ type: "image_url", image_url: { url: imageUrl } });
+    } else if (isImage || isPdf || isDocx) {
+      userContent.unshift({
+        type: "image_url",
+        image_url: {
+          url: `data:${mimeType || "application/octet-stream"};base64,${fileBase64}`,
+        },
+      });
+    } else {
+      try {
+        const text = atob(fileBase64);
+        userContent[0].text += `\n\nDocument content:\n${text.slice(0, 8000)}`;
+      } catch {
+        userContent.unshift({
+          type: "image_url",
+          image_url: {
+            url: `data:${mimeType || "application/octet-stream"};base64,${fileBase64}`,
+          },
+        });
+      }
+    }
+
+    console.log("OCR Pass 1: Raw text extraction...");
+    const pass1Response = await callAI(LOVABLE_API_KEY, [{ role: "user", content: userContent }]);
+
+    if (!pass1Response.ok) {
+      if (pass1Response.status === 429) {
+        return new Response(JSON.stringify({ dishes: [], days: [], error: "Príliš veľa požiadaviek. Skúste znovu o chvíľu." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const errText = await pass1Response.text();
+      console.error("AI OCR Pass 1 error:", pass1Response.status, errText);
+      return new Response(JSON.stringify({ dishes: [], days: [], error: `AI chyba: ${pass1Response.status}` }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const pass1Data = await pass1Response.json();
+    const rawText = pass1Data.choices?.[0]?.message?.content || "";
+    console.log(`OCR Pass 1 done: ${rawText.length} chars extracted`);
+
+    if (!rawText.trim()) {
+      return new Response(JSON.stringify({ dishes: [], days: [], error: "OCR nerozpoznal žiadny text" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // === PASS 2: AI correction + structuring ===
+    const correctionPrompt = structuredMode
+      ? `Si expert na slovenské reštauračné menu. Dostaneš surový OCR text z jedálneho lístka.
+Tvoja úloha:
+1. OPRAV preklepy a chyby z OCR (napr. "poIievka" → "polievka", "rezeft" → "rezeň", "0,50" cena → oprav na správnu)
+2. ROZPOZNAJ štruktúru menu podľa dní (Pondelok-Piatok)
+3. KATEGORIZUJ jedlá správne
 
 Pre KAŽDÝ DEŇ vráť objekt s:
 - "dayName": názov dňa (Pondelok, Utorok, Streda, Štvrtok, Piatok)
 - "dateStr": dátum ak je uvedený, inak ""
 - "items": pole jedál, kde každé jedlo má:
-  - "name": názov jedla (bez cien, gramáže, alergénov, čísiel menu)
+  - "name": OPRAVENÝ názov jedla (bez cien, gramáže, alergénov, čísiel menu)
   - "category": jedna z: "polievka", "hlavne_jedlo", "dezert", "predjedlo", "salat", "pizza", "burger", "pasta", "napoj", "ine"
   - "slot": typ pozície ("Polievka", "Menu 1", "Menu 2", "Menu 3", "Menu 4", "Menu 5", "Menu S", "Menu P", "Dezert", "Šalát", "Burger")
   - "grammage": gramáž ak je (napr. "150g", "300ml"), inak ""
@@ -63,145 +178,71 @@ DÔLEŽITÉ pravidlá:
 - Dezerty majú category "dezert" a slot "Dezert"
 - Vyčisti názvy: odstráň čísla menu, ceny, gramáže z názvu jedla
 - Ak dokument nemá dennú štruktúru, vráť jeden deň s dayName "Neznámy"
+- OPRAV slovenské diakritické znaky (č, š, ž, ť, ď, ň, ľ, á, é, í, ó, ú, ý, ô, ä)
 
 Vráť IBA JSON pole dní:
-[{"dayName":"Pondelok","dateStr":"17.2.","items":[{"name":"Cesnaková polievka","category":"polievka","slot":"Polievka","grammage":"300ml","price":1.50,"allergens":[1,3]}]}]`;
+[{"dayName":"Pondelok","dateStr":"17.2.","items":[{"name":"Cesnaková polievka","category":"polievka","slot":"Polievka","grammage":"300ml","price":1.50,"allergens":[1,3]}]}]
 
-    const simplePrompt = `Analyze this ${isPdf ? "PDF document" : isImage ? "image" : "document"} which contains a restaurant daily menu.
-Extract ALL dish/food names from it. Ignore headers, prices, dates, allergens, and other non-dish text.
+Surový OCR text:
+${rawText}`
+      : `Si expert na slovenské reštauračné menu. Dostaneš surový OCR text z jedálneho lístka.
+Tvoja úloha:
+1. OPRAV preklepy a chyby z OCR
+2. EXTRAHUJ iba názvy jedál (bez cien, gramáží, alergénov)
+3. OPRAV slovenské diakritické znaky
 
-Return ONLY a JSON array of dish name strings, e.g.:
-["Slepačia polievka s rezancami", "Vyprážaný rezeň so zemiakovým šalátom", "Čokoládový koláč"]
+Vráť IBA JSON pole opravených názvov jedál, napr.:
+["Slepačia polievka s rezancami", "Vyprážaný rezeň so zemiakovým šalátom"]
 
-If you cannot read the document or find no dishes, return an empty array: []
-Do not add any explanation, only the JSON array.`;
+Surový OCR text:
+${rawText}`;
 
-    const userContent: any[] = [
-      {
-        type: "text",
-        text: structuredMode ? structuredPrompt : simplePrompt,
-      },
-    ];
+    console.log("OCR Pass 2: AI correction + structuring...");
+    const pass2Response = await callAI(LOVABLE_API_KEY, [
+      { role: "system", content: "Si odborník na slovenské jedlá a reštauračné menu. Oprav OCR chyby a štruktúruj dáta presne podľa inštrukcií." },
+      { role: "user", content: correctionPrompt },
+    ]);
 
-    // If we have a pre-processed image URL (e.g. from Cloudinary enhance), use it directly
-    if (imageUrl) {
-      userContent.unshift({
-        type: "image_url",
-        image_url: { url: imageUrl },
-      });
-    } else if (isImage || isPdf || isDocx) {
-      // For images, PDFs, and docx - include as inline data for vision model
-      userContent.unshift({
-        type: "image_url",
-        image_url: {
-          url: `data:${mimeType || "application/octet-stream"};base64,${fileBase64}`,
-        },
-      });
-    } else {
-      // Try to decode text-based files
-      try {
-        const text = atob(fileBase64);
-        userContent[0].text += `\n\nDocument content:\n${text.slice(0, 8000)}`;
-      } catch {
-        // Binary file - send as image data
-        userContent.unshift({
-          type: "image_url",
-          image_url: {
-            url: `data:${mimeType || "application/octet-stream"};base64,${fileBase64}`,
-          },
-        });
-      }
-    }
-
-    // Use Gemini 2.5 Flash for vision/OCR - good balance of speed and quality
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content: userContent }],
-        stream: false,
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
+    if (!pass2Response.ok) {
+      if (pass2Response.status === 429) {
         return new Response(JSON.stringify({ dishes: [], days: [], error: "Príliš veľa požiadaviek. Skúste znovu o chvíľu." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const errText = await response.text();
-      console.error("AI OCR error:", response.status, errText);
-      return new Response(JSON.stringify({ dishes: [], days: [], error: `AI chyba: ${response.status}` }), {
+      console.error("AI OCR Pass 2 error:", pass2Response.status);
+      // Fallback: return raw text as single dish list
+      return new Response(JSON.stringify({ dishes: rawText.split("\n").filter(Boolean), days: [], error: "Korekcia zlyhala, vrátené surové dáta" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
-
-    // Parse response
-    let jsonStr = content;
-    const match = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (match) jsonStr = match[1];
-    jsonStr = jsonStr.trim();
+    const pass2Data = await pass2Response.json();
+    const correctedContent = pass2Data.choices?.[0]?.message?.content || "";
 
     let parsed: any;
     try {
-      parsed = JSON.parse(jsonStr);
+      parsed = parseJsonFromAI(correctedContent);
     } catch {
-      console.error("Failed to parse AI OCR response:", content.slice(0, 500));
-      return new Response(JSON.stringify({ dishes: [], days: [], error: "AI vrátila neplatný formát", raw: content.slice(0, 300) }), {
+      console.error("Failed to parse corrected response:", correctedContent.slice(0, 500));
+      return new Response(JSON.stringify({ dishes: [], days: [], error: "AI vrátila neplatný formát po korekcii", raw: correctedContent.slice(0, 300) }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (structuredMode) {
-      // Validate and clean structured data
-      const days: OcrDay[] = [];
-      const arr = Array.isArray(parsed) ? parsed : (parsed.days || [parsed]);
-
-      for (const day of arr) {
-        if (!day.dayName && !day.items) continue;
-        const cleanItems: OcrMenuItem[] = (day.items || [])
-          .filter((item: any) => item.name && item.name.trim().length > 0)
-          .map((item: any) => ({
-            name: String(item.name).trim(),
-            category: item.category || "hlavne_jedlo",
-            slot: item.slot || "Menu",
-            grammage: item.grammage || "",
-            price: typeof item.price === "number" ? item.price : null,
-            allergens: Array.isArray(item.allergens)
-              ? item.allergens.filter((a: number) => a >= 1 && a <= 14)
-              : [],
-          }));
-
-        if (cleanItems.length > 0) {
-          days.push({
-            dayName: day.dayName || "Neznámy",
-            dateStr: day.dateStr || "",
-            items: cleanItems,
-          });
-        }
-      }
-
+      const days = cleanStructuredDays(parsed);
       const totalItems = days.reduce((s, d) => s + d.items.length, 0);
-      console.log(`OCR structured: ${days.length} days, ${totalItems} items extracted`);
+      console.log(`OCR Pass 2 done: ${days.length} days, ${totalItems} items (corrected)`);
 
-      return new Response(JSON.stringify({ days, dishes: [] }), {
+      return new Response(JSON.stringify({ days, dishes: [], rawOcrText: rawText }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {
-      // Simple mode - flat list of dish names
       let dishes: string[] = [];
       if (Array.isArray(parsed)) {
         dishes = parsed.filter((d: any) => typeof d === "string" && d.trim().length > 0);
       }
-
-      return new Response(JSON.stringify({ dishes, days: [] }), {
+      return new Response(JSON.stringify({ dishes, days: [], rawOcrText: rawText }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
