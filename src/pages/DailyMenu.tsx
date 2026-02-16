@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { addWeeks, format, isToday, parseISO } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -22,11 +22,16 @@ import {
 import { DayMenuCard } from "@/components/daily-menu/DayMenuCard";
 import { DishPickerDialog } from "@/components/daily-menu/DishPickerDialog";
 import { AiMenuDialog } from "@/components/daily-menu/AiMenuDialog";
-import { ImportMenuDialog } from "@/components/daily-menu/ImportMenuDialog";
+import { ImportMenuDialog, type ImportDayResult } from "@/components/daily-menu/ImportMenuDialog";
+import { buildPrintDays, printWeeklyA4 } from "@/lib/weeklyPrintExport";
+
+const DAY_NAME_TO_INDEX: Record<string, number> = {
+  pondelok: 0, utorok: 1, streda: 2, štvrtok: 3, piatok: 4,
+};
 
 export default function DailyMenu() {
   const { toast } = useToast();
-  const { settings } = useRestaurant();
+  const { settings, restaurantName } = useRestaurant();
   const nonRepeatDays = settings.non_repeat_days;
   const [searchParams] = useSearchParams();
   const [weekStart, setWeekStart] = useState(() => {
@@ -116,7 +121,7 @@ export default function DailyMenu() {
     }
   };
 
-  // AI generation: apply selected dish IDs to the chosen day
+  // AI generation
   const handleAiApply = async (dishIds: string[]) => {
     if (!aiDate) return;
     setAiApplying(true);
@@ -137,7 +142,7 @@ export default function DailyMenu() {
     }
   };
 
-  // Import: apply dish IDs from Excel/CSV to the chosen day
+  // Simple import: apply dish IDs from flat list
   const handleImportApply = async (dishIds: string[]) => {
     if (!importDate) return;
     setImportApplying(true);
@@ -158,6 +163,51 @@ export default function DailyMenu() {
     }
   };
 
+  // Weekly Koliesko import: apply structured multi-day data
+  const handleWeeklyImport = async (days: ImportDayResult[]) => {
+    setImportApplying(true);
+    try {
+      let totalAdded = 0;
+      for (const day of days) {
+        // Map day name to weekday date
+        const dayIndex = DAY_NAME_TO_INDEX[day.dayName.toLowerCase()];
+        if (dayIndex === undefined) continue;
+        const targetDate = weekdays[dayIndex];
+        if (!targetDate) continue;
+
+        const matchedItems = day.items.filter(i => i.matchedDish);
+        if (matchedItems.length === 0) continue;
+
+        const dateKey = formatDateKey(targetDate);
+        const menuId = await upsertMenu.mutateAsync(dateKey);
+        const existingMenu = getMenuForDate(targetDate);
+        let sortOrder = (existingMenu?.menu_items?.length ?? 0) + 1;
+
+        for (const item of matchedItems) {
+          await addMenuItem.mutateAsync({
+            menuId,
+            dishId: item.matchedDish!.id,
+            sortOrder,
+            overridePrice: item.price ?? undefined,
+          });
+          sortOrder++;
+          totalAdded++;
+        }
+      }
+      toast({ title: `${totalAdded} jedál importovaných do ${days.length} dní` });
+    } catch (e: any) {
+      toast({ title: "Chyba", description: e.message, variant: "destructive" });
+    } finally {
+      setImportApplying(false);
+    }
+  };
+
+  // Weekly A4 print
+  const handleWeeklyPrint = () => {
+    const printDays = buildPrintDays(menus, weekdays);
+    printWeeklyA4(printDays, restaurantName || "Reštaurácia", weekLabel);
+  };
+
   const weekLabel = `${format(weekdays[0], "d. MMM", { locale: sk })} – ${format(
     weekdays[4],
     "d. MMM yyyy",
@@ -166,6 +216,8 @@ export default function DailyMenu() {
 
   const pickerMenu = pickerDate ? getMenuForDate(pickerDate) : undefined;
   const pickerAlreadyAdded = pickerMenu?.menu_items.map((i) => i.dish.id) ?? [];
+
+  const hasAnyItems = menus.some(m => m.menu_items.length > 0);
 
   return (
     <div className="space-y-6">
@@ -177,9 +229,21 @@ export default function DailyMenu() {
             Týždenný prehľad pondelok – piatok
           </p>
         </div>
-        <Button onClick={handlePublishAll} variant="default">
-          Publikovať všetky koncepty
-        </Button>
+        <div className="flex gap-2">
+          {hasAnyItems && (
+            <Button variant="outline" onClick={handleWeeklyPrint} title="Tlač týždňa na A4">
+              <Printer className="h-4 w-4 mr-1.5" />
+              Tlač A4
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => setImportDate(weekdays[0])} title="Import z Excel">
+            <FileUp className="h-4 w-4 mr-1.5" />
+            Import
+          </Button>
+          <Button onClick={handlePublishAll} variant="default">
+            Publikovať všetky koncepty
+          </Button>
+        </div>
       </div>
 
       {/* Week navigation */}
@@ -253,12 +317,13 @@ export default function DailyMenu() {
         isApplying={aiApplying}
       />
 
-      {/* Excel/CSV Import */}
+      {/* Excel/CSV Import — supports both flat + weekly Koliesko format */}
       <ImportMenuDialog
         open={!!importDate}
         onOpenChange={(open) => !open && setImportDate(null)}
         dishes={allDishes}
         onApply={handleImportApply}
+        onApplyWeekly={handleWeeklyImport}
         isApplying={importApplying}
       />
     </div>
