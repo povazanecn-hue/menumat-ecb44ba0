@@ -117,6 +117,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
   const [importMode, setImportMode] = useState<"koliesko" | "excel" | "ocr">("koliesko");
   const [useEnhance, setUseEnhance] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = () => {
     setRows([]);
@@ -492,30 +493,47 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
               </TabsContent>
 
               <TabsContent value="ocr" className="mt-3 space-y-3">
-                <div
-                  className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <div className="flex items-center justify-center gap-3 mb-3">
-                    <Camera className="h-8 w-8 text-muted-foreground" />
-                    <FileText className="h-8 w-8 text-muted-foreground" />
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Camera capture button */}
+                  <div
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    <Camera className="h-8 w-8 text-primary mx-auto mb-2" />
+                    <p className="text-sm font-medium text-foreground">Odfotiť menu</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Priamo z kamery zariadenia</p>
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={handleInputChange}
+                    />
                   </div>
-                  <p className="text-sm font-medium text-foreground">PDF, Word alebo fotka papierového menu</p>
-                  <p className="text-xs text-muted-foreground mt-1">AI rozpozná názvy jedál, kategórie, ceny a alergény</p>
-                  <Badge variant="secondary" className="mt-2 gap-1">
-                    <Sparkles className="h-3 w-3" />
-                    AI OCR
-                  </Badge>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={OCR_ACCEPT}
-                    className="hidden"
-                    onChange={handleInputChange}
-                  />
+                  {/* File upload button */}
+                  <div
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm font-medium text-foreground">Nahrať súbor</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">PDF, Word, JPG, PNG</p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept={OCR_ACCEPT}
+                      className="hidden"
+                      onChange={handleInputChange}
+                    />
+                  </div>
                 </div>
+                <Badge variant="secondary" className="gap-1 mx-auto flex w-fit">
+                  <Sparkles className="h-3 w-3" />
+                  AI OCR
+                </Badge>
                 <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2">
                   <div className="flex items-center gap-2">
                     <Wand2 className="h-4 w-4 text-primary" />
