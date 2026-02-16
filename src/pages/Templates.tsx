@@ -13,6 +13,7 @@ import {
 } from "@/hooks/useTemplates";
 import { TemplatePreviewCard } from "@/components/templates/TemplatePreviewCard";
 import { FontSettingsCard } from "@/components/templates/FontSettingsCard";
+import { CloudinaryToolsCard } from "@/components/templates/CloudinaryToolsCard";
 
 export default function Templates() {
   const { data: settings, isLoading } = useTemplateSettings();
@@ -131,14 +132,17 @@ export default function Templates() {
             ))}
           </div>
 
-          <FontSettingsCard
-            fonts={fonts}
-            onChange={setFonts}
-            onSave={handleSaveFonts}
-            onReset={handleResetFonts}
-            saving={saveSettings.isPending}
-            primaryTemplate={settings?.primary_template ?? "country"}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <FontSettingsCard
+              fonts={fonts}
+              onChange={setFonts}
+              onSave={handleSaveFonts}
+              onReset={handleResetFonts}
+              saving={saveSettings.isPending}
+              primaryTemplate={settings?.primary_template ?? "country"}
+            />
+            <CloudinaryToolsCard />
+          </div>
         </>
       )}
 
