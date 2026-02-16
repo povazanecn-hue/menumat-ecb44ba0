@@ -6,8 +6,8 @@ import { useRestaurant } from "@/hooks/useRestaurant";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { ChefHat, MapPin, Store } from "lucide-react";
 
 export default function Onboarding() {
   const { user } = useAuth();
@@ -41,45 +41,55 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-lg space-y-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+      {/* Logo */}
+      <div className="mb-8 flex items-center gap-3">
+        <ChefHat className="h-8 w-8 text-primary" />
+        <h1 className="font-serif text-2xl font-bold tracking-wide text-primary">MENU MASTER</h1>
+      </div>
+
+      <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="font-serif text-3xl font-bold text-foreground">Vitajte v MenuGen</h1>
-          <p className="text-muted-foreground">Nastavte si svoju reštauráciu a začnite tvoriť menu</p>
+          <h2 className="font-serif text-2xl font-bold text-foreground">Vitajte v Menu Master</h2>
+          <p className="text-muted-foreground text-sm">Nastavte si svoju reštauráciu a začnite tvoriť menu</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-serif">Nová reštaurácia</CardTitle>
-            <CardDescription>Zadajte základné údaje o vašej reštaurácii</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Názov reštaurácie *</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Klub Koliesko"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">Adresa</Label>
-                <Input
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Hlavná 1, Bratislava"
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Vytváram..." : "Vytvoriť reštauráciu"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-border bg-card p-6 shadow-2xl shadow-black/40">
+          <div className="flex items-center gap-2 mb-6">
+            <Store className="h-5 w-5 text-primary" />
+            <h3 className="font-serif text-lg font-semibold text-foreground">Nová reštaurácia</h3>
+          </div>
+
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="text-foreground">Názov reštaurácie *</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Klub Koliesko"
+                required
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="address" className="text-foreground flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" />
+                Adresa
+              </Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Hlavná 1, Bratislava"
+                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? "Vytváram..." : "Vytvoriť reštauráciu"}
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

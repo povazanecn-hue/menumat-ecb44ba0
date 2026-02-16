@@ -91,7 +91,7 @@ export function DayMenuCard({
 
   return (
     <Card
-      className={`transition-shadow ${isToday ? "ring-2 ring-primary/30 shadow-md" : ""} ${
+      className={`transition-all ${isToday ? "ring-2 ring-primary/40 shadow-lg shadow-primary/10" : "border-border hover:border-primary/20"} ${
         isPublished ? "bg-primary/5" : ""
       }`}
     >
