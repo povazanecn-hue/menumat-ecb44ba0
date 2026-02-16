@@ -13,8 +13,12 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Build dish list for context
-    const dishList = dishes.map((d: any) =>
+    // Server-side: filter out recently used dishes before sending to AI
+    const recentIds = new Set(Object.keys(recentUsage || {}));
+    const eligibleDishes = dishes.filter((d: any) => !recentIds.has(d.id));
+
+    // Build dish list for context (only eligible dishes)
+    const dishList = eligibleDishes.map((d: any) =>
       `ID:${d.id} | ${d.name} | category:${d.category} | price:${d.final_price ?? d.recommended_price}€ | daily_menu:${d.is_daily_menu}`
     ).join("\n");
 
@@ -120,6 +124,31 @@ Return format:
         status: 422,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Server-side validation: remove any dish IDs that are in recentUsage
+    const validateIds = (ids: string[]) =>
+      (ids || []).filter((id: string) => !recentIds.has(id));
+
+    parsed.soups = validateIds(parsed.soups);
+    parsed.mains = validateIds(parsed.mains);
+    parsed.desserts = validateIds(parsed.desserts);
+    if (parsed.extras) {
+      for (const key of Object.keys(parsed.extras)) {
+        parsed.extras[key] = validateIds(parsed.extras[key]);
+      }
+    }
+
+    // Also validate that all IDs exist in the original dish list
+    const allDishIds = new Set(dishes.map((d: any) => d.id));
+    const validateExists = (ids: string[]) => ids.filter((id: string) => allDishIds.has(id));
+    parsed.soups = validateExists(parsed.soups);
+    parsed.mains = validateExists(parsed.mains);
+    parsed.desserts = validateExists(parsed.desserts);
+    if (parsed.extras) {
+      for (const key of Object.keys(parsed.extras)) {
+        parsed.extras[key] = validateExists(parsed.extras[key]);
+      }
     }
 
     return new Response(JSON.stringify({ menu: parsed }), {
