@@ -2,11 +2,12 @@ import { useState, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, FileSpreadsheet, Check, X, AlertTriangle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles } from "lucide-react";
 import { Dish } from "@/hooks/useDishes";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
 
 interface ImportMenuDialogProps {
@@ -26,11 +27,7 @@ interface ParsedRow {
 /** Simple normalized string similarity (Dice coefficient on bigrams) */
 function similarity(a: string, b: string): number {
   const normalize = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]/g, "");
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
   const na = normalize(a);
   const nb = normalize(b);
   if (na === nb) return 1;
@@ -66,10 +63,8 @@ function findBestMatch(name: string, dishes: Dish[]): { dish: Dish | null; score
     }
   }
 
-  // Also check if rawName is a substring or vice versa
   if (bestScore < 0.4) {
-    const norm = (s: string) =>
-      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const nName = norm(name);
     for (const dish of dishes) {
       const nDish = norm(dish.name);
@@ -86,21 +81,36 @@ function findBestMatch(name: string, dishes: Dish[]): { dish: Dish | null; score
   return { dish: bestScore >= 0.35 ? best : null, score: bestScore };
 }
 
+const EXCEL_ACCEPT = ".xlsx,.xls,.csv";
+const OCR_ACCEPT = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp";
+
 export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, isApplying }: ImportMenuDialogProps) {
+  const { toast } = useToast();
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [importMode, setImportMode] = useState<"excel" | "ocr">("excel");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = () => {
     setRows([]);
     setFileName(null);
+    setIsOcrProcessing(false);
   };
 
-  const handleFile = useCallback(
+  const matchNames = (names: string[]) => {
+    const parsed: ParsedRow[] = names.map((rawName) => {
+      const { dish, score } = findBestMatch(rawName, dishes);
+      return { rawName, matchedDish: dish, similarity: score };
+    });
+    setRows(parsed);
+  };
+
+  // Excel/CSV handler
+  const handleExcelFile = useCallback(
     async (file: File) => {
       setFileName(file.name);
       const isCSV = file.name.endsWith(".csv");
-
       let names: string[] = [];
 
       if (isCSV) {
@@ -108,7 +118,6 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, isApplyi
         names = text
           .split(/\r?\n/)
           .map((line) => {
-            // Take first column (or the whole line)
             const cols = line.split(/[,;\t]/);
             return cols[0]?.trim() ?? "";
           })
@@ -119,7 +128,6 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, isApplyi
         const sheet = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { header: 1 });
 
-        // Find column with dish names (first non-empty string column, skip header-like rows)
         for (const row of json) {
           const vals = Object.values(row);
           const first = vals[0];
@@ -132,15 +140,78 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, isApplyi
         }
       }
 
-      // Match each name against existing dishes
-      const parsed: ParsedRow[] = names.map((rawName) => {
-        const { dish, score } = findBestMatch(rawName, dishes);
-        return { rawName, matchedDish: dish, similarity: score };
-      });
-
-      setRows(parsed);
+      matchNames(names);
     },
     [dishes]
+  );
+
+  // OCR handler (PDF, DOCX, images)
+  const handleOcrFile = useCallback(
+    async (file: File) => {
+      setFileName(file.name);
+      setIsOcrProcessing(true);
+
+      try {
+        // Convert file to base64
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+
+        const { data, error } = await supabase.functions.invoke("ocr-menu-import", {
+          body: {
+            fileBase64: base64,
+            mimeType: file.type || "application/octet-stream",
+            fileName: file.name,
+          },
+        });
+
+        if (error) throw error;
+
+        const dishNames: string[] = data?.dishes || [];
+        if (dishNames.length === 0) {
+          toast({
+            title: "Žiadne jedlá nenájdené",
+            description: "AI nerozpoznalo žiadne názvy jedál v dokumente. Skúste iný súbor.",
+            variant: "destructive",
+          });
+          resetState();
+          return;
+        }
+
+        matchNames(dishNames);
+        toast({
+          title: `OCR úspešný`,
+          description: `AI rozpoznalo ${dishNames.length} jedál z dokumentu.`,
+        });
+      } catch (e: any) {
+        console.error("OCR error:", e);
+        toast({
+          title: "Chyba pri OCR spracovaní",
+          description: e.message || "Nepodarilo sa spracovať súbor",
+          variant: "destructive",
+        });
+        resetState();
+      } finally {
+        setIsOcrProcessing(false);
+      }
+    },
+    [dishes, toast]
+  );
+
+  const handleFile = useCallback(
+    (file: File) => {
+      const ext = file.name.toLowerCase().split(".").pop() || "";
+      if (["xlsx", "xls", "csv"].includes(ext)) {
+        handleExcelFile(file);
+      } else {
+        handleOcrFile(file);
+      }
+    },
+    [handleExcelFile, handleOcrFile]
   );
 
   const handleDrop = useCallback(
@@ -168,10 +239,6 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, isApplyi
     );
   };
 
-  const handleManualMatch = (index: number, dish: Dish) => {
-    setRows((prev) => prev.map((r, i) => (i === index ? { ...r, matchedDish: dish, similarity: 1 } : r)));
-  };
-
   const matchedRows = rows.filter((r) => r.matchedDish !== null);
 
   const handleApply = async () => {
@@ -180,6 +247,8 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, isApplyi
     resetState();
     onOpenChange(false);
   };
+
+  const currentAccept = importMode === "excel" ? EXCEL_ACCEPT : OCR_ACCEPT;
 
   return (
     <Dialog
@@ -193,31 +262,83 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, isApplyi
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-primary" />
-            Import z Excel / CSV
+            Import menu
           </DialogTitle>
           <DialogDescription>
-            Nahrajte súbor s názvami jedál. Systém ich automaticky priradí k existujúcim jedlám v databáze.
+            Importujte jedlá z Excel/CSV alebo naskenujte PDF/obrázok pomocou AI OCR.
           </DialogDescription>
         </DialogHeader>
 
-        {rows.length === 0 ? (
-          /* Drop zone */
-          <div
-            className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm font-medium text-foreground">Pretiahnite súbor sem</p>
-            <p className="text-xs text-muted-foreground mt-1">alebo kliknite pre výber (.xlsx, .xls, .csv)</p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx,.xls,.csv"
-              className="hidden"
-              onChange={handleInputChange}
-            />
+        {rows.length === 0 && !isOcrProcessing ? (
+          <div className="space-y-4">
+            {/* Mode tabs */}
+            <Tabs value={importMode} onValueChange={(v) => setImportMode(v as "excel" | "ocr")}>
+              <TabsList className="w-full">
+                <TabsTrigger value="excel" className="flex-1 gap-1.5">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Excel / CSV
+                </TabsTrigger>
+                <TabsTrigger value="ocr" className="flex-1 gap-1.5">
+                  <Sparkles className="h-4 w-4" />
+                  PDF / OCR
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="excel" className="mt-3">
+                <div
+                  className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <FileSpreadsheet className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm font-medium text-foreground">Pretiahnite Excel/CSV súbor sem</p>
+                  <p className="text-xs text-muted-foreground mt-1">alebo kliknite pre výber (.xlsx, .xls, .csv)</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={EXCEL_ACCEPT}
+                    className="hidden"
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="ocr" className="mt-3">
+                <div
+                  className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                    <Image className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">Pretiahnite PDF, Word alebo obrázok</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    AI automaticky rozpozná názvy jedál (.pdf, .docx, .jpg, .png)
+                  </p>
+                  <Badge variant="secondary" className="mt-2 gap-1">
+                    <Sparkles className="h-3 w-3" />
+                    AI OCR
+                  </Badge>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={OCR_ACCEPT}
+                    className="hidden"
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        ) : isOcrProcessing ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm font-medium text-foreground">AI spracováva dokument...</p>
+            <p className="text-xs text-muted-foreground">{fileName}</p>
           </div>
         ) : (
           /* Parsed results */
@@ -287,9 +408,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, isApplyi
               variant="outline"
               size="sm"
               className="w-full"
-              onClick={() => {
-                resetState();
-              }}
+              onClick={() => resetState()}
             >
               Nahrať iný súbor
             </Button>
@@ -302,9 +421,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, isApplyi
           </Button>
           {matchedRows.length > 0 && (
             <Button onClick={handleApply} disabled={isApplying}>
-              {isApplying
-                ? "Pridávam…"
-                : `Pridať ${matchedRows.length} jedál`}
+              {isApplying ? "Pridávam…" : `Pridať ${matchedRows.length} jedál`}
             </Button>
           )}
         </DialogFooter>
