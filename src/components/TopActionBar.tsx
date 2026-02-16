@@ -14,7 +14,7 @@ export function TopActionBar() {
 
       <div className="h-5 w-px bg-border" />
 
-      <div className="mr-auto">
+      <div className="mr-auto" onClick={() => navigate("/dashboard")}>
         <LogoBrand size="md" />
       </div>
 
