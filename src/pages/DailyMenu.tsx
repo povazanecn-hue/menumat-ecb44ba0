@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { addWeeks, format, isToday } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar, Wand2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Dish, useDishes } from "@/hooks/useDishes";
@@ -20,6 +20,7 @@ import {
 import { DayMenuCard } from "@/components/daily-menu/DayMenuCard";
 import { DishPickerDialog } from "@/components/daily-menu/DishPickerDialog";
 import { AiMenuDialog } from "@/components/daily-menu/AiMenuDialog";
+import { ImportMenuDialog } from "@/components/daily-menu/ImportMenuDialog";
 
 export default function DailyMenu() {
   const { toast } = useToast();
@@ -27,6 +28,8 @@ export default function DailyMenu() {
   const [pickerDate, setPickerDate] = useState<Date | null>(null);
   const [aiDate, setAiDate] = useState<Date | null>(null);
   const [aiApplying, setAiApplying] = useState(false);
+  const [importDate, setImportDate] = useState<Date | null>(null);
+  const [importApplying, setImportApplying] = useState(false);
 
   const weekdays = getWeekdays(weekStart);
   const { data: menus = [], isLoading } = useWeekMenus(weekStart);
@@ -123,6 +126,27 @@ export default function DailyMenu() {
     }
   };
 
+  // Import: apply dish IDs from Excel/CSV to the chosen day
+  const handleImportApply = async (dishIds: string[]) => {
+    if (!importDate) return;
+    setImportApplying(true);
+    try {
+      const dateKey = formatDateKey(importDate);
+      const menuId = await upsertMenu.mutateAsync(dateKey);
+      const menu = getMenuForDate(importDate);
+      let sortOrder = (menu?.menu_items?.length ?? 0) + 1;
+      for (const dishId of dishIds) {
+        await addMenuItem.mutateAsync({ menuId, dishId, sortOrder });
+        sortOrder++;
+      }
+      toast({ title: `${dishIds.length} jedál importovaných` });
+    } catch (e: any) {
+      toast({ title: "Chyba", description: e.message, variant: "destructive" });
+    } finally {
+      setImportApplying(false);
+    }
+  };
+
   const weekLabel = `${format(weekdays[0], "d. MMM", { locale: sk })} – ${format(
     weekdays[4],
     "d. MMM yyyy",
@@ -190,6 +214,7 @@ export default function DailyMenu() {
               onRemoveItem={handleRemoveItem}
               onPublish={handlePublish}
               onAiGenerate={() => setAiDate(date)}
+              onImport={() => setImportDate(date)}
               isToday={isToday(date)}
             />
           ))}
@@ -215,6 +240,15 @@ export default function DailyMenu() {
         nonRepeatDays={14}
         onApply={handleAiApply}
         isApplying={aiApplying}
+      />
+
+      {/* Excel/CSV Import */}
+      <ImportMenuDialog
+        open={!!importDate}
+        onOpenChange={(open) => !open && setImportDate(null)}
+        dishes={allDishes}
+        onApply={handleImportApply}
+        isApplying={importApplying}
       />
     </div>
   );
