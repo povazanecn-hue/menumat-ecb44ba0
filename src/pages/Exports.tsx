@@ -13,6 +13,7 @@ export default function Exports() {
   const { data: templateSettings } = useTemplateSettings();
   const [selectedMenuId, setSelectedMenuId] = useState<string>("");
   const [activeTemplate, setActiveTemplate] = useState<string>("");
+  const [showFinancials, setShowFinancials] = useState(false);
 
   const selectedMenu = menus?.find((m: any) => m.id === selectedMenuId) ?? null;
 
@@ -64,8 +65,8 @@ export default function Exports() {
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <MenuPreview menu={selectedMenu} templateStyle={activeTemplate || templateSettings?.primary_template || "country"} />
-            <ExportActions menu={selectedMenu} onTemplateChange={setActiveTemplate} />
+            <MenuPreview menu={selectedMenu} templateStyle={activeTemplate || templateSettings?.primary_template || "country"} showFinancials={showFinancials} />
+            <ExportActions menu={selectedMenu} onTemplateChange={setActiveTemplate} onShowFinancialsChange={setShowFinancials} />
           </div>
         </TabsContent>
 

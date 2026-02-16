@@ -6,9 +6,10 @@ import { TEMPLATE_PRESETS } from "@/hooks/useTemplates";
 interface MenuPreviewProps {
   menu: any;
   templateStyle?: string;
+  showFinancials?: boolean;
 }
 
-export function MenuPreview({ menu, templateStyle = "country" }: MenuPreviewProps) {
+export function MenuPreview({ menu, templateStyle = "country", showFinancials = false }: MenuPreviewProps) {
   const preset = TEMPLATE_PRESETS.find((p) => p.id === templateStyle) ?? TEMPLATE_PRESETS[0];
   const { previewColors } = preset;
 
@@ -36,6 +37,17 @@ export function MenuPreview({ menu, templateStyle = "country" }: MenuPreviewProp
   const getPrice = (item: any) => {
     const p = item.override_price ?? item.dish?.final_price ?? item.dish?.recommended_price ?? 0;
     return `${Number(p).toFixed(2)} €`;
+  };
+
+  const getCost = (item: any) => {
+    return Number(item.dish?.cost ?? 0).toFixed(2);
+  };
+
+  const getMargin = (item: any) => {
+    const price = item.override_price ?? item.dish?.final_price ?? item.dish?.recommended_price ?? 0;
+    const cost = item.dish?.cost ?? 0;
+    if (cost === 0) return "—";
+    return `${(((price - cost) / cost) * 100).toFixed(0)}%`;
   };
 
   const dateStr = menu.menu_date
@@ -86,16 +98,24 @@ export function MenuPreview({ menu, templateStyle = "country" }: MenuPreviewProp
                 {catItems.map((item: any) => (
                   <div
                     key={item.id}
-                    className="flex justify-between items-baseline text-sm py-0.5"
+                    className="text-sm py-0.5"
                     style={{ borderBottom: `1px dotted ${previewColors.accent}25` }}
                   >
-                    <span>
-                      {item.dish?.name}
-                      {item.dish?.grammage && (
-                        <span className="ml-1 opacity-60 text-xs">({item.dish.grammage})</span>
-                      )}
-                    </span>
-                    <span className="font-bold ml-4 whitespace-nowrap">{getPrice(item)}</span>
+                    <div className="flex justify-between items-baseline">
+                      <span>
+                        {item.dish?.name}
+                        {item.dish?.grammage && (
+                          <span className="ml-1 opacity-60 text-xs">({item.dish.grammage})</span>
+                        )}
+                      </span>
+                      <span className="font-bold ml-4 whitespace-nowrap">{getPrice(item)}</span>
+                    </div>
+                    {showFinancials && (
+                      <div className="flex gap-3 text-[10px] opacity-50 mt-0.5">
+                        <span>Náklad: {getCost(item)} €</span>
+                        <span>Marža: {getMargin(item)}</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

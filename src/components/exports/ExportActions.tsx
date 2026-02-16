@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
-import { Monitor, Printer, FileSpreadsheet, Globe, Loader2, ExternalLink, Copy } from "lucide-react";
+import { Monitor, Printer, FileSpreadsheet, Globe, Loader2, ExternalLink, Copy, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { exportTV, exportPDF, exportExcel, exportWebEmbed } from "@/lib/exportUtils";
 import { useSaveExport, type ExportFormat } from "@/hooks/useExports";
 import { useTemplateSettings } from "@/hooks/useTemplates";
+import { useCanViewFinancials } from "@/hooks/useUserRole";
 
 interface ExportActionsProps {
   menu: any;
   onTemplateChange?: (template: string) => void;
+  onShowFinancialsChange?: (show: boolean) => void;
 }
 
 const TEMPLATES = [
@@ -20,12 +24,14 @@ const TEMPLATES = [
   { value: "modern", label: "Moderný" },
 ];
 
-export function ExportActions({ menu, onTemplateChange }: ExportActionsProps) {
+export function ExportActions({ menu, onTemplateChange, onShowFinancialsChange }: ExportActionsProps) {
   const { data: templateSettings } = useTemplateSettings();
+  const canViewFinancials = useCanViewFinancials();
   const [template, setTemplate] = useState("country");
   const [loading, setLoading] = useState<string | null>(null);
   const [embedResult, setEmbedResult] = useState<{ url: string; embedSnippet: string } | null>(null);
   const [tvResult, setTvResult] = useState<{ url: string } | null>(null);
+  const [showFinancials, setShowFinancials] = useState(false);
   const saveExport = useSaveExport();
 
   useEffect(() => {
@@ -111,6 +117,26 @@ export function ExportActions({ menu, onTemplateChange }: ExportActionsProps) {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Financial visibility toggle - only for owner/manager */}
+        {canViewFinancials && (
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div className="flex items-center gap-2">
+              {showFinancials ? <Eye className="h-4 w-4 text-primary" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+              <Label htmlFor="show-financials" className="text-sm cursor-pointer">
+                Zobraziť náklady a maržu
+              </Label>
+            </div>
+            <Switch
+              id="show-financials"
+              checked={showFinancials}
+              onCheckedChange={(checked) => {
+                setShowFinancials(checked);
+                onShowFinancialsChange?.(checked);
+              }}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <Button
