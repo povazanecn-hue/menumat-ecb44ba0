@@ -116,6 +116,9 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
   const [ocrProgressMessage, setOcrProgressMessage] = useState<string>("AI spracováva dokument...");
   const [importMode, setImportMode] = useState<"koliesko" | "excel" | "ocr">("koliesko");
   const [useEnhance, setUseEnhance] = useState(true);
+  const [originalPreview, setOriginalPreview] = useState<string | null>(null);
+  const [enhancedPreview, setEnhancedPreview] = useState<string | null>(null);
+  const [pendingOcrData, setPendingOcrData] = useState<{ base64: string; mimeType: string; fileName: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -125,6 +128,9 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
     setFileName(null);
     setIsOcrProcessing(false);
     setOcrProgressMessage("AI spracováva dokument...");
+    setOriginalPreview(null);
+    setEnhancedPreview(null);
+    setPendingOcrData(null);
   };
 
   const matchNames = (names: string[]) => {
@@ -259,18 +265,26 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
         // Step 1: Cloudinary enhance for images
         if (useEnhance && isImage) {
           setOcrProgressMessage("Vylepšujem kvalitu fotky (Cloudinary)...");
+          const dataUrl = `data:${file.type};base64,${base64}`;
+          setOriginalPreview(dataUrl);
           try {
-            const dataUrl = `data:${file.type};base64,${base64}`;
             const result = await cloudinary.enhance(dataUrl);
             if (result?.url) {
               enhancedUrl = result.url;
+              setEnhancedPreview(enhancedUrl);
+              // Pause – show preview and wait for user to continue
+              setPendingOcrData({ base64, mimeType: file.type, fileName: file.name });
+              setIsOcrProcessing(false);
+              return;
             }
           } catch (enhanceErr) {
             console.warn("Cloudinary enhance failed, falling back to direct OCR:", enhanceErr);
           }
+        } else if (isImage) {
+          setOriginalPreview(`data:${file.type};base64,${base64}`);
         }
 
-        // Step 2: AI OCR
+        // Step 2: AI OCR (direct, no enhance or enhance failed)
         setOcrProgressMessage("AI rozpoznáva jedlá...");
 
         const ocrBody: Record<string, any> = {
@@ -348,6 +362,70 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
     [dishes, toast]
   );
 
+  /** Continue OCR after user reviewed enhanced preview */
+  const continueOcrAfterPreview = useCallback(async () => {
+    if (!pendingOcrData) return;
+    setIsOcrProcessing(true);
+    setOcrProgressMessage("AI rozpoznáva jedlá...");
+    setOriginalPreview(null);
+    setEnhancedPreview(null);
+
+    const { base64, mimeType, fileName: fName } = pendingOcrData;
+    const imageUrl = enhancedPreview;
+
+    try {
+      const ocrBody: Record<string, any> = {
+        mimeType: mimeType || "application/octet-stream",
+        fileName: fName,
+        mode: "structured",
+      };
+      if (imageUrl) {
+        ocrBody.imageUrl = imageUrl;
+      } else {
+        ocrBody.fileBase64 = base64;
+      }
+
+      const { data, error } = await supabase.functions.invoke("ocr-menu-import", { body: ocrBody });
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: "Chyba OCR", description: data.error, variant: "destructive" });
+        resetState();
+        return;
+      }
+
+      const ocrDays = data?.days || [];
+      if (ocrDays.length > 0) {
+        const results: ImportDayResult[] = ocrDays.map((day: any) => ({
+          dayName: day.dayName,
+          dateStr: day.dateStr,
+          items: day.items.map((item: any) => {
+            const { dish, score } = findBestMatch(item.name, dishes);
+            return { rawName: item.name, matchedDish: dish, similarity: score, slot: item.slot || "Menu", grammage: item.grammage || "", price: item.price, allergens: item.allergens || [] };
+          }).filter((i: any) => i.rawName.length > 0),
+        }));
+        setWeeklyData(results);
+        const totalItems = results.reduce((s, d) => s + d.items.length, 0);
+        const matched = results.reduce((s, d) => s + d.items.filter(i => i.matchedDish).length, 0);
+        toast({ title: `OCR: ${ocrDays.length} dní rozpoznaných`, description: `${matched}/${totalItems} jedál priradených.` });
+      } else {
+        const dishNames: string[] = data?.dishes || [];
+        if (dishNames.length === 0) {
+          toast({ title: "Žiadne jedlá nenájdené", variant: "destructive" });
+          resetState();
+          return;
+        }
+        matchNames(dishNames);
+        toast({ title: `OCR úspešný`, description: `${dishNames.length} jedál.` });
+      }
+      setPendingOcrData(null);
+    } catch (e: any) {
+      toast({ title: "Chyba OCR", description: e.message, variant: "destructive" });
+      resetState();
+    } finally {
+      setIsOcrProcessing(false);
+    }
+  }, [pendingOcrData, enhancedPreview, dishes, toast]);
+
   const handleFile = useCallback(
     (file: File) => {
       const ext = file.name.toLowerCase().split(".").pop() || "";
@@ -410,6 +488,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
   };
 
   const hasResults = rows.length > 0 || weeklyData !== null;
+  const showEnhancePreview = pendingOcrData !== null && enhancedPreview !== null && !isOcrProcessing;
   const currentAccept = importMode === "ocr" ? OCR_ACCEPT : EXCEL_ACCEPT;
 
   return (
@@ -431,7 +510,40 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
           </DialogDescription>
         </DialogHeader>
 
-        {!hasResults && !isOcrProcessing ? (
+        {showEnhancePreview ? (
+          <div className="space-y-4">
+            <p className="text-sm font-medium text-foreground text-center">Porovnanie: Originál vs Vylepšené</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-muted-foreground text-center font-medium uppercase tracking-wider">Originál</p>
+                <div className="border border-border rounded-lg overflow-hidden bg-muted/20">
+                  {originalPreview && (
+                    <img src={originalPreview} alt="Originál" className="w-full h-48 object-contain" />
+                  )}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-primary text-center font-medium uppercase tracking-wider flex items-center justify-center gap-1">
+                  <Wand2 className="h-3 w-3" />
+                  Vylepšené
+                </p>
+                <div className="border border-primary/30 rounded-lg overflow-hidden bg-muted/20">
+                  <img src={enhancedPreview} alt="Vylepšené" className="w-full h-48 object-contain" />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" size="sm" onClick={resetState}>
+                <X className="h-3.5 w-3.5 mr-1" />
+                Zrušiť
+              </Button>
+              <Button size="sm" onClick={continueOcrAfterPreview}>
+                <Sparkles className="h-3.5 w-3.5 mr-1" />
+                Pokračovať na AI OCR
+              </Button>
+            </div>
+          </div>
+        ) : !hasResults && !isOcrProcessing ? (
           <div className="space-y-4">
             <Tabs value={importMode} onValueChange={(v) => setImportMode(v as any)}>
               <TabsList className="w-full">
