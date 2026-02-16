@@ -173,11 +173,31 @@
 
   .logo-glow {
     text-shadow:
-      0 0 10px hsl(40 55% 55% / 0.7),
-      0 0 30px hsl(40 55% 55% / 0.4),
-      0 0 60px hsl(40 55% 55% / 0.2),
-      0 0 100px hsl(40 55% 55% / 0.1);
+      /* Sharp side shadow - no blur */
+      2px 2px 0px hsl(20 30% 5%),
+      -1px -1px 0px hsl(20 30% 5% / 0.5),
+      1px 0px 0px hsl(20 30% 5% / 0.7),
+      0px 1px 0px hsl(20 30% 5% / 0.7),
+      /* Thin black outline */
+      1px 1px 0px hsl(0 0% 0%),
+      -1px -1px 0px hsl(0 0% 0% / 0.4),
+      1px -1px 0px hsl(0 0% 0% / 0.4),
+      -1px 1px 0px hsl(0 0% 0% / 0.4),
+      /* Gold glow */
+      0 0 15px hsl(40 55% 55% / 0.8),
+      0 0 40px hsl(40 55% 55% / 0.4),
+      0 0 80px hsl(40 55% 55% / 0.2);
     animation: logo-pulse 3s ease-in-out infinite;
+  }
+
+  .logo-glow-light {
+    text-shadow:
+      1px 1px 0px hsl(20 30% 5% / 0.6),
+      -1px -1px 0px hsl(0 0% 0% / 0.3),
+      1px -1px 0px hsl(0 0% 0% / 0.3),
+      -1px 1px 0px hsl(0 0% 0% / 0.3),
+      0 0 8px hsl(40 55% 55% / 0.5),
+      0 0 20px hsl(40 55% 55% / 0.2);
   }
 
   .icon-glow {
@@ -201,17 +221,31 @@
 @keyframes logo-pulse {
   0%, 100% {
     text-shadow:
-      0 0 10px hsl(40 55% 55% / 0.7),
-      0 0 30px hsl(40 55% 55% / 0.4),
-      0 0 60px hsl(40 55% 55% / 0.2),
-      0 0 100px hsl(40 55% 55% / 0.1);
+      2px 2px 0px hsl(20 30% 5%),
+      -1px -1px 0px hsl(20 30% 5% / 0.5),
+      1px 0px 0px hsl(20 30% 5% / 0.7),
+      0px 1px 0px hsl(20 30% 5% / 0.7),
+      1px 1px 0px hsl(0 0% 0%),
+      -1px -1px 0px hsl(0 0% 0% / 0.4),
+      1px -1px 0px hsl(0 0% 0% / 0.4),
+      -1px 1px 0px hsl(0 0% 0% / 0.4),
+      0 0 15px hsl(40 55% 55% / 0.8),
+      0 0 40px hsl(40 55% 55% / 0.4),
+      0 0 80px hsl(40 55% 55% / 0.2);
   }
   50% {
     text-shadow:
-      0 0 20px hsl(40 55% 55% / 0.9),
-      0 0 50px hsl(40 55% 55% / 0.6),
-      0 0 90px hsl(40 55% 55% / 0.3),
-      0 0 130px hsl(40 55% 55% / 0.15);
+      2px 2px 0px hsl(20 30% 5%),
+      -1px -1px 0px hsl(20 30% 5% / 0.5),
+      1px 0px 0px hsl(20 30% 5% / 0.7),
+      0px 1px 0px hsl(20 30% 5% / 0.7),
+      1px 1px 0px hsl(0 0% 0%),
+      -1px -1px 0px hsl(0 0% 0% / 0.4),
+      1px -1px 0px hsl(0 0% 0% / 0.4),
+      -1px 1px 0px hsl(0 0% 0% / 0.4),
+      0 0 25px hsl(40 55% 55% / 1),
+      0 0 60px hsl(40 55% 55% / 0.6),
+      0 0 100px hsl(40 55% 55% / 0.3);
   }
 }
 
