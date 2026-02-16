@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Trash2, Tag, ArrowDown, Check } from "lucide-react";
+import { Trash2, Tag, ArrowDown, Check, Sparkles, Globe, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -111,6 +111,24 @@ export function SupplierPriceTable({
                 <Badge className="text-[10px] gap-1 px-1.5 bg-primary/10 text-primary border-primary/20">
                   <ArrowDown className="h-3 w-3" />
                   Najlacnejšie
+                </Badge>
+              )}
+              {sp.confidence === "ai_extracted" && (
+                <Badge className="text-[10px] gap-1 px-1.5 bg-violet-500/15 text-violet-400 border-violet-500/30">
+                  <Sparkles className="h-3 w-3" />
+                  AI
+                </Badge>
+              )}
+              {sp.confidence === "web_scraped" && (
+                <Badge className="text-[10px] gap-1 px-1.5 bg-sky-500/15 text-sky-400 border-sky-500/30">
+                  <Globe className="h-3 w-3" />
+                  Web
+                </Badge>
+              )}
+              {(sp.confidence === "manual" || !sp.confidence) && (
+                <Badge className="text-[10px] gap-1 px-1.5 bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                  <User className="h-3 w-3" />
+                  Manuálne
                 </Badge>
               )}
               <span className="flex-1" />
