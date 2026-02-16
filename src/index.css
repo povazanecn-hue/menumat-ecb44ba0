@@ -166,4 +166,16 @@
   .bg-gold-gradient:hover {
     background: linear-gradient(135deg, hsl(40 60% 40%), hsl(38 50% 55%));
   }
+
+  .logo-glow {
+    text-shadow:
+      0 0 10px hsl(40 55% 55% / 0.6),
+      0 0 30px hsl(40 55% 55% / 0.3),
+      0 0 60px hsl(40 55% 55% / 0.15);
+  }
+
+  .icon-glow {
+    filter: drop-shadow(0 0 12px hsl(40 55% 55% / 0.7))
+            drop-shadow(0 0 30px hsl(40 55% 55% / 0.3));
+  }
 }

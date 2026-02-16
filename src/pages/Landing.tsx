@@ -102,8 +102,8 @@ export default function Landing() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <ChefHat className="h-7 w-7 text-primary drop-shadow-[0_0_8px_hsl(40_55%_55%/0.6)]" />
-          <span className="font-serif text-xl font-bold tracking-wider text-primary">MENU MASTER</span>
+          <ChefHat className="h-8 w-8 text-primary icon-glow" />
+          <span className="font-serif text-2xl font-bold tracking-wider text-primary logo-glow">MENU MASTER</span>
         </motion.div>
 
         {/* Hero food image */}
@@ -220,7 +220,7 @@ export default function Landing() {
         >
           {features.map((f) => (
             <motion.div key={f.title} variants={fadeUp}>
-              <Card className="group h-full border-border/50 transition-all duration-300 hover:border-primary/40 hover:shadow-[0_8px_30px_hsl(40_55%_55%/0.1)]">
+              <Card className="group h-full border-border/50 bg-card/60 backdrop-blur-md transition-all duration-300 hover:border-primary/40 hover:shadow-[0_8px_30px_hsl(40_55%_55%/0.1)]">
                 <CardContent className="flex flex-col gap-3 p-6">
                   <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-300 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_hsl(40_55%_55%/0.2)]">
                     <f.icon className="h-7 w-7 transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(40_55%_55%/0.5)]" />
@@ -235,7 +235,7 @@ export default function Landing() {
       </section>
 
       {/* How it works */}
-      <section className="border-y border-border/50 bg-card/50 px-4 py-24">
+      <section className="border-y border-border/50 bg-card/40 backdrop-blur-sm px-4 py-24">
         <div className="mx-auto max-w-4xl">
           <motion.h2
             className="mb-14 text-center font-serif text-3xl font-bold sm:text-5xl"
