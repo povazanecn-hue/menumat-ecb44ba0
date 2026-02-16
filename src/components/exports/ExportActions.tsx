@@ -24,6 +24,7 @@ export function ExportActions({ menu }: ExportActionsProps) {
   const [template, setTemplate] = useState("country");
   const [loading, setLoading] = useState<string | null>(null);
   const [embedResult, setEmbedResult] = useState<{ url: string; embedSnippet: string } | null>(null);
+  const [tvResult, setTvResult] = useState<{ url: string } | null>(null);
   const saveExport = useSaveExport();
 
   useEffect(() => {
@@ -32,9 +33,10 @@ export function ExportActions({ menu }: ExportActionsProps) {
     }
   }, [templateSettings]);
 
-  // Reset embed result when menu changes
+  // Reset results when menu changes
   useEffect(() => {
     setEmbedResult(null);
+    setTvResult(null);
   }, [menu?.id]);
 
   const handleExport = async (format: ExportFormat) => {
@@ -44,9 +46,16 @@ export function ExportActions({ menu }: ExportActionsProps) {
       let fileUrl: string | undefined;
 
       switch (format) {
-        case "tv":
-          exportTV(menu, template);
+        case "tv": {
+          const result = await exportTV(menu, template);
+          setTvResult(result);
+          fileUrl = result.url;
+          toast({
+            title: "TV displej publikovaný",
+            description: "Live URL je pripravená pre váš smart TV.",
+          });
           break;
+        }
         case "pdf":
           exportPDF(menu, template);
           break;
@@ -70,7 +79,7 @@ export function ExportActions({ menu }: ExportActionsProps) {
         templateName: format === "excel" ? undefined : template,
         fileUrl,
       });
-      if (format !== "webflow") {
+      if (format !== "webflow" && format !== "tv") {
         toast({ title: "Export úspešný", description: `Formát: ${format.toUpperCase()}` });
       }
     } catch (e: any) {
@@ -143,6 +152,51 @@ export function ExportActions({ menu }: ExportActionsProps) {
             <span className="text-xs">Web embed</span>
           </Button>
         </div>
+
+        {/* TV Live URL result */}
+        {tvResult && (
+          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+            <div className="flex items-center gap-2">
+              <Monitor className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">TV FullHD displej (1920×1080)</span>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Live URL — otvorte v prehliadači na smart TV</label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={tvResult.url}
+                  className="text-xs h-8 font-mono"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 shrink-0"
+                  onClick={() => window.open(tvResult.url, "_blank")}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 shrink-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(tvResult.url);
+                    toast({ title: "URL skopírovaná" });
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              Stránka sa automaticky obnovuje každých 60 sekúnd. Rovnaký dátum = rovnaká URL.
+            </p>
+          </div>
+        )}
 
         {/* Embed result with live URL */}
         {embedResult && (
