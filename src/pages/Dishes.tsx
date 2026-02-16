@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Search, Pencil, Trash2, BookOpen, TrendingUp } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, BookOpen, TrendingUp, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,23 @@ export default function Dishes() {
   const createDish = useCreateDish();
   const updateDish = useUpdateDish();
   const deleteDish = useDeleteDish();
+
+  // R26: Track dishes with unpriced ingredients
+  const [dishesWithMissingPrices, setDishesWithMissingPrices] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!restaurantId) return;
+    (async () => {
+      // Find dish_ingredients where the linked ingredient has base_price = 0
+      const { data } = await supabase
+        .from("dish_ingredients")
+        .select("dish_id, ingredient:ingredients!inner(base_price)")
+        .eq("ingredient.base_price", 0);
+      if (data) {
+        const ids = new Set(data.map((row: any) => row.dish_id));
+        setDishesWithMissingPrices(ids);
+      }
+    })();
+  }, [restaurantId, dishes]);
   const { toast } = useToast();
 
   const [search, setSearch] = useState("");
@@ -206,6 +223,15 @@ export default function Dishes() {
                           onClick={() => setRecipeTarget({ id: dish.id, name: dish.name })}
                         >
                           <BookOpen className="h-3 w-3 mr-0.5" />R
+                        </Badge>
+                      )}
+                      {canViewFinancials && dishesWithMissingPrices.has(dish.id) && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0 border-destructive/40 text-destructive"
+                          title="Jedlo obsahuje ingrediencie bez ceny — náklady sú neúplné"
+                        >
+                          <AlertTriangle className="h-3 w-3 mr-0.5" />Neúplné
                         </Badge>
                       )}
                     </div>

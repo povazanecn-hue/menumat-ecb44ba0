@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Wand2, Loader2 } from "lucide-react";
+import { Wand2, Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +11,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dish } from "@/hooks/useDishes";
+import { DISH_CATEGORIES } from "@/lib/constants";
 
 interface AiMenuSlots {
   soups: number;
@@ -19,10 +21,16 @@ interface AiMenuSlots {
   desserts: number;
 }
 
+interface CategorySlot {
+  category: string;
+  count: number;
+}
+
 interface AiMenuResult {
   soups: string[];
   mains: string[];
   desserts: string[];
+  extras?: Record<string, string[]>;
 }
 
 interface AiMenuDialogProps {
@@ -35,6 +43,16 @@ interface AiMenuDialogProps {
   isApplying: boolean;
 }
 
+const EXTRA_CATEGORIES = [
+  { value: "predjedlo", label: "Predjedlo" },
+  { value: "salat", label: "Šalát" },
+  { value: "pizza", label: "Pizza" },
+  { value: "burger", label: "Burger" },
+  { value: "pasta", label: "Pasta" },
+  { value: "napoj", label: "Nápoj" },
+  { value: "ine", label: "Iné" },
+];
+
 export function AiMenuDialog({
   open,
   onOpenChange,
@@ -45,9 +63,26 @@ export function AiMenuDialog({
   isApplying,
 }: AiMenuDialogProps) {
   const [slots, setSlots] = useState<AiMenuSlots>({ soups: 1, mains: 3, desserts: 1 });
+  const [extraSlots, setExtraSlots] = useState<CategorySlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AiMenuResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const addExtraSlot = () => {
+    const usedCategories = extraSlots.map((s) => s.category);
+    const available = EXTRA_CATEGORIES.find((c) => !usedCategories.includes(c.value));
+    if (available) {
+      setExtraSlots([...extraSlots, { category: available.value, count: 1 }]);
+    }
+  };
+
+  const removeExtraSlot = (index: number) => {
+    setExtraSlots(extraSlots.filter((_, i) => i !== index));
+  };
+
+  const updateExtraSlot = (index: number, field: "category" | "count", value: string | number) => {
+    setExtraSlots(extraSlots.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  };
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -74,6 +109,7 @@ export function AiMenuDialog({
             })),
             recentUsage,
             slots,
+            extraSlots: extraSlots.filter((s) => s.count > 0),
             nonRepeatDays,
           }),
         }
@@ -94,7 +130,12 @@ export function AiMenuDialog({
   };
 
   const allSelectedIds = result
-    ? [...(result.soups || []), ...(result.mains || []), ...(result.desserts || [])]
+    ? [
+        ...(result.soups || []),
+        ...(result.mains || []),
+        ...(result.desserts || []),
+        ...Object.values(result.extras || {}).flat(),
+      ]
     : [];
 
   const getDishName = (id: string) => dishes.find((d) => d.id === id)?.name ?? id;
@@ -105,9 +146,11 @@ export function AiMenuDialog({
     onOpenChange(false);
   };
 
+  const usedExtraCategories = extraSlots.map((s) => s.category);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif flex items-center gap-2">
             <Wand2 className="h-5 w-5" />
@@ -122,6 +165,7 @@ export function AiMenuDialog({
             ohľadom na {nonRepeatDays}-dňové pravidlo neopakovania.
           </p>
 
+          {/* Core slots */}
           <div className="grid grid-cols-3 gap-3">
             <div>
               <Label className="text-xs">Polievky</Label>
@@ -160,6 +204,64 @@ export function AiMenuDialog({
               />
             </div>
           </div>
+
+          {/* Extra category slots */}
+          {extraSlots.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Voliteľné kategórie
+              </Label>
+              {extraSlots.map((slot, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Select
+                    value={slot.category}
+                    onValueChange={(v) => updateExtraSlot(index, "category", v)}
+                  >
+                    <SelectTrigger className="flex-1 h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EXTRA_CATEGORIES.filter(
+                        (c) => c.value === slot.category || !usedExtraCategories.includes(c.value)
+                      ).map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={5}
+                    value={slot.count}
+                    onChange={(e) => updateExtraSlot(index, "count", Number(e.target.value))}
+                    className="w-16 h-9"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-destructive shrink-0"
+                    onClick={() => removeExtraSlot(index)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {extraSlots.length < EXTRA_CATEGORIES.length && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-xs"
+              onClick={addExtraSlot}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              Pridať kategóriu (pizza, šalát, burger...)
+            </Button>
+          )}
 
           {!result && (
             <Button
@@ -242,6 +344,25 @@ export function AiMenuDialog({
                   </div>
                 </div>
               )}
+
+              {/* Extra categories */}
+              {result.extras &&
+                Object.entries(result.extras).map(([cat, ids]) =>
+                  ids.length > 0 ? (
+                    <div key={cat}>
+                      <span className="text-xs font-medium text-muted-foreground uppercase">
+                        {DISH_CATEGORIES[cat] ?? cat}
+                      </span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {ids.map((id) => (
+                          <Badge key={id} variant="outline" className="text-xs">
+                            {getDishName(id)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null
+                )}
             </div>
           )}
         </div>
