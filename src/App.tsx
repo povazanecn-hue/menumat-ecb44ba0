@@ -13,6 +13,7 @@ import Dashboard from "@/pages/Dashboard";
 import Dishes from "@/pages/Dishes";
 import DailyMenu from "@/pages/DailyMenu";
 import Ingredients from "@/pages/Ingredients";
+import Exports from "@/pages/Exports";
 import Placeholder from "@/pages/Placeholder";
 import NotFound from "@/pages/NotFound";
 
@@ -49,7 +50,7 @@ const App = () => (
                 <Route path="/ingredients" element={<Ingredients />} />
                 <Route path="/recipes" element={<Placeholder />} />
                 <Route path="/shopping-list" element={<Placeholder />} />
-                <Route path="/exports" element={<Placeholder />} />
+                <Route path="/exports" element={<Exports />} />
                 <Route path="/templates" element={<Placeholder />} />
                 <Route path="/settings" element={<Placeholder />} />
               </Route>
