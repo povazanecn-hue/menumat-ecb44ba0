@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDishes, useCreateDish, useUpdateDish, useDeleteDish, Dish } from "@/hooks/useDishes";
 import { useDishRecipeIds } from "@/hooks/useRecipes";
 import { useRestaurant } from "@/hooks/useRestaurant";
+import { useCanViewFinancials } from "@/hooks/useUserRole";
 import { DishFormDialog, DishFormData } from "@/components/dishes/DishFormDialog";
 import { RecipeDetailDialog } from "@/components/recipes/RecipeDetailDialog";
 import { DISH_CATEGORIES, ALLERGENS } from "@/lib/constants";
@@ -28,6 +29,7 @@ export default function Dishes() {
   const { data: dishes = [], isLoading } = useDishes();
   const { restaurantId } = useRestaurant();
   const { data: recipeIds = new Set() } = useDishRecipeIds(restaurantId);
+  const canViewFinancials = useCanViewFinancials();
   const createDish = useCreateDish();
   const updateDish = useUpdateDish();
   const deleteDish = useDeleteDish();
@@ -215,40 +217,51 @@ export default function Dishes() {
                     </div>
                   </div>
 
-                  {/* 3-column pricing */}
-                  <div className="hidden sm:flex items-center gap-3 shrink-0">
-                    {/* Cost */}
-                    <div className="text-right">
-                      <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Náklady</p>
-                      <p className="text-xs tabular-nums text-muted-foreground">{costWithVat.toFixed(2)} €</p>
+                  {/* 3-column pricing — hidden for staff/Chef role */}
+                  {canViewFinancials && (
+                    <div className="hidden sm:flex items-center gap-3 shrink-0">
+                      {/* Cost */}
+                      <div className="text-right">
+                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Náklady</p>
+                        <p className="text-xs tabular-nums text-muted-foreground">{costWithVat.toFixed(2)} €</p>
+                      </div>
+                      {/* Recommended */}
+                      <div className="text-right">
+                        <p className="text-[9px] uppercase tracking-wider text-primary/70">Dopor.</p>
+                        <p className="text-xs tabular-nums text-primary/70">{formatPrice(dish.recommended_price)}</p>
+                      </div>
+                      {/* Final */}
+                      <div className="text-right min-w-[60px]">
+                        <p className="text-[9px] uppercase tracking-wider text-accent">Finálna</p>
+                        <p className="text-sm font-bold tabular-nums text-foreground">
+                          {formatPrice(dish.final_price ?? dish.recommended_price)}
+                        </p>
+                      </div>
+                      {/* Margin indicator */}
+                      {dish.cost > 0 && (
+                        <Badge
+                          variant="secondary"
+                          className={`text-[9px] px-1.5 py-0.5 shrink-0 ${
+                            marginPercent < 30
+                              ? "border-destructive/30 text-destructive"
+                              : "border-primary/20 text-primary"
+                          }`}
+                        >
+                          <TrendingUp className="h-2.5 w-2.5 mr-0.5" />
+                          {marginPercent}%
+                        </Badge>
+                      )}
                     </div>
-                    {/* Recommended */}
-                    <div className="text-right">
-                      <p className="text-[9px] uppercase tracking-wider text-primary/70">Dopor.</p>
-                      <p className="text-xs tabular-nums text-primary/70">{formatPrice(dish.recommended_price)}</p>
-                    </div>
-                    {/* Final */}
-                    <div className="text-right min-w-[60px]">
-                      <p className="text-[9px] uppercase tracking-wider text-accent">Finálna</p>
+                  )}
+
+                  {/* Price always visible (final only for non-financial users) */}
+                  {!canViewFinancials && (
+                    <div className="hidden sm:block text-right shrink-0 min-w-[60px]">
                       <p className="text-sm font-bold tabular-nums text-foreground">
                         {formatPrice(dish.final_price ?? dish.recommended_price)}
                       </p>
                     </div>
-                    {/* Margin indicator */}
-                    {dish.cost > 0 && (
-                      <Badge
-                        variant="secondary"
-                        className={`text-[9px] px-1.5 py-0.5 shrink-0 ${
-                          marginPercent < 30
-                            ? "border-destructive/30 text-destructive"
-                            : "border-primary/20 text-primary"
-                        }`}
-                      >
-                        <TrendingUp className="h-2.5 w-2.5 mr-0.5" />
-                        {marginPercent}%
-                      </Badge>
-                    )}
-                  </div>
+                  )}
 
                   {/* Mobile: simple price */}
                   <div className="sm:hidden text-right shrink-0">

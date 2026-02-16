@@ -9,6 +9,7 @@ import {
   Palette,
   Settings,
   ChefHat,
+  ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -30,6 +31,7 @@ const mainNav = [
   { title: "Jedlá", url: "/dishes", icon: UtensilsCrossed },
   { title: "Ingrediencie", url: "/ingredients", icon: Carrot },
   { title: "Recepty", url: "/recipes", icon: BookOpen },
+  { title: "Jedálny lístok", url: "/permanent-menu", icon: ClipboardList },
 ];
 
 const toolsNav = [

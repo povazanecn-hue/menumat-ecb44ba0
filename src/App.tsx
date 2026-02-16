@@ -18,6 +18,7 @@ import Ingredients from "@/pages/Ingredients";
 import Exports from "@/pages/Exports";
 import Templates from "@/pages/Templates";
 import Settings from "@/pages/Settings";
+import PermanentMenu from "@/pages/PermanentMenu";
 import Landing from "@/pages/Landing";
 import NotFound from "@/pages/NotFound";
 
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="/dishes" element={<Dishes />} />
                 <Route path="/ingredients" element={<Ingredients />} />
                 <Route path="/recipes" element={<Recipes />} />
+                <Route path="/permanent-menu" element={<PermanentMenu />} />
                 <Route path="/shopping-list" element={<ShoppingList />} />
                 <Route path="/exports" element={<Exports />} />
                 <Route path="/templates" element={<Templates />} />

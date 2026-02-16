@@ -1,6 +1,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopActionBar } from "@/components/TopActionBar";
+import { OliviaAssistant } from "@/components/OliviaAssistant";
 import { Outlet } from "react-router-dom";
 
 export function AppLayout() {
@@ -14,6 +15,7 @@ export function AppLayout() {
             <Outlet />
           </main>
         </div>
+        <OliviaAssistant />
       </div>
     </SidebarProvider>
   );
