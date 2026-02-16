@@ -15,6 +15,7 @@ import DailyMenu from "@/pages/DailyMenu";
 import Recipes from "@/pages/Recipes";
 import Ingredients from "@/pages/Ingredients";
 import Exports from "@/pages/Exports";
+import Templates from "@/pages/Templates";
 import Placeholder from "@/pages/Placeholder";
 import NotFound from "@/pages/NotFound";
 
@@ -52,7 +53,7 @@ const App = () => (
                 <Route path="/recipes" element={<Recipes />} />
                 <Route path="/shopping-list" element={<Placeholder />} />
                 <Route path="/exports" element={<Exports />} />
-                <Route path="/templates" element={<Placeholder />} />
+                <Route path="/templates" element={<Templates />} />
                 <Route path="/settings" element={<Placeholder />} />
               </Route>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
