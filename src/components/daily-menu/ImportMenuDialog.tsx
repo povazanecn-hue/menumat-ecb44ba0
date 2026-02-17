@@ -125,25 +125,24 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
   const [cameraFacing, setCameraFacing] = useState<"environment" | "user">("environment");
   const [rawOcrText, setRawOcrText] = useState<string | null>(null);
   const [showOcrComparison, setShowOcrComparison] = useState(false);
-  const [editingItem, setEditingItem] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
+  const [editingItem, setEditingItem] = useState<{ dayIdx: number; itemIdx: number; field: "name" | "side_dish" | "extras" } | null>(null);
   const [editValue, setEditValue] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
 
-  const handleEditItem = (dayIdx: number, itemIdx: number) => {
+  const handleEditItem = (dayIdx: number, itemIdx: number, field: "name" | "side_dish" | "extras") => {
     const item = weeklyData?.[dayIdx]?.items[itemIdx];
     if (!item) return;
-    setEditingItem({ dayIdx, itemIdx });
-    setEditValue(item.rawName);
+    setEditingItem({ dayIdx, itemIdx, field });
+    setEditValue(field === "name" ? item.rawName : field === "side_dish" ? item.side_dish : item.extras);
     setTimeout(() => editInputRef.current?.focus(), 50);
   };
 
   const commitEdit = () => {
     if (!editingItem || !weeklyData) return;
-    const { dayIdx, itemIdx } = editingItem;
-    const newName = editValue.trim();
-    if (newName.length === 0) { setEditingItem(null); return; }
+    const { dayIdx, itemIdx, field } = editingItem;
+    const val = editValue.trim();
 
     setWeeklyData(prev => {
       if (!prev) return prev;
@@ -153,8 +152,13 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
           ...day,
           items: day.items.map((item, ii) => {
             if (ii !== itemIdx) return item;
-            const { dish, score } = findBestMatch(newName, dishes);
-            return { ...item, rawName: newName, matchedDish: dish, similarity: score };
+            if (field === "name") {
+              if (val.length === 0) return item;
+              const { dish, score } = findBestMatch(val, dishes);
+              return { ...item, rawName: val, matchedDish: dish, similarity: score };
+            }
+            if (field === "side_dish") return { ...item, side_dish: val };
+            return { ...item, extras: val };
           }),
         };
       });
@@ -838,7 +842,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                           <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
                         )}
                         <div className="flex-1 min-w-0">
-                          {editingItem?.dayIdx === di && editingItem?.itemIdx === ii ? (
+                          {editingItem?.dayIdx === di && editingItem?.itemIdx === ii && editingItem?.field === "name" ? (
                             <div className="flex items-center gap-1">
                               <input
                                 ref={editInputRef}
@@ -853,19 +857,59 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                               />
                             </div>
                           ) : (
-                            <p className="truncate text-xs group/name cursor-pointer" onClick={() => handleEditItem(di, ii)}>
+                            <p className="truncate text-xs group/name cursor-pointer" onClick={() => handleEditItem(di, ii, "name")}>
                               {item.grammage && <span className="font-semibold">{item.grammage} </span>}
                               {item.rawName}
                               <Pencil className="inline-block h-2.5 w-2.5 ml-1 opacity-0 group-hover/name:opacity-60 transition-opacity" />
                             </p>
                           )}
-                          {(item.side_dish || item.extras) && (
-                            <p className="text-[10px] text-muted-foreground truncate">
-                              {item.side_dish && <span className="text-primary/80">🍽 {item.side_dish}</span>}
-                              {item.side_dish && item.extras && " · "}
-                              {item.extras && <span className="text-accent-foreground/70">+ {item.extras}</span>}
-                            </p>
-                          )}
+                          <div className="flex gap-2 flex-wrap">
+                            {editingItem?.dayIdx === di && editingItem?.itemIdx === ii && editingItem?.field === "side_dish" ? (
+                              <input
+                                ref={editInputRef}
+                                placeholder="Príloha..."
+                                className="text-[10px] bg-background border border-primary/40 rounded px-1 py-0 outline-none focus:ring-1 focus:ring-primary/50 w-28"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") commitEdit();
+                                  if (e.key === "Escape") setEditingItem(null);
+                                }}
+                                onBlur={commitEdit}
+                              />
+                            ) : (
+                              <span
+                                className="text-[10px] text-primary/80 cursor-pointer hover:underline"
+                                onClick={() => handleEditItem(di, ii, "side_dish")}
+                                title="Klikni pre úpravu prílohy"
+                              >
+                                🍽 {item.side_dish || "—"}
+                              </span>
+                            )}
+                            <span className="text-[10px] text-muted-foreground">·</span>
+                            {editingItem?.dayIdx === di && editingItem?.itemIdx === ii && editingItem?.field === "extras" ? (
+                              <input
+                                ref={editInputRef}
+                                placeholder="Extra..."
+                                className="text-[10px] bg-background border border-primary/40 rounded px-1 py-0 outline-none focus:ring-1 focus:ring-primary/50 w-28"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") commitEdit();
+                                  if (e.key === "Escape") setEditingItem(null);
+                                }}
+                                onBlur={commitEdit}
+                              />
+                            ) : (
+                              <span
+                                className="text-[10px] text-accent-foreground/70 cursor-pointer hover:underline"
+                                onClick={() => handleEditItem(di, ii, "extras")}
+                                title="Klikni pre úpravu extras"
+                              >
+                                + {item.extras || "—"}
+                              </span>
+                            )}
+                          </div>
                           {item.matchedDish && (
                             <p className="text-[10px] text-muted-foreground truncate">
                               → {item.matchedDish.name}{" "}
