@@ -172,16 +172,32 @@ Pre KAŽDÝ DEŇ vráť objekt s:
   - "price": cena v EUR číslo ak je, inak null
   - "allergens": pole čísel alergénov 1-14
 
-DÔLEŽITÉ pravidlá:
+PRAVIDLÁ PRE ALERGÉNY (VEĽMI DÔLEŽITÉ):
+- Hľadaj čísla alergénov v AKÝKOĽVEK formáte:
+  - V zátvorkách: (1,3,7) alebo (1, 3, 7)
+  - Za hviezdičkou: *1,3,7 alebo * 1, 3, 7
+  - Za písmenom A: A: 1,3,7 alebo Al: 1,3,7
+  - Za slovom "alergény": Alergény: 1,3,7
+  - Za pomlčkou na konci riadku: - 1,3,7
+  - Superscript/horný index: jedlo¹·³·⁷
+  - Zmiešané s textom: "obsahuje lepok(1), mlieko(7)"
+- EU alergény 1-14:
+  1=lepok/gluten, 2=kôrovce, 3=vajcia, 4=ryby, 5=arašidy, 6=sója, 7=mlieko/laktóza,
+  8=orechy, 9=zeler, 10=horčica, 11=sezam, 12=oxid siričitý/siričitany, 13=vlčí bôb, 14=mäkkýše
+- Ak vedľa jedla vidíš čísla 1-14 v akomkoľvek formáte, pridaj ich do "allergens"
+- Ak jedlo NEOBSAHUJE žiadne čísla alergénov, vráť prázdne pole []
+- NIKDY nehádaj alergény z názvu jedla - extrahuj IBA tie, ktoré sú EXPLICITNE uvedené v texte
+
+ĎALŠIE DÔLEŽITÉ pravidlá:
 - Polievky majú category "polievka" a slot "Polievka"
 - Hlavné jedlá majú category "hlavne_jedlo" a slot "Menu 1", "Menu 2" atď.
 - Dezerty majú category "dezert" a slot "Dezert"
-- Vyčisti názvy: odstráň čísla menu, ceny, gramáže z názvu jedla
+- Vyčisti názvy: odstráň čísla menu, ceny, gramáže A ALERGÉNY z názvu jedla
 - Ak dokument nemá dennú štruktúru, vráť jeden deň s dayName "Neznámy"
 - OPRAV slovenské diakritické znaky (č, š, ž, ť, ď, ň, ľ, á, é, í, ó, ú, ý, ô, ä)
 
 Vráť IBA JSON pole dní:
-[{"dayName":"Pondelok","dateStr":"17.2.","items":[{"name":"Cesnaková polievka","category":"polievka","slot":"Polievka","grammage":"300ml","price":1.50,"allergens":[1,3]}]}]
+[{"dayName":"Pondelok","dateStr":"17.2.","items":[{"name":"Cesnaková polievka","category":"polievka","slot":"Polievka","grammage":"300ml","price":1.50,"allergens":[1,3,9]}]}]
 
 Surový OCR text:
 ${rawText}`
