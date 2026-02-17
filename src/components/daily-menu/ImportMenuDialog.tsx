@@ -7,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar, Camera, Wand2, RefreshCw, ChevronDown, Eye, Pencil } from "lucide-react";
-import { Dish } from "@/hooks/useDishes";
+import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar, Camera, Wand2, RefreshCw, ChevronDown, Eye, Pencil, PlusCircle } from "lucide-react";
+import { Dish, useCreateDish } from "@/hooks/useDishes";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCloudinary } from "@/hooks/useCloudinary";
@@ -110,6 +110,7 @@ const OCR_ACCEPT = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp";
 export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyWeekly, isApplying }: ImportMenuDialogProps) {
   const { toast } = useToast();
   const cloudinary = useCloudinary();
+  const createDishMutation = useCreateDish();
   // Simple mode (flat list)
   const [rows, setRows] = useState<ParsedRow[]>([]);
   // Koliesko mode (structured weekly)
@@ -164,6 +165,80 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
       });
     });
     setEditingItem(null);
+  };
+
+  /** Create a new dish from unmatched import item and link it */
+  const handleCreateDishFromItem = async (dayIdx: number, itemIdx: number) => {
+    if (!weeklyData) return;
+    const item = weeklyData[dayIdx]?.items[itemIdx];
+    if (!item || item.matchedDish) return;
+
+    try {
+      const newDish = await createDishMutation.mutateAsync({
+        name: item.rawName,
+        category: "hlavne_jedlo",
+        allergens: item.allergens || [],
+        grammage: item.grammage || null,
+        vat_rate: 20,
+        cost: 0,
+        recommended_price: item.price ?? 0,
+        final_price: item.price ?? null,
+        is_daily_menu: true,
+        is_permanent_offer: false,
+        subtype: null,
+      });
+
+      // Update weeklyData to link this item to the new dish
+      setWeeklyData(prev => {
+        if (!prev) return prev;
+        return prev.map((day, di) => {
+          if (di !== dayIdx) return day;
+          return {
+            ...day,
+            items: day.items.map((it, ii) => {
+              if (ii !== itemIdx) return it;
+              return { ...it, matchedDish: newDish as Dish, similarity: 1 };
+            }),
+          };
+        });
+      });
+
+      toast({ title: "Jedlo vytvorené", description: `„${item.rawName}" bolo pridané do databázy.` });
+    } catch (e: any) {
+      toast({ title: "Chyba", description: e.message, variant: "destructive" });
+    }
+  };
+
+  /** Create a new dish from unmatched flat row */
+  const handleCreateDishFromRow = async (index: number) => {
+    const row = rows[index];
+    if (!row || row.matchedDish) return;
+
+    try {
+      const newDish = await createDishMutation.mutateAsync({
+        name: row.rawName,
+        category: "hlavne_jedlo",
+        allergens: [],
+        grammage: null,
+        vat_rate: 20,
+        cost: 0,
+        recommended_price: 0,
+        final_price: null,
+        is_daily_menu: true,
+        is_permanent_offer: false,
+        subtype: null,
+      });
+
+      setRows(prev =>
+        prev.map((r, i) =>
+          i === index ? { ...r, matchedDish: newDish as Dish, similarity: 1 } : r
+        )
+      );
+
+      toast({ title: "Jedlo vytvorené", description: `„${row.rawName}" bolo pridané do databázy.` });
+    } catch (e: any) {
+      toast({ title: "Chyba", description: e.message, variant: "destructive" });
+    }
   };
 
   const resetState = () => {
@@ -917,7 +992,19 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                             </p>
                           )}
                           {!item.matchedDish && (
-                            <p className="text-[10px] text-destructive/80">Nenájdené v databáze</p>
+                            <div className="flex items-center gap-1">
+                              <p className="text-[10px] text-destructive/80">Nenájdené v databáze</p>
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-0.5 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
+                                onClick={() => handleCreateDishFromItem(di, ii)}
+                                disabled={createDishMutation.isPending}
+                                title="Vytvoriť nové jedlo v databáze"
+                              >
+                                <PlusCircle className="h-3 w-3" />
+                                Vytvoriť
+                              </button>
+                            </div>
                           )}
                         </div>
                         {item.price != null && item.price > 0 && (
@@ -985,7 +1072,19 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                         </p>
                       )}
                       {!row.matchedDish && (
-                        <p className="text-xs text-destructive/80">Nenájdené v databáze</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-destructive/80">Nenájdené v databáze</p>
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-0.5 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
+                            onClick={() => handleCreateDishFromRow(i)}
+                            disabled={createDishMutation.isPending}
+                            title="Vytvoriť nové jedlo v databáze"
+                          >
+                            <PlusCircle className="h-3 w-3" />
+                            Vytvoriť
+                          </button>
+                        </div>
                       )}
                     </div>
                     <Button variant="ghost" size="sm" className="h-7 text-xs shrink-0" onClick={() => toggleRow(i)}>
