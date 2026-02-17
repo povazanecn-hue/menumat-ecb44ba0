@@ -6,7 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar, Camera, Wand2, RefreshCw } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar, Camera, Wand2, RefreshCw, ChevronDown, Eye } from "lucide-react";
 import { Dish } from "@/hooks/useDishes";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -120,6 +121,8 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
   const [enhancedPreview, setEnhancedPreview] = useState<string | null>(null);
   const [pendingOcrData, setPendingOcrData] = useState<{ base64: string; mimeType: string; fileName: string } | null>(null);
   const [cameraFacing, setCameraFacing] = useState<"environment" | "user">("environment");
+  const [rawOcrText, setRawOcrText] = useState<string | null>(null);
+  const [showOcrComparison, setShowOcrComparison] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -132,6 +135,8 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
     setOriginalPreview(null);
     setEnhancedPreview(null);
     setPendingOcrData(null);
+    setRawOcrText(null);
+    setShowOcrComparison(false);
   };
 
   const matchNames = (names: string[]) => {
@@ -313,6 +318,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
 
         // Check for structured days first
         const ocrDays: { dayName: string; dateStr: string; items: { name: string; category: string; slot: string; grammage: string; price: number | null; allergens: number[] }[] }[] = data?.days || [];
+        if (data?.rawOcrText) setRawOcrText(data.rawOcrText);
 
         if (ocrDays.length > 0) {
           // Map OCR results to ImportDayResult with fuzzy matching
@@ -395,6 +401,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
       }
 
       const ocrDays = data?.days || [];
+      if (data?.rawOcrText) setRawOcrText(data.rawOcrText);
       if (ocrDays.length > 0) {
         const results: ImportDayResult[] = ocrDays.map((day: any) => ({
           dayName: day.dayName,
@@ -709,6 +716,59 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
               </div>
             </div>
 
+            {/* OCR Comparison: Raw vs Corrected */}
+            {rawOcrText && (
+              <Collapsible open={showOcrComparison} onOpenChange={setShowOcrComparison}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full gap-2 text-xs">
+                    <Eye className="h-3.5 w-3.5" />
+                    {showOcrComparison ? "Skryť" : "Zobraziť"} porovnanie OCR textu
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showOcrComparison ? "rotate-180" : ""}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-destructive/80 font-medium uppercase tracking-wider flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        Surový OCR text
+                      </p>
+                      <ScrollArea className="h-36 rounded-md border border-destructive/20 bg-destructive/5 p-2">
+                        <pre className="text-[10px] whitespace-pre-wrap text-foreground/70 font-mono leading-relaxed">
+                          {rawOcrText}
+                        </pre>
+                      </ScrollArea>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-primary font-medium uppercase tracking-wider flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        AI opravený výsledok
+                      </p>
+                      <ScrollArea className="h-36 rounded-md border border-primary/20 bg-primary/5 p-2">
+                        <div className="space-y-1.5">
+                          {weeklyData.map((day, di) => (
+                            <div key={di}>
+                              <p className="text-[10px] font-bold text-primary">{day.dayName} {day.dateStr}</p>
+                              {day.items.map((item, ii) => (
+                                <p key={ii} className="text-[10px] text-foreground/80 pl-2">
+                                  <span className="text-primary/60">{item.slot}:</span>{" "}
+                                  {item.rawName}
+                                  {item.price != null && <span className="text-muted-foreground"> {item.price.toFixed(2)}€</span>}
+                                  {item.allergens.length > 0 && (
+                                    <span className="text-amber-500/80"> ({item.allergens.join(",")})</span>
+                                  )}
+                                </p>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
             <ScrollArea className="flex-1 max-h-[400px]">
               <div className="space-y-4">
                 {weeklyData.map((day, di) => (
@@ -753,6 +813,11 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                         </div>
                         {item.price != null && item.price > 0 && (
                           <span className="text-xs font-semibold shrink-0">{item.price.toFixed(2)} €</span>
+                        )}
+                        {item.allergens.length > 0 && (
+                          <Badge variant="outline" className="text-[9px] shrink-0 gap-0.5 px-1 py-0 h-4 border-amber-500/40 text-amber-600 dark:text-amber-400">
+                            A: {item.allergens.join(",")}
+                          </Badge>
                         )}
                       </div>
                     ))}
