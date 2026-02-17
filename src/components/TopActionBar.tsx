@@ -1,4 +1,4 @@
-import { CalendarDays, FileOutput, Bell, CheckCheck } from "lucide-react";
+import { CalendarDays, FileOutput, Bell, CheckCheck, Command } from "lucide-react";
 import { LogoBrand } from "@/components/LogoBrand";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -28,6 +28,21 @@ export function TopActionBar() {
       </div>
 
       <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 text-muted-foreground hover:text-foreground h-8 px-2.5 border-border/50"
+          onClick={() => {
+            document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
+          }}
+        >
+          <Command className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Hľadať</span>
+          <kbd className="hidden sm:inline-flex pointer-events-none ml-1 h-5 items-center rounded border border-border/60 bg-muted/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+            ⌘K
+          </kbd>
+        </Button>
+
         <Button
           variant="ghost"
           size="sm"

@@ -1,6 +1,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopActionBar } from "@/components/TopActionBar";
+import { CommandPalette } from "@/components/CommandPalette";
 import { OliviaAssistant } from "@/components/OliviaAssistant";
 import { Outlet } from "react-router-dom";
 import woodBg from "@/assets/textures/wood-bg.jpg";
@@ -31,6 +32,7 @@ export function AppLayout() {
             <Outlet />
           </main>
         </div>
+        <CommandPalette />
         <OliviaAssistant />
       </div>
     </SidebarProvider>
