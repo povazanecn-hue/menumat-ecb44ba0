@@ -36,6 +36,8 @@ export interface ImportDayResult {
     grammage: string;
     price: number | null;
     allergens: number[];
+    side_dish: string;
+    extras: string;
   }[];
 }
 
@@ -187,6 +189,8 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                 grammage: item.grammage,
                 price: item.price,
                 allergens: item.allergens,
+                side_dish: "",
+                extras: "",
               };
             }).filter(i => i.rawName.length > 0),
           };
@@ -317,7 +321,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
         }
 
         // Check for structured days first
-        const ocrDays: { dayName: string; dateStr: string; items: { name: string; category: string; slot: string; grammage: string; price: number | null; allergens: number[] }[] }[] = data?.days || [];
+        const ocrDays: { dayName: string; dateStr: string; items: { name: string; category: string; slot: string; grammage: string; price: number | null; allergens: number[]; side_dish?: string; extras?: string }[] }[] = data?.days || [];
         if (data?.rawOcrText) setRawOcrText(data.rawOcrText);
 
         if (ocrDays.length > 0) {
@@ -335,6 +339,8 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                 grammage: item.grammage || "",
                 price: item.price,
                 allergens: item.allergens || [],
+                side_dish: item.side_dish || "",
+                extras: item.extras || "",
               };
             }).filter(i => i.rawName.length > 0),
           }));
@@ -408,7 +414,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
           dateStr: day.dateStr,
           items: day.items.map((item: any) => {
             const { dish, score } = findBestMatch(item.name, dishes);
-            return { rawName: item.name, matchedDish: dish, similarity: score, slot: item.slot || "Menu", grammage: item.grammage || "", price: item.price, allergens: item.allergens || [] };
+            return { rawName: item.name, matchedDish: dish, similarity: score, slot: item.slot || "Menu", grammage: item.grammage || "", price: item.price, allergens: item.allergens || [], side_dish: item.side_dish || "", extras: item.extras || "" };
           }).filter((i: any) => i.rawName.length > 0),
         }));
         setWeeklyData(results);
@@ -801,6 +807,13 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                             {item.grammage && <span className="font-semibold">{item.grammage} </span>}
                             {item.rawName}
                           </p>
+                          {(item.side_dish || item.extras) && (
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              {item.side_dish && <span className="text-primary/80">🍽 {item.side_dish}</span>}
+                              {item.side_dish && item.extras && " · "}
+                              {item.extras && <span className="text-accent-foreground/70">+ {item.extras}</span>}
+                            </p>
+                          )}
                           {item.matchedDish && (
                             <p className="text-[10px] text-muted-foreground truncate">
                               → {item.matchedDish.name}{" "}

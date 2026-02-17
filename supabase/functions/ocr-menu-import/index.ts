@@ -11,6 +11,8 @@ interface OcrMenuItem {
   grammage: string;
   price: number | null;
   allergens: number[];
+  side_dish: string;
+  extras: string;
 }
 
 interface OcrDay {
@@ -60,6 +62,8 @@ function cleanStructuredDays(parsed: any): OcrDay[] {
         allergens: Array.isArray(item.allergens)
           ? item.allergens.filter((a: number) => a >= 1 && a <= 14)
           : [],
+        side_dish: typeof item.side_dish === "string" ? item.side_dish.trim() : "",
+        extras: typeof item.extras === "string" ? item.extras.trim() : "",
       }));
 
     if (cleanItems.length > 0) {
@@ -165,12 +169,32 @@ Pre KAŽDÝ DEŇ vráť objekt s:
 - "dayName": názov dňa (Pondelok, Utorok, Streda, Štvrtok, Piatok)
 - "dateStr": dátum ak je uvedený, inak ""
 - "items": pole jedál, kde každé jedlo má:
-  - "name": OPRAVENÝ názov jedla (bez cien, gramáže, alergénov, čísiel menu)
+   - "name": OPRAVENÝ názov HLAVNÉHO jedla BEZ prílohy a extras (bez cien, gramáže, alergénov, čísiel menu)
   - "category": jedna z: "polievka", "hlavne_jedlo", "dezert", "predjedlo", "salat", "pizza", "burger", "pasta", "napoj", "ine"
   - "slot": typ pozície ("Polievka", "Menu 1", "Menu 2", "Menu 3", "Menu 4", "Menu 5", "Menu S", "Menu P", "Dezert", "Šalát", "Burger")
   - "grammage": gramáž ak je (napr. "150g", "300ml"), inak ""
   - "price": cena v EUR číslo ak je, inak null
   - "allergens": pole čísel alergénov 1-14
+  - "side_dish": príloha oddelená od názvu jedla, napr. "zemiaková kaša", "ryža", "hranolky", "zemiakový šalát", "varené zemiaky", "cestoviny". Ak nie je, vráť ""
+  - "extras": extra doplnok/omáčka oddelená od názvu, napr. "tatárska omáčka", "uhorkový šalátik", "šalát", "kapusta". Ak nie je, vráť ""
+
+PRAVIDLÁ PRE PRÍLOHY A EXTRAS (VEĽMI DÔLEŽITÉ):
+- ODDEL prílohu (side_dish) od názvu hlavného jedla. Hľadaj vzory:
+  - "so zemiakovým šalátom" → side_dish: "zemiakový šalát"
+  - "s ryžou" → side_dish: "ryža"
+  - "s hranolkami" → side_dish: "hranolky"
+  - "s kašou" / "so zemiakovú kašou" → side_dish: "zemiaková kaša"
+  - "s varenými zemiakmi" → side_dish: "varené zemiaky"
+  - "s cestovinami" / "s haluškami" → side_dish: "halušky"
+  - "s knedľou" / "s knedľami" → side_dish: "knedľa"
+- ODDEL extras (omáčky, šaláty ako doplnok):
+  - "s tatárskou omáčkou" / "a tatárskou omáčkou" → extras: "tatárska omáčka"
+  - "s uhorkovým šalátikom" / "a uhorkovým šalátikom" → extras: "uhorkový šalátik"
+  - "s kapustou" → extras: "kapusta"
+  - "s oblohou" → extras: "obloha"
+- Ak jedlo obsahuje aj prílohu aj extra, oddel OBE: napr. "Vyprážaný rezeň so zemiakovým šalátom a tatárskou omáčkou" → name: "Vyprážaný rezeň", side_dish: "zemiakový šalát", extras: "tatárska omáčka"
+- Názvy príloh a extras preveď do ZÁKLADNÉHO TVARU (1. pád): "so zemiakovým šalátom" → "zemiakový šalát"
+- Pre polievky a dezerty side_dish a extras sú zvyčajne ""
 
 PRAVIDLÁ PRE ALERGÉNY (VEĽMI DÔLEŽITÉ):
 - Hľadaj čísla alergénov v AKÝKOĽVEK formáte:
@@ -197,7 +221,7 @@ PRAVIDLÁ PRE ALERGÉNY (VEĽMI DÔLEŽITÉ):
 - OPRAV slovenské diakritické znaky (č, š, ž, ť, ď, ň, ľ, á, é, í, ó, ú, ý, ô, ä)
 
 Vráť IBA JSON pole dní:
-[{"dayName":"Pondelok","dateStr":"17.2.","items":[{"name":"Cesnaková polievka","category":"polievka","slot":"Polievka","grammage":"300ml","price":1.50,"allergens":[1,3,9]}]}]
+[{"dayName":"Pondelok","dateStr":"17.2.","items":[{"name":"Vyprážaný rezeň","category":"hlavne_jedlo","slot":"Menu 1","grammage":"150g","price":6.50,"allergens":[1,3],"side_dish":"zemiakový šalát","extras":"tatárska omáčka"}]}]
 
 Surový OCR text:
 ${rawText}`
