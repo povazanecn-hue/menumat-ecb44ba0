@@ -128,6 +128,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
   const [showOcrComparison, setShowOcrComparison] = useState(false);
   const [editingItem, setEditingItem] = useState<{ dayIdx: number; itemIdx: number; field: "name" | "side_dish" | "extras" } | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [isCreatingAll, setIsCreatingAll] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
@@ -238,6 +239,92 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
       toast({ title: "Jedlo vytvorené", description: `„${row.rawName}" bolo pridané do databázy.` });
     } catch (e: any) {
       toast({ title: "Chyba", description: e.message, variant: "destructive" });
+    }
+  };
+
+  /** Batch create all unmatched weekly items */
+  const handleCreateAllUnmatched = async () => {
+    if (!weeklyData) return;
+    setIsCreatingAll(true);
+    let created = 0;
+    try {
+      for (let di = 0; di < weeklyData.length; di++) {
+        for (let ii = 0; ii < weeklyData[di].items.length; ii++) {
+          const item = weeklyData[di].items[ii];
+          if (item.matchedDish) continue;
+          try {
+            const newDish = await createDishMutation.mutateAsync({
+              name: item.rawName,
+              category: "hlavne_jedlo",
+              allergens: item.allergens || [],
+              grammage: item.grammage || null,
+              vat_rate: 20,
+              cost: 0,
+              recommended_price: item.price ?? 0,
+              final_price: item.price ?? null,
+              is_daily_menu: true,
+              is_permanent_offer: false,
+              subtype: null,
+            });
+            setWeeklyData(prev => {
+              if (!prev) return prev;
+              return prev.map((day, dIdx) => {
+                if (dIdx !== di) return day;
+                return {
+                  ...day,
+                  items: day.items.map((it, iIdx) =>
+                    iIdx === ii ? { ...it, matchedDish: newDish as Dish, similarity: 1 } : it
+                  ),
+                };
+              });
+            });
+            created++;
+          } catch (e) {
+            console.error(`Failed to create dish "${item.rawName}":`, e);
+          }
+        }
+      }
+      toast({ title: "Hotovo", description: `Vytvorených ${created} nových jedál.` });
+    } finally {
+      setIsCreatingAll(false);
+    }
+  };
+
+  /** Batch create all unmatched flat rows */
+  const handleCreateAllUnmatchedRows = async () => {
+    setIsCreatingAll(true);
+    let created = 0;
+    try {
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.matchedDish) continue;
+        try {
+          const newDish = await createDishMutation.mutateAsync({
+            name: row.rawName,
+            category: "hlavne_jedlo",
+            allergens: [],
+            grammage: null,
+            vat_rate: 20,
+            cost: 0,
+            recommended_price: 0,
+            final_price: null,
+            is_daily_menu: true,
+            is_permanent_offer: false,
+            subtype: null,
+          });
+          setRows(prev =>
+            prev.map((r, idx) =>
+              idx === i ? { ...r, matchedDish: newDish as Dish, similarity: 1 } : r
+            )
+          );
+          created++;
+        } catch (e) {
+          console.error(`Failed to create dish "${row.rawName}":`, e);
+        }
+      }
+      toast({ title: "Hotovo", description: `Vytvorených ${created} nových jedál.` });
+    } finally {
+      setIsCreatingAll(false);
     }
   };
 
@@ -836,6 +923,23 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
               </div>
             </div>
 
+            {weeklyUnmatched > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2"
+                onClick={handleCreateAllUnmatched}
+                disabled={isCreatingAll || createDishMutation.isPending}
+              >
+                {isCreatingAll ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <PlusCircle className="h-3.5 w-3.5" />
+                )}
+                {isCreatingAll ? "Vytvárám..." : `Vytvoriť všetky nepriradené (${weeklyUnmatched})`}
+              </Button>
+            )}
+
             {/* OCR Comparison: Raw vs Corrected */}
             {rawOcrText && (
               <Collapsible open={showOcrComparison} onOpenChange={setShowOcrComparison}>
@@ -1046,6 +1150,23 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                 )}
               </div>
             </div>
+
+            {rows.length - matchedRows.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2"
+                onClick={handleCreateAllUnmatchedRows}
+                disabled={isCreatingAll || createDishMutation.isPending}
+              >
+                {isCreatingAll ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <PlusCircle className="h-3.5 w-3.5" />
+                )}
+                {isCreatingAll ? "Vytvárám..." : `Vytvoriť všetky nepriradené (${rows.length - matchedRows.length})`}
+              </Button>
+            )}
 
             <ScrollArea className="max-h-[300px]">
               <div className="space-y-1.5">
