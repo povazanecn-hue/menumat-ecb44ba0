@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe, FileUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,12 +25,14 @@ import {
   useCreateSupplierPrice,
   useDeleteSupplierPrice,
   useApplySupplierPrice,
+  useBulkCreateSupplierPrices,
   IngredientWithSuppliers,
 } from "@/hooks/useIngredients";
 import { IngredientFormDialog, IngredientFormData } from "@/components/ingredients/IngredientFormDialog";
 import { SupplierPriceDialog, SupplierPriceFormData } from "@/components/ingredients/SupplierPriceDialog";
 import { SupplierPriceTable } from "@/components/ingredients/SupplierPriceTable";
 import { WebPriceSearchDialog } from "@/components/ingredients/WebPriceSearchDialog";
+import { SupplierPriceImportDialog, ImportRow } from "@/components/ingredients/SupplierPriceImportDialog";
 
 export default function Ingredients() {
   const { data: ingredients = [], isLoading } = useIngredients();
@@ -40,6 +42,7 @@ export default function Ingredients() {
   const createSupplierPrice = useCreateSupplierPrice();
   const deleteSupplierPrice = useDeleteSupplierPrice();
   const applySupplierPrice = useApplySupplierPrice();
+  const bulkCreatePrices = useBulkCreateSupplierPrices();
   const { toast } = useToast();
 
   const [search, setSearch] = useState("");
@@ -49,6 +52,7 @@ export default function Ingredients() {
   const [supplierTarget, setSupplierTarget] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [webSearchTarget, setWebSearchTarget] = useState<IngredientWithSuppliers | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => {
     return ingredients.filter((i) =>
@@ -131,6 +135,27 @@ export default function Ingredients() {
     }
   };
 
+  const handleBulkImport = async (rows: ImportRow[]) => {
+    const prices = rows
+      .filter(r => r.matched_ingredient_id)
+      .map(r => ({
+        ingredient_id: r.matched_ingredient_id!,
+        supplier_name: r.supplier_name,
+        price: r.price,
+        is_promo: r.is_promo,
+        valid_from: r.valid_from,
+        valid_to: r.valid_to,
+        confidence: "manual" as const,
+      }));
+    try {
+      await bulkCreatePrices.mutateAsync(prices);
+      toast({ title: `${prices.length} cien importovaných` });
+      setImportOpen(false);
+    } catch (e: any) {
+      toast({ title: "Chyba importu", description: e.message, variant: "destructive" });
+    }
+  };
+
   const noPricedCount = ingredients.filter((i) => i.base_price === 0).length;
 
   return (
@@ -148,10 +173,16 @@ export default function Ingredients() {
             )}
           </p>
         </div>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus className="h-4 w-4 mr-1" />
-          Nová ingrediencia
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <FileUp className="h-4 w-4 mr-1" />
+            Import cenníka
+          </Button>
+          <Button onClick={() => setFormOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Nová ingrediencia
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -380,6 +411,15 @@ export default function Ingredients() {
           onAddPrice={handleWebPriceAdd}
         />
       )}
+
+      {/* Supplier Price Import Dialog */}
+      <SupplierPriceImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        ingredients={ingredients}
+        onImport={handleBulkImport}
+        importing={bulkCreatePrices.isPending}
+      />
     </div>
   );
 }
