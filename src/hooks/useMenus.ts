@@ -90,11 +90,15 @@ export function useAddMenuItem() {
       dishId,
       sortOrder,
       overridePrice,
+      sideDish,
+      extras,
     }: {
       menuId: string;
       dishId: string;
       sortOrder: number;
       overridePrice?: number | null;
+      sideDish?: string;
+      extras?: string;
     }) => {
       const { data, error } = await supabase
         .from("menu_items")
@@ -103,6 +107,8 @@ export function useAddMenuItem() {
           dish_id: dishId,
           sort_order: sortOrder,
           override_price: overridePrice ?? null,
+          side_dish: sideDish || null,
+          extras: extras || null,
         })
         .select()
         .single();
