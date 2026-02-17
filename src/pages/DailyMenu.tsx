@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { addWeeks, format, isToday, parseISO } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2, Save } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,7 +50,7 @@ export default function DailyMenu() {
   const [aiApplying, setAiApplying] = useState(false);
   const [importDate, setImportDate] = useState<Date | null>(null);
   const [importApplying, setImportApplying] = useState(false);
-
+  const [savingAll, setSavingAll] = useState(false);
   const weekdays = getWeekdays(weekStart);
   const { data: menus = [], isLoading } = useWeekMenus(weekStart);
   const { data: recentUsage = {} } = useRecentDishUsage(nonRepeatDays);
@@ -228,6 +228,29 @@ export default function DailyMenu() {
     }
   };
 
+  const handleSaveAll = async () => {
+    setSavingAll(true);
+    try {
+      let savedCount = 0;
+      for (const date of weekdays) {
+        const dateKey = formatDateKey(date);
+        const existing = getMenuForDate(date);
+        if (!existing) {
+          // Create menu record for days that don't have one yet
+          await upsertMenu.mutateAsync(dateKey);
+          savedCount++;
+        } else if (existing.menu_items.length > 0) {
+          savedCount++;
+        }
+      }
+      toast({ title: `${savedCount} dní uložených`, description: "Všetky dni boli uložené." });
+    } catch (e: any) {
+      toast({ title: "Chyba", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingAll(false);
+    }
+  };
+
   // AI generation
   const handleAiApply = async (dishIds: string[]) => {
     if (!aiDate) return;
@@ -357,6 +380,15 @@ export default function DailyMenu() {
           >
             {regenerating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1.5" />}
             AI Týždeň
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleSaveAll}
+            disabled={savingAll}
+            title="Uložiť všetky dni naraz"
+          >
+            {savingAll ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
+            Uložiť všetky dni
           </Button>
           <Button onClick={handlePublishAll} variant="default">
             Publikovať všetky koncepty
