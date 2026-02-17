@@ -296,6 +296,8 @@ export default function DailyMenu() {
             dishId: item.matchedDish!.id,
             sortOrder,
             overridePrice: item.price ?? undefined,
+            sideDish: item.side_dish || undefined,
+            extras: item.extras || undefined,
           });
           sortOrder++;
           totalAdded++;
