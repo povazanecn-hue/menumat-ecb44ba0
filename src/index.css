@@ -261,3 +261,8 @@
             drop-shadow(0 0 70px hsl(40 55% 55% / 0.25));
   }
 }
+
+/* Safe area for notched phones */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
