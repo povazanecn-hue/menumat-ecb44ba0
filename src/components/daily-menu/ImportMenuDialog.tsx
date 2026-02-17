@@ -14,6 +14,36 @@ import { useToast } from "@/hooks/use-toast";
 import { useCloudinary } from "@/hooks/useCloudinary";
 import * as XLSX from "xlsx";
 import { parseKolieskoExcel, parseKolieskoCSV, type KolieskoDay, type KolieskoMenuItem } from "@/lib/kolieskoImport";
+import { Database } from "@/integrations/supabase/types";
+
+type DishCategory = Database["public"]["Enums"]["dish_category"];
+
+const CATEGORY_LABELS: Record<DishCategory, string> = {
+  polievka: "Polievka",
+  hlavne_jedlo: "Hlavné jedlo",
+  dezert: "Dezert",
+  predjedlo: "Predjedlo",
+  salat: "Šalát",
+  pizza: "Pizza",
+  burger: "Burger",
+  pasta: "Pasta",
+  napoj: "Nápoj",
+  ine: "Iné",
+};
+
+/** Infer dish category from OCR slot label */
+function inferCategoryFromSlot(slot: string): DishCategory {
+  const s = slot.toLowerCase().trim();
+  if (s === "p" || s.startsWith("poliev")) return "polievka";
+  if (s === "d" || s.startsWith("dezert") || s.startsWith("zákus") || s.startsWith("zakus")) return "dezert";
+  if (s === "s" || s.startsWith("šalát") || s.startsWith("salat") || s.startsWith("salát")) return "salat";
+  if (s === "b" || s.startsWith("burger")) return "burger";
+  if (s.startsWith("pizza")) return "pizza";
+  if (s.startsWith("pasta") || s.startsWith("cestovin")) return "pasta";
+  if (s.startsWith("predjedlo") || s.startsWith("predkrm")) return "predjedlo";
+  if (s.startsWith("nápoj") || s.startsWith("napoj")) return "napoj";
+  return "hlavne_jedlo";
+}
 
 interface ImportMenuDialogProps {
   open: boolean;
@@ -129,6 +159,8 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
   const [editingItem, setEditingItem] = useState<{ dayIdx: number; itemIdx: number; field: "name" | "side_dish" | "extras" } | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isCreatingAll, setIsCreatingAll] = useState(false);
+  // Category overrides: key = "dayIdx-itemIdx" for weekly, "row-idx" for flat
+  const [categoryOverrides, setCategoryOverrides] = useState<Record<string, DishCategory>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
@@ -175,9 +207,10 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
     if (!item || item.matchedDish) return;
 
     try {
+      const category = categoryOverrides[`${dayIdx}-${itemIdx}`] || inferCategoryFromSlot(item.slot);
       const newDish = await createDishMutation.mutateAsync({
         name: item.rawName,
-        category: "hlavne_jedlo",
+        category,
         allergens: item.allergens || [],
         grammage: item.grammage || null,
         vat_rate: 20,
@@ -216,9 +249,10 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
     if (!row || row.matchedDish) return;
 
     try {
+      const category = categoryOverrides[`row-${index}`] || "hlavne_jedlo";
       const newDish = await createDishMutation.mutateAsync({
         name: row.rawName,
-        category: "hlavne_jedlo",
+        category,
         allergens: [],
         grammage: null,
         vat_rate: 20,
@@ -253,9 +287,10 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
           const item = weeklyData[di].items[ii];
           if (item.matchedDish) continue;
           try {
+            const category = categoryOverrides[`${di}-${ii}`] || inferCategoryFromSlot(item.slot);
             const newDish = await createDishMutation.mutateAsync({
               name: item.rawName,
-              category: "hlavne_jedlo",
+              category,
               allergens: item.allergens || [],
               grammage: item.grammage || null,
               vat_rate: 20,
@@ -299,9 +334,10 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
         const row = rows[i];
         if (row.matchedDish) continue;
         try {
+          const category = categoryOverrides[`row-${i}`] || "hlavne_jedlo";
           const newDish = await createDishMutation.mutateAsync({
             name: row.rawName,
-            category: "hlavne_jedlo",
+            category,
             allergens: [],
             grammage: null,
             vat_rate: 20,
@@ -340,6 +376,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
     setRawOcrText(null);
     setShowOcrComparison(false);
     setEditingItem(null);
+    setCategoryOverrides({});
   };
 
   const matchNames = (names: string[]) => {
@@ -1096,13 +1133,22 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                             </p>
                           )}
                           {!item.matchedDish && (
-                            <div className="flex items-center gap-1">
-                              <p className="text-[10px] text-destructive/80">Nenájdené v databáze</p>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <p className="text-[10px] text-destructive/80">Nenájdené</p>
+                              <select
+                                className="text-[10px] bg-background border border-border rounded px-1 py-0 h-5 text-foreground"
+                                value={categoryOverrides[`${di}-${ii}`] || inferCategoryFromSlot(item.slot)}
+                                onChange={(e) => setCategoryOverrides(prev => ({ ...prev, [`${di}-${ii}`]: e.target.value as DishCategory }))}
+                              >
+                                {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
+                                  <option key={val} value={val}>{label}</option>
+                                ))}
+                              </select>
                               <button
                                 type="button"
                                 className="inline-flex items-center gap-0.5 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
                                 onClick={() => handleCreateDishFromItem(di, ii)}
-                                disabled={createDishMutation.isPending}
+                                disabled={createDishMutation.isPending || isCreatingAll}
                                 title="Vytvoriť nové jedlo v databáze"
                               >
                                 <PlusCircle className="h-3 w-3" />
@@ -1193,13 +1239,22 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                         </p>
                       )}
                       {!row.matchedDish && (
-                        <div className="flex items-center gap-1">
-                          <p className="text-xs text-destructive/80">Nenájdené v databáze</p>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <p className="text-xs text-destructive/80">Nenájdené</p>
+                          <select
+                            className="text-[10px] bg-background border border-border rounded px-1 py-0 h-5 text-foreground"
+                            value={categoryOverrides[`row-${i}`] || "hlavne_jedlo"}
+                            onChange={(e) => setCategoryOverrides(prev => ({ ...prev, [`row-${i}`]: e.target.value as DishCategory }))}
+                          >
+                            {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
+                              <option key={val} value={val}>{label}</option>
+                            ))}
+                          </select>
                           <button
                             type="button"
                             className="inline-flex items-center gap-0.5 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
                             onClick={() => handleCreateDishFromRow(i)}
-                            disabled={createDishMutation.isPending}
+                            disabled={createDishMutation.isPending || isCreatingAll}
                             title="Vytvoriť nové jedlo v databáze"
                           >
                             <PlusCircle className="h-3 w-3" />
