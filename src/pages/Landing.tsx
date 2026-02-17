@@ -25,31 +25,37 @@ const features = [
     icon: UtensilsCrossed,
     title: "Auto databáza jedál",
     desc: "Spravujte kompletný katalóg jedál s alergénmi, gramážou a cenami na jednom mieste.",
+    link: "/dishes",
   },
   {
     icon: Calendar,
     title: "AI generovanie menu",
     desc: "Nechajte AI zostaviť denné menu s pravidlami neopakovania a kategóriami.",
+    link: "/daily-menu",
   },
   {
     icon: FileText,
     title: "Magic importy & exporty",
     desc: "Import z Excel/CSV, export na TV, PDF, kuchyňu aj web — všetko jedným klikom.",
+    link: "/exports",
   },
   {
     icon: ShoppingCart,
     title: "Inteligentný sklad",
     desc: "Automatické nákupné zoznamy generované z menu a receptov.",
+    link: "/shopping-list",
   },
   {
     icon: TrendingUp,
     title: "AI Price Power",
     desc: "Marže, cenotvorba a odporúčané ceny s plnou kontrolou nad finálnou cenou.",
+    link: "/ingredients",
   },
   {
     icon: Truck,
     title: "Agent surovín & dodávatelia",
     desc: "Porovnávajte ceny od Lidl, Kaufland, Metro a ďalších dodávateľov v reálnom čase.",
+    link: "/ingredients",
   },
 ];
 
@@ -172,12 +178,16 @@ export default function Landing() {
               key={f.title}
               variants={scaleIn}
               whileHover={{ scale: 1.15, rotate: 3 }}
-              className="group relative flex h-14 w-14 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 text-primary transition-all duration-300 hover:border-primary/50 hover:bg-primary/15 hover:shadow-[0_0_20px_hsl(40_55%_55%/0.25)]"
             >
-              <f.icon className="h-7 w-7 transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(40_55%_55%/0.6)]" />
-              <span className="pointer-events-none absolute -bottom-7 whitespace-nowrap text-[10px] font-medium text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                {f.title}
-              </span>
+              <Link
+                to="/auth"
+                className="group relative flex h-14 w-14 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 text-primary transition-all duration-300 hover:border-primary/50 hover:bg-primary/15 hover:shadow-[0_0_20px_hsl(40_55%_55%/0.25)]"
+              >
+                <f.icon className="h-7 w-7 transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(40_55%_55%/0.6)]" />
+                <span className="pointer-events-none absolute -bottom-7 whitespace-nowrap text-[10px] font-medium text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                  {f.title}
+                </span>
+              </Link>
             </motion.div>
           ))}
         </motion.div>
