@@ -86,9 +86,79 @@ export default function Auth() {
       </div>
 
       {/* Form */}
-      <div className="relative z-[1] w-full max-w-md mx-6 mb-8 space-y-5 bg-card/60 backdrop-blur-md rounded-2xl p-6 border border-border/30 shadow-2xl shadow-black/30">
-        {/* OAuth */}
-        <div className="space-y-2">
+      <div className="relative z-[1] w-full max-w-md mx-6 mb-8 space-y-3 bg-card/60 backdrop-blur-md rounded-2xl p-6 border border-border/30 shadow-2xl shadow-black/30">
+        <h2 className="text-center text-xl font-bold text-foreground tracking-wide">
+          {isLogin ? "PRIHLÁSENIE" : "REGISTRÁCIA"}
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {!isLogin && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="fullName" className="text-foreground text-sm">Meno</Label>
+                <Input
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Ján Novák"
+                  required={!isLogin}
+                  className="h-12 bg-secondary border-border/60 text-foreground placeholder:text-muted-foreground rounded-xl"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-foreground text-sm">Vaša pozícia</Label>
+                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                  <SelectTrigger className="h-12 bg-secondary border-border/60 text-foreground rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLE_OPTIONS.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="semzadajtevasemail@email.sk"
+            required
+            className="h-12 bg-secondary border-border/60 text-foreground placeholder:text-muted-foreground rounded-xl"
+          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Heslo"
+              required
+              minLength={6}
+              className="h-12 bg-secondary border-border/60 text-foreground placeholder:text-muted-foreground pr-10 rounded-xl"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          <Button
+            type="submit"
+            className="w-full h-14 text-lg font-semibold bg-gold-gradient border-0 text-primary-foreground shadow-[0_4px_20px_hsl(40_55%_55%/0.35)] rounded-xl"
+            disabled={submitting}
+          >
+            {submitting ? "Spracovávam..." : isLogin ? "Prihlásiť sa" : "Zaregistrovať sa"}
+          </Button>
+        </form>
+
+        {/* OAuth pod prihlásením */}
+        <div className="space-y-2 pt-1">
           <Button
             type="button"
             variant="outline"
@@ -126,88 +196,7 @@ export default function Auth() {
           </Button>
         </div>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-transparent px-3 text-muted-foreground">alebo</span>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
-            <>
-              <div className="space-y-1.5">
-                <Label htmlFor="fullName" className="text-foreground text-sm">Meno</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Ján Novák"
-                  required={!isLogin}
-                  className="h-12 bg-secondary border-border/60 text-foreground placeholder:text-muted-foreground rounded-xl"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-foreground text-sm">Vaša pozícia</Label>
-                <Select value={selectedRole} onValueChange={setSelectedRole}>
-                  <SelectTrigger className="h-12 bg-secondary border-border/60 text-foreground rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLE_OPTIONS.map((r) => (
-                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          )}
-          <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-foreground text-sm">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="vas@email.sk"
-              required
-              className="h-12 bg-secondary border-border/60 text-foreground placeholder:text-muted-foreground rounded-xl"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-foreground text-sm">Heslo</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-                className="h-12 bg-secondary border-border/60 text-foreground placeholder:text-muted-foreground pr-10 rounded-xl"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-          <Button
-            type="submit"
-            className="w-full h-14 text-lg font-semibold bg-gold-gradient border-0 text-primary-foreground shadow-[0_4px_20px_hsl(40_55%_55%/0.35)] rounded-xl"
-            disabled={submitting}
-          >
-            {submitting ? "Spracovávam..." : isLogin ? "Prihlásiť sa" : "Zaregistrovať sa"}
-          </Button>
-        </form>
-
-        <div className="text-center pt-2">
+        <div className="text-center pt-1">
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
@@ -217,7 +206,7 @@ export default function Auth() {
           </button>
         </div>
 
-        <p className="text-center text-[11px] text-muted-foreground/70 pt-4">
+        <p className="text-center text-[11px] text-muted-foreground/70 pt-2">
           Powered by <span className="font-semibold text-primary">N-[vision]</span> | <span className="font-semibold text-primary">N-oLiMiT gastro</span> | Pre gastro s budúcnosťou!
         </p>
       </div>
