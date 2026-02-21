@@ -9,8 +9,7 @@ export type CloudinaryAction =
   | "ocr"
   | "analyze"
   | "generative_fill"
-  | "effects"
-  | "upload";
+  | "effects";
 
 interface CloudinaryOptions {
   action: CloudinaryAction;

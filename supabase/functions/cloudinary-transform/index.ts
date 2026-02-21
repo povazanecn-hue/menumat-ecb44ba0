@@ -13,8 +13,7 @@ interface TransformRequest {
     | "ocr"
     | "analyze"
     | "generative_fill"
-    | "effects"
-    | "upload";
+    | "effects";
   image_url?: string;
   public_id?: string;
   options?: Record<string, any>;
@@ -30,12 +29,12 @@ Deno.serve(async (req) => {
 
     // Upload external URL to Cloudinary if needed
     let activePublicId = public_id;
-    if (image_url && !public_id && action !== "upload") {
+    if (image_url && !public_id) {
       const uploaded = await uploadFromUrl(CLOUD_NAME, API_KEY, API_SECRET, image_url);
       activePublicId = uploaded.public_id;
     }
 
-    if (!activePublicId && action !== "analyze" && action !== "upload") {
+    if (!activePublicId && action !== "analyze") {
       return jsonError("No image provided (image_url or public_id required)", 400);
     }
 
@@ -107,14 +106,6 @@ async function handleAction(
       return buildTransformResult(cloudName, publicId,
         `e_${options.effect || "art:hokusai"}/q_auto:best/f_auto`
       );
-
-    case "upload": {
-      if (!imageUrl) throw new Error("image_url is required for upload action");
-      const folder = options.folder || "design-menumat-app";
-      const prefix = options.public_id_prefix || "";
-      const uploaded = await uploadFromUrl(cloudName, apiKey, apiSecret, imageUrl, folder, prefix);
-      return { url: uploaded.secure_url, public_id: uploaded.public_id };
-    }
 
     default:
       throw new Error(`Unknown action: ${action}`);
@@ -230,27 +221,18 @@ async function handleAnalyze(
 // ── Upload helper ────────────────────────────────────────────────────
 
 async function uploadFromUrl(
-  cloudName: string, apiKey: string, apiSecret: string, url: string,
-  folder = "menugen", publicIdPrefix = ""
+  cloudName: string, apiKey: string, apiSecret: string, url: string
 ): Promise<{ public_id: string; secure_url: string }> {
   const timestamp = Math.floor(Date.now() / 1000);
-  const actualFolder = folder;
-  const signParts = [`folder=${actualFolder}`];
-  let publicId: string | undefined;
-  if (publicIdPrefix) {
-    publicId = `${actualFolder}/${publicIdPrefix}_${timestamp}`;
-    signParts.push(`public_id=${publicId}`);
-  }
-  signParts.push(`timestamp=${timestamp}`);
-  const signature = await sha1Hex(signParts.join("&") + apiSecret);
+  const folder = "menugen";
+  const signature = await sha1Hex(`folder=${folder}&timestamp=${timestamp}${apiSecret}`);
 
   const form = new FormData();
   form.append("file", url);
   form.append("api_key", apiKey);
   form.append("timestamp", timestamp.toString());
   form.append("signature", signature);
-  form.append("folder", actualFolder);
-  if (publicId) form.append("public_id", publicId);
+  form.append("folder", folder);
 
   const resp = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
     method: "POST",
