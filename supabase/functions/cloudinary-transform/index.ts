@@ -13,7 +13,8 @@ interface TransformRequest {
     | "ocr"
     | "analyze"
     | "generative_fill"
-    | "effects";
+    | "effects"
+    | "upload";
   image_url?: string;
   public_id?: string;
   options?: Record<string, any>;
@@ -106,6 +107,15 @@ async function handleAction(
       return buildTransformResult(cloudName, publicId,
         `e_${options.effect || "art:hokusai"}/q_auto:best/f_auto`
       );
+
+    case "upload":
+      if (!imageUrl) throw new Error("image_url is required for upload");
+      const uploadResult = await uploadFromUrl(
+        cloudName, apiKey, apiSecret, imageUrl,
+        options.folder || "menugen",
+        options.public_id_prefix
+      );
+      return { url: uploadResult.secure_url, public_id: uploadResult.public_id };
 
     default:
       throw new Error(`Unknown action: ${action}`);
@@ -221,11 +231,15 @@ async function handleAnalyze(
 // ── Upload helper ────────────────────────────────────────────────────
 
 async function uploadFromUrl(
-  cloudName: string, apiKey: string, apiSecret: string, url: string
+  cloudName: string, apiKey: string, apiSecret: string, url: string,
+  folder = "menugen", publicIdPrefix?: string
 ): Promise<{ public_id: string; secure_url: string }> {
   const timestamp = Math.floor(Date.now() / 1000);
-  const folder = "menugen";
-  const signature = await sha1Hex(`folder=${folder}&timestamp=${timestamp}${apiSecret}`);
+  const signParts: string[] = [`folder=${folder}`, `overwrite=true`];
+  if (publicIdPrefix) signParts.push(`public_id=${folder}/${publicIdPrefix}`);
+  signParts.push(`timestamp=${timestamp}`);
+  signParts.sort();
+  const signature = await sha1Hex(signParts.join("&") + apiSecret);
 
   const form = new FormData();
   form.append("file", url);
@@ -233,6 +247,8 @@ async function uploadFromUrl(
   form.append("timestamp", timestamp.toString());
   form.append("signature", signature);
   form.append("folder", folder);
+  if (publicIdPrefix) form.append("public_id", `${folder}/${publicIdPrefix}`);
+  form.append("overwrite", "true");
 
   const resp = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
     method: "POST",
