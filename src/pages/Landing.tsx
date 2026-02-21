@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LogoBrand } from "@/components/LogoBrand";
 import {
-  ChefHat,
   UtensilsCrossed,
   Calendar,
   FileText,
@@ -16,9 +15,9 @@ import {
   Sparkles,
   UserPlus,
   LogIn,
+  Loader2,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import kolieskoKresba from "@/assets/textures/koliesko-bg.jpg";
 
 const features = [
   {
@@ -87,7 +86,7 @@ export default function Landing() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <ChefHat className="h-8 w-8 animate-pulse text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -98,8 +97,7 @@ export default function Landing() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <div className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center bg-no-repeat opacity-[0.35]" style={{ backgroundImage: `url(${kolieskoKresba})` }} />
-      <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-background/40 via-background/70 to-background" />
+      <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-br from-primary/5 via-background to-background" />
       {/* Hero — clean layout without food image */}
       <header className="relative flex min-h-screen flex-col items-center justify-center px-4">
         {/* Top bar with logo */}
@@ -291,7 +289,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-border/50 px-4 py-3 text-center">
         <p className="text-xs text-muted-foreground mb-1">
-          © {new Date().getFullYear()} Menu Master. Všetky práva vyhradené.
+          © {new Date().getFullYear()} menumat. Všetky práva vyhradené.
         </p>
         <p className="text-[11px] text-muted-foreground/70">
           Powered by <span className="font-semibold text-primary">N-[vision]</span> | <span className="font-semibold text-primary">N-oLiMiT gastro</span> | Pre gastro s budúcnosťou!
