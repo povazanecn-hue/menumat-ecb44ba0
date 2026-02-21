@@ -130,7 +130,7 @@ export function AppSidebar() {
             </Button>
           </div>
         )}
-        <p className="text-[10px] text-sidebar-foreground/30 tracking-wide">MENU MASTER v1.0</p>
+        <p className="text-[10px] text-sidebar-foreground/30 tracking-wide">menumat v1.0</p>
         <p className="text-[9px] text-sidebar-foreground/40 leading-tight">
           Powered by <span className="font-semibold text-sidebar-primary/70">N-[vision]</span> | <span className="font-semibold text-sidebar-primary/70">N-oLiMiT gastro</span>
           <br />Pre gastro s budúcnosťou!
