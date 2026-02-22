@@ -26,3 +26,9 @@ Poucenie: Nabuduce nechat Lovable vytvorit repo ako prvy krok
   - Súkromné repozitáre (GitHub Pro/Team/Enterprise)
 - **Alternatíva:** Lovable, Claude, Codex pracujú na feature/* vetvách → PR do main
   - Toto je dohoda, nie technické vynútenie
+
+## [2026-02-22] Cloud Knowledge — officiálny collaboration režim
+- Zavedený súbor `.ai-context/cloud-knowledge.md` ako zdieľaná dohoda medzi AI nástrojmi
+- Popisuje workflow pre Lovable, Claude Code a Codex
+- Conflict playbook pre prípad kolízie zmien
+- Guardrails sú povinné pre všetky AI nástroje pred väčšími zásahmi
