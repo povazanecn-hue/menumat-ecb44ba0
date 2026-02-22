@@ -24,3 +24,7 @@
 - AI asistent v app sa volá Olivia
 - Supabase projekt: pozri supabase/config.toml
 - POZOR: .env je commitnuty — treba riesit!
+## Zmeny 2026-02-22
+- ✅ Repo premenovaný: menumat-ecb44ba0 → menumat-menumaestro-aktual
+- ✅ Všetky AI context súbory aktualizované s novým názvom
+- ⚠️ Branch protection (PR required) — vyžaduje GitHub Pro pre private repo
