@@ -1,0 +1,11 @@
+# CODEOWNERS — MenuMaestro
+# Každá zmena v tomto repe musí byť schválená vlastníkom pred merge do main.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Všetky súbory — vyžaduje schválenie od vlastníka
+* @povazanecn-hue
+
+# AI context a konfigurační súbory — zvlášť chránené
+/.ai-context/ @povazanecn-hue
+/CLAUDE.md @povazanecn-hue
+/.github/ @povazanecn-hue
