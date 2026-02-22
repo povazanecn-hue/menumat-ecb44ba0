@@ -28,6 +28,10 @@ Restaurant menu generator (MenuMaestro / MENUMAT).
 - `CLAUDE.md` — auto-loaded by Claude Code
 - `.github/copilot-instructions.md` — auto-loaded by Codex/Copilot
 
+## ⚠️ Povinné čítanie pred väčšími zásahmi
+Pred zmenou štruktúry, configu alebo závislostí si prečítaj:
+👉 `.ai-context/cloud-knowledge.md` — guardrails pre všetky AI nástroje
+
 ## Active AI Tools
 - **Lovable** — primary frontend builder, syncs to main branch
 - **Claude Code** — architecture, backend, complex logic (feature/* → PR)
