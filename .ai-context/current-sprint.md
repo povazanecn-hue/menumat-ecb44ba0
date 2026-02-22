@@ -2,22 +2,25 @@
 **Posledna session:** Claude Code
 
 ### Hotovo
-- [x] Lovable pushol kod do menumat-ecb44ba0
-- [x] Nastavena .ai-context/ struktura pre AI sync
-- [x] Tech stack potvrdeny: React + Vite + Supabase + Tailwind + Gemini
+- [x] Lovable pushol kompletny kod do repo
+- [x] CLAUDE.md vytvoreny (Claude Code cita automaticky)
+- [x] .github/copilot-instructions.md vytvoreny (Codex cita automaticky)
+- [x] .ai-context/ struktura nastavena s realnym obsahom
+- [x] Architektura zdokumentovana (vsetky pages + komponenty)
 
-### Prebieha
-- [ ] Overit .env vs .env.example (pozor - .env je v repo!)
-- [ ] Zdokumentovat Supabase schemu v architecture.md
-- [ ] Doplnit live URL po deployi
+### AI Sync stav
+- Claude Code: cita CLAUDE.md automaticky pri otvoreni repo ✓
+- Codex:       cita .github/copilot-instructions.md automaticky ✓
+- Lovable:     sync cez main branch ✓
+- Zdielana pamat: .ai-context/ (vsetky AI) ✓
 
 ### Dalsi krok (pre dalšiu AI — Claude alebo Codex)
-→ Precitaj src/ strukturu a doplň architecture.md
-→ Skontroluj ci .env neobsahuje ostré kluče (bezpecnost!)
-→ Pokracuj vo vyvoji podla zadania
+→ Zistit co chce user dorobit / pokracovat na projekte
+→ Skontroluj KNOWN_ISSUES.md — .env je v repo (bezpecnostny problem!)
+→ Navrhni feature branch ak ide o vacsiu zmenu
 
 ### Dolezite kontexty
-- Package manager: Bun
-- Supabase: projekt v /supabase/ adresari
-- Komponenty: shadcn/ui (components.json)
-- Testing: Vitest (vitest.config.ts)
+- Package manager: Bun (nie npm ani yarn)
+- AI asistent v app sa volá Olivia
+- Supabase projekt: pozri supabase/config.toml
+- POZOR: .env je commitnuty — treba riesit!
