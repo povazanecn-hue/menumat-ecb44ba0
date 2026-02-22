@@ -1,0 +1,16 @@
+name: PR Review Required
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  require-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR
+        run: |
+          echo "✅ PR pre main vetvu"
+          echo "⚠️  Tento PR vyžaduje schválenie od @povazanecn-hue pred merge!"
+          echo "Repo: menumat-menumaestro-aktual"
+          echo "Pravidlo: Nikto (Lovable, Claude, Codex) nemôže mergovať bez súhlasu vlastníka."
