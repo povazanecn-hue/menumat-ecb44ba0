@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
 
 /* MenuGen Dark-Gold Luxury Design System */
 
@@ -113,7 +113,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Source Sans 3', system-ui, sans-serif;
     position: relative;
   }
 
@@ -154,115 +154,16 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif;
   }
 }
 
 /* Gold gradient utility for buttons */
 @layer utilities {
   .bg-gold-gradient {
-    background: linear-gradient(135deg, hsl(40 60% 45%), hsl(42 65% 55%), hsl(38 50% 60%));
-    box-shadow: 0 0 20px hsl(40 55% 55% / 0.3), 0 4px 15px hsl(40 55% 55% / 0.2);
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, hsl(40 60% 45%), hsl(38 50% 60%));
   }
   .bg-gold-gradient:hover {
-    background: linear-gradient(135deg, hsl(40 65% 50%), hsl(42 70% 60%), hsl(38 55% 65%));
-    box-shadow: 0 0 30px hsl(40 55% 55% / 0.5), 0 6px 25px hsl(40 55% 55% / 0.35);
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, hsl(40 60% 40%), hsl(38 50% 55%));
   }
-
-  .logo-glow {
-    text-shadow:
-      /* Sharp side shadow - no blur */
-      2px 2px 0px hsl(20 30% 5%),
-      -1px -1px 0px hsl(20 30% 5% / 0.5),
-      1px 0px 0px hsl(20 30% 5% / 0.7),
-      0px 1px 0px hsl(20 30% 5% / 0.7),
-      /* Thin black outline */
-      1px 1px 0px hsl(0 0% 0%),
-      -1px -1px 0px hsl(0 0% 0% / 0.4),
-      1px -1px 0px hsl(0 0% 0% / 0.4),
-      -1px 1px 0px hsl(0 0% 0% / 0.4),
-      /* Gold glow */
-      0 0 15px hsl(40 55% 55% / 0.8),
-      0 0 40px hsl(40 55% 55% / 0.4),
-      0 0 80px hsl(40 55% 55% / 0.2);
-    animation: logo-pulse 3s ease-in-out infinite;
-  }
-
-  .logo-glow-light {
-    text-shadow:
-      1px 1px 0px hsl(20 30% 5% / 0.6),
-      -1px -1px 0px hsl(0 0% 0% / 0.3),
-      1px -1px 0px hsl(0 0% 0% / 0.3),
-      -1px 1px 0px hsl(0 0% 0% / 0.3),
-      0 0 8px hsl(40 55% 55% / 0.5),
-      0 0 20px hsl(40 55% 55% / 0.2);
-  }
-
-  .icon-glow {
-    filter: drop-shadow(0 0 12px hsl(40 55% 55% / 0.8))
-            drop-shadow(0 0 30px hsl(40 55% 55% / 0.4))
-            drop-shadow(0 0 50px hsl(40 55% 55% / 0.15));
-    animation: icon-pulse 3s ease-in-out infinite;
-  }
-
-  .btn-glow-outline {
-    box-shadow: 0 0 10px hsl(40 55% 55% / 0.15), inset 0 0 10px hsl(40 55% 55% / 0.05);
-    transition: all 0.3s ease;
-  }
-  .btn-glow-outline:hover {
-    box-shadow: 0 0 20px hsl(40 55% 55% / 0.3), inset 0 0 15px hsl(40 55% 55% / 0.1);
-    border-color: hsl(40 55% 55% / 0.6);
-    transform: translateY(-1px);
-  }
-}
-
-@keyframes logo-pulse {
-  0%, 100% {
-    text-shadow:
-      2px 2px 0px hsl(20 30% 5%),
-      -1px -1px 0px hsl(20 30% 5% / 0.5),
-      1px 0px 0px hsl(20 30% 5% / 0.7),
-      0px 1px 0px hsl(20 30% 5% / 0.7),
-      1px 1px 0px hsl(0 0% 0%),
-      -1px -1px 0px hsl(0 0% 0% / 0.4),
-      1px -1px 0px hsl(0 0% 0% / 0.4),
-      -1px 1px 0px hsl(0 0% 0% / 0.4),
-      0 0 15px hsl(40 55% 55% / 0.8),
-      0 0 40px hsl(40 55% 55% / 0.4),
-      0 0 80px hsl(40 55% 55% / 0.2);
-  }
-  50% {
-    text-shadow:
-      2px 2px 0px hsl(20 30% 5%),
-      -1px -1px 0px hsl(20 30% 5% / 0.5),
-      1px 0px 0px hsl(20 30% 5% / 0.7),
-      0px 1px 0px hsl(20 30% 5% / 0.7),
-      1px 1px 0px hsl(0 0% 0%),
-      -1px -1px 0px hsl(0 0% 0% / 0.4),
-      1px -1px 0px hsl(0 0% 0% / 0.4),
-      -1px 1px 0px hsl(0 0% 0% / 0.4),
-      0 0 25px hsl(40 55% 55% / 1),
-      0 0 60px hsl(40 55% 55% / 0.6),
-      0 0 100px hsl(40 55% 55% / 0.3);
-  }
-}
-
-@keyframes icon-pulse {
-  0%, 100% {
-    filter: drop-shadow(0 0 12px hsl(40 55% 55% / 0.8))
-            drop-shadow(0 0 30px hsl(40 55% 55% / 0.4))
-            drop-shadow(0 0 50px hsl(40 55% 55% / 0.15));
-  }
-  50% {
-    filter: drop-shadow(0 0 20px hsl(40 55% 55% / 1))
-            drop-shadow(0 0 45px hsl(40 55% 55% / 0.6))
-            drop-shadow(0 0 70px hsl(40 55% 55% / 0.25));
-  }
-}
-
-/* Safe area for notched phones */
-.safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

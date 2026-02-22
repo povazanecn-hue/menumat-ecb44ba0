@@ -34,7 +34,7 @@ export default function Exports() {
 
         <TabsContent value="export" className="space-y-4 mt-4">
           {/* Menu selector */}
-          <Card className="bg-card/60 backdrop-blur-md">
+          <Card>
             <CardHeader>
               <CardTitle className="font-serif text-lg">Vybrať menu</CardTitle>
             </CardHeader>
@@ -71,7 +71,7 @@ export default function Exports() {
         </TabsContent>
 
         <TabsContent value="history" className="mt-4">
-          <Card className="bg-card/60 backdrop-blur-md">
+          <Card>
             <CardHeader>
               <CardTitle className="font-serif text-lg">História exportov</CardTitle>
             </CardHeader>

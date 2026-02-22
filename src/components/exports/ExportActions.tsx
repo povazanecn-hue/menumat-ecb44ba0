@@ -64,10 +64,10 @@ export function ExportActions({ menu, onTemplateChange, onShowFinancialsChange }
           break;
         }
         case "pdf":
-          exportPDF(menu, template, showFinancials);
+          exportPDF(menu, template);
           break;
         case "excel":
-          exportExcel(menu, showFinancials);
+          exportExcel(menu);
           break;
         case "webflow": {
           const result = await exportWebEmbed(menu);

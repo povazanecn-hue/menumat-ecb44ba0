@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe, FileUp } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -25,14 +24,12 @@ import {
   useCreateSupplierPrice,
   useDeleteSupplierPrice,
   useApplySupplierPrice,
-  useBulkCreateSupplierPrices,
   IngredientWithSuppliers,
 } from "@/hooks/useIngredients";
 import { IngredientFormDialog, IngredientFormData } from "@/components/ingredients/IngredientFormDialog";
 import { SupplierPriceDialog, SupplierPriceFormData } from "@/components/ingredients/SupplierPriceDialog";
 import { SupplierPriceTable } from "@/components/ingredients/SupplierPriceTable";
 import { WebPriceSearchDialog } from "@/components/ingredients/WebPriceSearchDialog";
-import { SupplierPriceImportDialog, ImportRow } from "@/components/ingredients/SupplierPriceImportDialog";
 
 export default function Ingredients() {
   const { data: ingredients = [], isLoading } = useIngredients();
@@ -42,7 +39,6 @@ export default function Ingredients() {
   const createSupplierPrice = useCreateSupplierPrice();
   const deleteSupplierPrice = useDeleteSupplierPrice();
   const applySupplierPrice = useApplySupplierPrice();
-  const bulkCreatePrices = useBulkCreateSupplierPrices();
   const { toast } = useToast();
 
   const [search, setSearch] = useState("");
@@ -52,7 +48,6 @@ export default function Ingredients() {
   const [supplierTarget, setSupplierTarget] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [webSearchTarget, setWebSearchTarget] = useState<IngredientWithSuppliers | null>(null);
-  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(() => {
     return ingredients.filter((i) =>
@@ -135,27 +130,6 @@ export default function Ingredients() {
     }
   };
 
-  const handleBulkImport = async (rows: ImportRow[]) => {
-    const prices = rows
-      .filter(r => r.matched_ingredient_id)
-      .map(r => ({
-        ingredient_id: r.matched_ingredient_id!,
-        supplier_name: r.supplier_name,
-        price: r.price,
-        is_promo: r.is_promo,
-        valid_from: r.valid_from,
-        valid_to: r.valid_to,
-        confidence: "manual" as const,
-      }));
-    try {
-      await bulkCreatePrices.mutateAsync(prices);
-      toast({ title: `${prices.length} cien importovaných` });
-      setImportOpen(false);
-    } catch (e: any) {
-      toast({ title: "Chyba importu", description: e.message, variant: "destructive" });
-    }
-  };
-
   const noPricedCount = ingredients.filter((i) => i.base_price === 0).length;
 
   return (
@@ -173,16 +147,10 @@ export default function Ingredients() {
             )}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)}>
-            <FileUp className="h-4 w-4 mr-1" />
-            Import cenníka
-          </Button>
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Nová ingrediencia
-          </Button>
-        </div>
+        <Button onClick={() => setFormOpen(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Nová ingrediencia
+        </Button>
       </div>
 
       {/* Search */}
@@ -198,23 +166,9 @@ export default function Ingredients() {
 
       {/* List */}
       {isLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Card key={i} className="bg-card/60 backdrop-blur-md">
-              <CardContent className="flex items-center gap-4 py-3 px-4">
-                <Skeleton className="h-7 w-7 rounded" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-3 w-24" />
-                </div>
-                <Skeleton className="h-5 w-20" />
-                <Skeleton className="h-8 w-8" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <div className="text-center py-12 text-muted-foreground">Načítavam ingrediencie...</div>
       ) : filtered.length === 0 ? (
-        <Card className="bg-card/60 backdrop-blur-md">
+        <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
               {ingredients.length === 0
@@ -230,7 +184,7 @@ export default function Ingredients() {
             const supplierCount = ing.supplier_prices.length;
 
             return (
-              <Card key={ing.id} className="bg-card/60 backdrop-blur-md border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
+              <Card key={ing.id} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
                 <Collapsible open={isExpanded} onOpenChange={() => setExpandedId(isExpanded ? null : ing.id)}>
                   <CardContent className="py-3 px-4">
                     <div className="flex items-center gap-4">
@@ -411,15 +365,6 @@ export default function Ingredients() {
           onAddPrice={handleWebPriceAdd}
         />
       )}
-
-      {/* Supplier Price Import Dialog */}
-      <SupplierPriceImportDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        ingredients={ingredients}
-        onImport={handleBulkImport}
-        importing={bulkCreatePrices.isPending}
-      />
     </div>
   );
 }

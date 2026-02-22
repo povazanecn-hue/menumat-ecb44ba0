@@ -80,7 +80,7 @@ export async function exportTV(menu: ExportMenu, template: string = "country"): 
 }
 
 // ─── PDF / Print ───
-export function exportPDF(menu: ExportMenu, template: string = "country", showFinancials: boolean = false) {
+export function exportPDF(menu: ExportMenu, template: string = "country") {
   // Generate a local HTML for printing (no server needed)
   const groups = groupItems(menu.menu_items);
   const dateLabel = formatDate(menu.menu_date);
@@ -96,15 +96,9 @@ export function exportPDF(menu: ExportMenu, template: string = "country", showFi
     rows += `<div style="margin-bottom:18px;">
       <div style="font-family:${headerFont};font-size:20px;font-weight:700;color:${accentColor};margin-bottom:6px;text-transform:uppercase;letter-spacing:2px;">${DISH_CATEGORIES[cat] || cat}</div>`;
     for (const item of items) {
-      const costVal = item.dish.cost;
-      const priceVal = item.override_price ?? item.dish.final_price ?? item.dish.recommended_price;
-      const marginPct = costVal > 0 ? (((priceVal - costVal) / costVal) * 100).toFixed(0) + "%" : "—";
       rows += `<div style="display:flex;justify-content:space-between;align-items:baseline;font-family:${bodyFont};font-size:16px;padding:4px 0;border-bottom:1px dotted ${accentColor}40;">
         <span><strong>${item.dish.name}</strong>${item.dish.grammage ? ` <span style="font-size:13px;color:${textColor}99;">(${item.dish.grammage})</span>` : ""}${item.dish.allergens.length ? ` <span style="font-size:12px;color:${textColor}80;">A: ${getAllergenStr(item.dish.allergens)}</span>` : ""}</span>
-        <span style="white-space:nowrap;margin-left:24px;">
-          ${showFinancials ? `<span style="font-size:12px;color:${textColor}80;margin-right:12px;">N: ${costVal.toFixed(2)}€ | M: ${marginPct}</span>` : ""}
-          <span style="font-weight:700;">${getPrice(item)}</span>
-        </span>
+        <span style="font-weight:700;white-space:nowrap;margin-left:24px;">${getPrice(item)}</span>
       </div>`;
     }
     rows += `</div>`;
@@ -130,41 +124,30 @@ ${rows}
 }
 
 // ─── Excel kitchen export ───
-export function exportExcel(menu: ExportMenu, showFinancials: boolean = false) {
+export function exportExcel(menu: ExportMenu) {
   const dateLabel = formatDate(menu.menu_date);
   const sorted = [...menu.menu_items].sort((a, b) => a.sort_order - b.sort_order);
 
   const wsData = [
     ["DENNÉ MENU", dateLabel],
     [],
-    showFinancials
-      ? ["#", "Kategória", "Názov jedla", "Gramáž", "Alergény", "Náklad (€)", "Marža", "Cena (€)"]
-      : ["#", "Kategória", "Názov jedla", "Gramáž", "Alergény", "Cena (€)"],
+    ["#", "Kategória", "Názov jedla", "Gramáž", "Alergény", "Cena (€)"],
   ];
 
   sorted.forEach((item, i) => {
-    const costVal = item.dish.cost;
-    const priceVal = item.override_price ?? item.dish.final_price ?? item.dish.recommended_price;
-    const marginPct = costVal > 0 ? (((priceVal - costVal) / costVal) * 100).toFixed(0) + "%" : "—";
-    const baseRow = [
+    wsData.push([
       String(i + 1),
       DISH_CATEGORIES[item.dish.category] || item.dish.category,
       item.dish.name,
       item.dish.grammage || "",
       getAllergenStr(item.dish.allergens),
-    ];
-    if (showFinancials) {
-      baseRow.push(costVal.toFixed(2), marginPct);
-    }
-    baseRow.push(getPrice(item));
-    wsData.push(baseRow);
+      getPrice(item),
+    ]);
   });
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws["!cols"] = showFinancials
-    ? [{ wch: 4 }, { wch: 16 }, { wch: 40 }, { wch: 12 }, { wch: 16 }, { wch: 10 }, { wch: 8 }, { wch: 10 }]
-    : [{ wch: 4 }, { wch: 16 }, { wch: 40 }, { wch: 12 }, { wch: 16 }, { wch: 10 }];
+  ws["!cols"] = [{ wch: 4 }, { wch: 16 }, { wch: 40 }, { wch: 12 }, { wch: 16 }, { wch: 10 }];
   XLSX.utils.book_append_sheet(wb, ws, "Menu");
   XLSX.writeFile(wb, `menu-kitchen-${menu.menu_date}.xlsx`);
 }

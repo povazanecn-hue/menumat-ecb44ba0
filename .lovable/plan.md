@@ -1,39 +1,57 @@
 
-# Hromadne tlacidlo "Vytvorit vsetky nepriradene"
 
-## Zmeny v `src/components/daily-menu/ImportMenuDialog.tsx`
+# Integrácia Cloudinary OCR do import flow
 
-### 1. Nova funkcia `handleCreateAllUnmatched`
+## Prehľad
 
-Pridanie async funkcie, ktora:
-- Prejde vsetky `weeklyData` dni a ich polozky (alebo `rows` pre flat mode)
-- Vyberie vsetky kde `matchedDish === null`
-- Sekvencne (alebo paralelne s `Promise.all`) zavola `createDishMutation.mutateAsync` pre kazdu
-- Po uspesnom vytvoreni aktualizuje lokalny stav (`weeklyData` / `rows`) s novym jedlom a similarity 100%
-- Zobrazi toast s poctom vytvorenych jedal
+Pridanie Cloudinary spracovania obrázkov do existujúceho OCR import tabu v `ImportMenuDialog`. Keď používateľ odfotí papierové menu, obrázok sa najprv vylepší cez Cloudinary (auto-enhance, upscale) pre lepšiu kvalitu rozpoznávania, a potom sa pošle do AI OCR pipeline (Gemini 2.5 Flash).
 
-### 2. Nova funkcia `handleCreateAllUnmatchedRows`
+## Prečo nie čistý Cloudinary OCR?
 
-Rovnaka logika pre flat list (`rows` state) - prejde vsetky riadky bez `matchedDish` a vytovri ich.
+Cloudinary `adv_ocr` add-on extrahuje len surový text bez štruktúry. Súčasný AI pipeline (Gemini) vie extrahovať štruktúrované dáta (dni, kategórie, ceny, alergény). Najlepší výsledok sa dosiahne kombináciou:
+1. **Cloudinary** - vylepšenie kvality fotky (ostrenie, kontrast, upscale)
+2. **Gemini AI** - inteligentné štruktúrované rozpoznávanie jedál
 
-### 3. UI - tlacidlo v weekly preview
+## Zmeny
 
-Medzi summary badges (priradene/nepriradene) a ScrollArea sa prida tlacidlo:
-- Zobrazi sa len ak `weeklyUnmatched > 0`
-- Text: `Vytvorit vsetky nepriradene (N)`
-- Ikona: `PlusCircle`
-- `disabled` pocas `createDishMutation.isPending`
-- Umiestnenie: na riadku vedla badge "N nepriradených" alebo pod nim
+### 1. ImportMenuDialog.tsx - Nový OCR režim "Fotka menu"
 
-### 4. UI - tlacidlo v flat list preview
+V OCR tabe pridať prepínač medzi:
+- **Štandard OCR** (súčasný priamy upload do AI) 
+- **Fotka papierového menu** (Cloudinary enhance -> AI OCR)
 
-Rovnake tlacidlo pre jednoduchy zoznam, zobrazene ak existuju nepriradene riadky.
+Pri výbere "Fotka menu":
+- Obrázok sa najprv odošle na Cloudinary cez `cloudinary-transform` edge function s akciou `enhance`
+- Vylepšený obrázok URL sa potom pošle do `ocr-menu-import` edge function
+- Zobrazí sa progress: "Vylepšujem kvalitu fotky..." -> "AI rozpoznáva jedlá..."
 
-### Technicke detaily
+### 2. ocr-menu-import edge function - podpora URL vstupu
 
-- Pouzije sa existujuci `createDishMutation` (hook `useCreateDish`)
-- Kategoria defaultne `hlavne_jedlo`, rovnako ako pri jednotlivom vytvoreni
-- Pre weekly data sa prenesie `allergens`, `grammage`, `price` z OCR dat
-- Pre flat rows sa pouziju prazdne defaults (rovnako ako `handleCreateDishFromRow`)
-- State sa aktualizuje progresivne - kazde jedlo sa updatne ihned po vytvoreni
-- Tracking stavu "vytvaram vsetky" cez novy `boolean` state `isCreatingAll` pre disablovanie UI
+Pridať alternatívny vstup `imageUrl` (URL vylepšeného obrázka z Cloudinary) popri existujúcom `fileBase64`. Ak je poskytnutý `imageUrl`, použije sa priamo ako image_url v AI požiadavke namiesto base64.
+
+### 3. UI zmeny v OCR tabe
+
+- Pridať ikonu kamery a text "Odfotené papierové menu" ako sub-voľbu
+- Toggle/checkbox "Vylepšiť kvalitu (Cloudinary)" - defaultne zapnutý pre obrázky
+- Indikátor dvojkrokového spracovania s progress stavmi
+
+## Technické detaily
+
+### ImportMenuDialog.tsx
+- Import `useCloudinary` hooku
+- Nový stav: `useEnhance: boolean` (default true pre obrázky)
+- V `handleOcrFile`: ak `useEnhance` a súbor je obrázok (jpg/png/webp):
+  1. Upload base64 ako data URL
+  2. Zavolať `cloudinary.enhance(dataUrl)`
+  3. Ak úspešné, poslať výslednú URL do `ocr-menu-import` s `imageUrl` parametrom
+  4. Ak zlyhá, fallback na priamy base64 upload (štandardný flow)
+
+### ocr-menu-import/index.ts
+- Pridať `imageUrl` do vstupných parametrov
+- Ak je `imageUrl` prítomný, použiť ho ako `image_url` v OpenAI/Gemini vision požiadavke
+- Base64 flow ostáva ako fallback
+
+### Žiadne databázové zmeny
+- Využíva existujúce Cloudinary secrets (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)
+- Využíva existujúcu `cloudinary-transform` edge function
+

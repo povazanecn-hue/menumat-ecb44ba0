@@ -125,21 +125,3 @@ export function useApplySupplierPrice() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ingredients"] }),
   });
 }
-
-/** Bulk insert supplier prices (for import) */
-export function useBulkCreateSupplierPrices() {
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (prices: Omit<TablesInsert<"supplier_prices">, "id">[]) => {
-      if (prices.length === 0) return [];
-      const { data, error } = await supabase
-        .from("supplier_prices")
-        .insert(prices)
-        .select();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ingredients"] }),
-  });
-}

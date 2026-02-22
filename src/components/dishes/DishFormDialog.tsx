@@ -11,7 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ALLERGENS, DISH_CATEGORIES } from "@/lib/constants";
-import { getVatForCategory } from "@/lib/unitNormalization";
 import { Dish } from "@/hooks/useDishes";
 import { Database } from "@/integrations/supabase/types";
 import { TrendingUp, AlertTriangle, Lock } from "lucide-react";
@@ -151,10 +150,7 @@ export function DishFormDialog({ open, onOpenChange, dish, onSubmit, submitting,
               <Label>Kategória</Label>
               <Select
                 value={form.category}
-                onValueChange={(v) => {
-                  const cat = v as DishCategory;
-                  setForm((f) => ({ ...f, category: cat, vat_rate: getVatForCategory(cat) }));
-                }}
+                onValueChange={(v) => setForm((f) => ({ ...f, category: v as DishCategory }))}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>

@@ -6,44 +6,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar, Camera, Wand2, RefreshCw, ChevronDown, Eye, Pencil, PlusCircle } from "lucide-react";
-import { Dish, useCreateDish } from "@/hooks/useDishes";
+import { Upload, FileSpreadsheet, FileText, Image, Check, X, AlertTriangle, Loader2, Sparkles, Calendar, Camera, Wand2, RefreshCw } from "lucide-react";
+import { Dish } from "@/hooks/useDishes";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCloudinary } from "@/hooks/useCloudinary";
 import * as XLSX from "xlsx";
 import { parseKolieskoExcel, parseKolieskoCSV, type KolieskoDay, type KolieskoMenuItem } from "@/lib/kolieskoImport";
-import { Database } from "@/integrations/supabase/types";
-
-type DishCategory = Database["public"]["Enums"]["dish_category"];
-
-const CATEGORY_LABELS: Record<DishCategory, string> = {
-  polievka: "Polievka",
-  hlavne_jedlo: "Hlavné jedlo",
-  dezert: "Dezert",
-  predjedlo: "Predjedlo",
-  salat: "Šalát",
-  pizza: "Pizza",
-  burger: "Burger",
-  pasta: "Pasta",
-  napoj: "Nápoj",
-  ine: "Iné",
-};
-
-/** Infer dish category from OCR slot label */
-function inferCategoryFromSlot(slot: string): DishCategory {
-  const s = slot.toLowerCase().trim();
-  if (s === "p" || s.startsWith("poliev")) return "polievka";
-  if (s === "d" || s.startsWith("dezert") || s.startsWith("zákus") || s.startsWith("zakus")) return "dezert";
-  if (s === "s" || s.startsWith("šalát") || s.startsWith("salat") || s.startsWith("salát")) return "salat";
-  if (s === "b" || s.startsWith("burger")) return "burger";
-  if (s.startsWith("pizza")) return "pizza";
-  if (s.startsWith("pasta") || s.startsWith("cestovin")) return "pasta";
-  if (s.startsWith("predjedlo") || s.startsWith("predkrm")) return "predjedlo";
-  if (s.startsWith("nápoj") || s.startsWith("napoj")) return "napoj";
-  return "hlavne_jedlo";
-}
 
 interface ImportMenuDialogProps {
   open: boolean;
@@ -66,8 +35,6 @@ export interface ImportDayResult {
     grammage: string;
     price: number | null;
     allergens: number[];
-    side_dish: string;
-    extras: string;
   }[];
 }
 
@@ -140,7 +107,6 @@ const OCR_ACCEPT = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp";
 export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyWeekly, isApplying }: ImportMenuDialogProps) {
   const { toast } = useToast();
   const cloudinary = useCloudinary();
-  const createDishMutation = useCreateDish();
   // Simple mode (flat list)
   const [rows, setRows] = useState<ParsedRow[]>([]);
   // Koliesko mode (structured weekly)
@@ -154,215 +120,8 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
   const [enhancedPreview, setEnhancedPreview] = useState<string | null>(null);
   const [pendingOcrData, setPendingOcrData] = useState<{ base64: string; mimeType: string; fileName: string } | null>(null);
   const [cameraFacing, setCameraFacing] = useState<"environment" | "user">("environment");
-  const [rawOcrText, setRawOcrText] = useState<string | null>(null);
-  const [showOcrComparison, setShowOcrComparison] = useState(false);
-  const [editingItem, setEditingItem] = useState<{ dayIdx: number; itemIdx: number; field: "name" | "side_dish" | "extras" } | null>(null);
-  const [editValue, setEditValue] = useState("");
-  const [isCreatingAll, setIsCreatingAll] = useState(false);
-  // Category overrides: key = "dayIdx-itemIdx" for weekly, "row-idx" for flat
-  const [categoryOverrides, setCategoryOverrides] = useState<Record<string, DishCategory>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const editInputRef = useRef<HTMLInputElement>(null);
-
-  const handleEditItem = (dayIdx: number, itemIdx: number, field: "name" | "side_dish" | "extras") => {
-    const item = weeklyData?.[dayIdx]?.items[itemIdx];
-    if (!item) return;
-    setEditingItem({ dayIdx, itemIdx, field });
-    setEditValue(field === "name" ? item.rawName : field === "side_dish" ? item.side_dish : item.extras);
-    setTimeout(() => editInputRef.current?.focus(), 50);
-  };
-
-  const commitEdit = () => {
-    if (!editingItem || !weeklyData) return;
-    const { dayIdx, itemIdx, field } = editingItem;
-    const val = editValue.trim();
-
-    setWeeklyData(prev => {
-      if (!prev) return prev;
-      return prev.map((day, di) => {
-        if (di !== dayIdx) return day;
-        return {
-          ...day,
-          items: day.items.map((item, ii) => {
-            if (ii !== itemIdx) return item;
-            if (field === "name") {
-              if (val.length === 0) return item;
-              const { dish, score } = findBestMatch(val, dishes);
-              return { ...item, rawName: val, matchedDish: dish, similarity: score };
-            }
-            if (field === "side_dish") return { ...item, side_dish: val };
-            return { ...item, extras: val };
-          }),
-        };
-      });
-    });
-    setEditingItem(null);
-  };
-
-  /** Create a new dish from unmatched import item and link it */
-  const handleCreateDishFromItem = async (dayIdx: number, itemIdx: number) => {
-    if (!weeklyData) return;
-    const item = weeklyData[dayIdx]?.items[itemIdx];
-    if (!item || item.matchedDish) return;
-
-    try {
-      const category = categoryOverrides[`${dayIdx}-${itemIdx}`] || inferCategoryFromSlot(item.slot);
-      const newDish = await createDishMutation.mutateAsync({
-        name: item.rawName,
-        category,
-        allergens: item.allergens || [],
-        grammage: item.grammage || null,
-        vat_rate: 20,
-        cost: 0,
-        recommended_price: item.price ?? 0,
-        final_price: item.price ?? null,
-        is_daily_menu: true,
-        is_permanent_offer: false,
-        subtype: null,
-      });
-
-      // Update weeklyData to link this item to the new dish
-      setWeeklyData(prev => {
-        if (!prev) return prev;
-        return prev.map((day, di) => {
-          if (di !== dayIdx) return day;
-          return {
-            ...day,
-            items: day.items.map((it, ii) => {
-              if (ii !== itemIdx) return it;
-              return { ...it, matchedDish: newDish as Dish, similarity: 1 };
-            }),
-          };
-        });
-      });
-
-      toast({ title: "Jedlo vytvorené", description: `„${item.rawName}" bolo pridané do databázy.` });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    }
-  };
-
-  /** Create a new dish from unmatched flat row */
-  const handleCreateDishFromRow = async (index: number) => {
-    const row = rows[index];
-    if (!row || row.matchedDish) return;
-
-    try {
-      const category = categoryOverrides[`row-${index}`] || "hlavne_jedlo";
-      const newDish = await createDishMutation.mutateAsync({
-        name: row.rawName,
-        category,
-        allergens: [],
-        grammage: null,
-        vat_rate: 20,
-        cost: 0,
-        recommended_price: 0,
-        final_price: null,
-        is_daily_menu: true,
-        is_permanent_offer: false,
-        subtype: null,
-      });
-
-      setRows(prev =>
-        prev.map((r, i) =>
-          i === index ? { ...r, matchedDish: newDish as Dish, similarity: 1 } : r
-        )
-      );
-
-      toast({ title: "Jedlo vytvorené", description: `„${row.rawName}" bolo pridané do databázy.` });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    }
-  };
-
-  /** Batch create all unmatched weekly items */
-  const handleCreateAllUnmatched = async () => {
-    if (!weeklyData) return;
-    setIsCreatingAll(true);
-    let created = 0;
-    try {
-      for (let di = 0; di < weeklyData.length; di++) {
-        for (let ii = 0; ii < weeklyData[di].items.length; ii++) {
-          const item = weeklyData[di].items[ii];
-          if (item.matchedDish) continue;
-          try {
-            const category = categoryOverrides[`${di}-${ii}`] || inferCategoryFromSlot(item.slot);
-            const newDish = await createDishMutation.mutateAsync({
-              name: item.rawName,
-              category,
-              allergens: item.allergens || [],
-              grammage: item.grammage || null,
-              vat_rate: 20,
-              cost: 0,
-              recommended_price: item.price ?? 0,
-              final_price: item.price ?? null,
-              is_daily_menu: true,
-              is_permanent_offer: false,
-              subtype: null,
-            });
-            setWeeklyData(prev => {
-              if (!prev) return prev;
-              return prev.map((day, dIdx) => {
-                if (dIdx !== di) return day;
-                return {
-                  ...day,
-                  items: day.items.map((it, iIdx) =>
-                    iIdx === ii ? { ...it, matchedDish: newDish as Dish, similarity: 1 } : it
-                  ),
-                };
-              });
-            });
-            created++;
-          } catch (e) {
-            console.error(`Failed to create dish "${item.rawName}":`, e);
-          }
-        }
-      }
-      toast({ title: "Hotovo", description: `Vytvorených ${created} nových jedál.` });
-    } finally {
-      setIsCreatingAll(false);
-    }
-  };
-
-  /** Batch create all unmatched flat rows */
-  const handleCreateAllUnmatchedRows = async () => {
-    setIsCreatingAll(true);
-    let created = 0;
-    try {
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        if (row.matchedDish) continue;
-        try {
-          const category = categoryOverrides[`row-${i}`] || "hlavne_jedlo";
-          const newDish = await createDishMutation.mutateAsync({
-            name: row.rawName,
-            category,
-            allergens: [],
-            grammage: null,
-            vat_rate: 20,
-            cost: 0,
-            recommended_price: 0,
-            final_price: null,
-            is_daily_menu: true,
-            is_permanent_offer: false,
-            subtype: null,
-          });
-          setRows(prev =>
-            prev.map((r, idx) =>
-              idx === i ? { ...r, matchedDish: newDish as Dish, similarity: 1 } : r
-            )
-          );
-          created++;
-        } catch (e) {
-          console.error(`Failed to create dish "${row.rawName}":`, e);
-        }
-      }
-      toast({ title: "Hotovo", description: `Vytvorených ${created} nových jedál.` });
-    } finally {
-      setIsCreatingAll(false);
-    }
-  };
 
   const resetState = () => {
     setRows([]);
@@ -373,10 +132,6 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
     setOriginalPreview(null);
     setEnhancedPreview(null);
     setPendingOcrData(null);
-    setRawOcrText(null);
-    setShowOcrComparison(false);
-    setEditingItem(null);
-    setCategoryOverrides({});
   };
 
   const matchNames = (names: string[]) => {
@@ -427,8 +182,6 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                 grammage: item.grammage,
                 price: item.price,
                 allergens: item.allergens,
-                side_dish: "",
-                extras: "",
               };
             }).filter(i => i.rawName.length > 0),
           };
@@ -559,8 +312,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
         }
 
         // Check for structured days first
-        const ocrDays: { dayName: string; dateStr: string; items: { name: string; category: string; slot: string; grammage: string; price: number | null; allergens: number[]; side_dish?: string; extras?: string }[] }[] = data?.days || [];
-        if (data?.rawOcrText) setRawOcrText(data.rawOcrText);
+        const ocrDays: { dayName: string; dateStr: string; items: { name: string; category: string; slot: string; grammage: string; price: number | null; allergens: number[] }[] }[] = data?.days || [];
 
         if (ocrDays.length > 0) {
           // Map OCR results to ImportDayResult with fuzzy matching
@@ -577,8 +329,6 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                 grammage: item.grammage || "",
                 price: item.price,
                 allergens: item.allergens || [],
-                side_dish: item.side_dish || "",
-                extras: item.extras || "",
               };
             }).filter(i => i.rawName.length > 0),
           }));
@@ -645,14 +395,13 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
       }
 
       const ocrDays = data?.days || [];
-      if (data?.rawOcrText) setRawOcrText(data.rawOcrText);
       if (ocrDays.length > 0) {
         const results: ImportDayResult[] = ocrDays.map((day: any) => ({
           dayName: day.dayName,
           dateStr: day.dateStr,
           items: day.items.map((item: any) => {
             const { dish, score } = findBestMatch(item.name, dishes);
-            return { rawName: item.name, matchedDish: dish, similarity: score, slot: item.slot || "Menu", grammage: item.grammage || "", price: item.price, allergens: item.allergens || [], side_dish: item.side_dish || "", extras: item.extras || "" };
+            return { rawName: item.name, matchedDish: dish, similarity: score, slot: item.slot || "Menu", grammage: item.grammage || "", price: item.price, allergens: item.allergens || [] };
           }).filter((i: any) => i.rawName.length > 0),
         }));
         setWeeklyData(results);
@@ -960,76 +709,6 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
               </div>
             </div>
 
-            {weeklyUnmatched > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-2"
-                onClick={handleCreateAllUnmatched}
-                disabled={isCreatingAll || createDishMutation.isPending}
-              >
-                {isCreatingAll ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <PlusCircle className="h-3.5 w-3.5" />
-                )}
-                {isCreatingAll ? "Vytvárám..." : `Vytvoriť všetky nepriradené (${weeklyUnmatched})`}
-              </Button>
-            )}
-
-            {/* OCR Comparison: Raw vs Corrected */}
-            {rawOcrText && (
-              <Collapsible open={showOcrComparison} onOpenChange={setShowOcrComparison}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full gap-2 text-xs">
-                    <Eye className="h-3.5 w-3.5" />
-                    {showOcrComparison ? "Skryť" : "Zobraziť"} porovnanie OCR textu
-                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showOcrComparison ? "rotate-180" : ""}`} />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-destructive/80 font-medium uppercase tracking-wider flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        Surový OCR text
-                      </p>
-                      <ScrollArea className="h-36 rounded-md border border-destructive/20 bg-destructive/5 p-2">
-                        <pre className="text-[10px] whitespace-pre-wrap text-foreground/70 font-mono leading-relaxed">
-                          {rawOcrText}
-                        </pre>
-                      </ScrollArea>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-primary font-medium uppercase tracking-wider flex items-center gap-1">
-                        <Sparkles className="h-3 w-3" />
-                        AI opravený výsledok
-                      </p>
-                      <ScrollArea className="h-36 rounded-md border border-primary/20 bg-primary/5 p-2">
-                        <div className="space-y-1.5">
-                          {weeklyData.map((day, di) => (
-                            <div key={di}>
-                              <p className="text-[10px] font-bold text-primary">{day.dayName} {day.dateStr}</p>
-                              {day.items.map((item, ii) => (
-                                <p key={ii} className="text-[10px] text-foreground/80 pl-2">
-                                  <span className="text-primary/60">{item.slot}:</span>{" "}
-                                  {item.rawName}
-                                  {item.price != null && <span className="text-muted-foreground"> {item.price.toFixed(2)}€</span>}
-                                  {item.allergens.length > 0 && (
-                                    <span className="text-amber-500/80"> ({item.allergens.join(",")})</span>
-                                  )}
-                                </p>
-                              ))}
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-
             <ScrollArea className="flex-1 max-h-[400px]">
               <div className="space-y-4">
                 {weeklyData.map((day, di) => (
@@ -1058,74 +737,10 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                           <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
                         )}
                         <div className="flex-1 min-w-0">
-                          {editingItem?.dayIdx === di && editingItem?.itemIdx === ii && editingItem?.field === "name" ? (
-                            <div className="flex items-center gap-1">
-                              <input
-                                ref={editInputRef}
-                                className="flex-1 text-xs bg-background border border-primary/40 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-primary/50"
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") commitEdit();
-                                  if (e.key === "Escape") setEditingItem(null);
-                                }}
-                                onBlur={commitEdit}
-                              />
-                            </div>
-                          ) : (
-                            <p className="truncate text-xs group/name cursor-pointer" onClick={() => handleEditItem(di, ii, "name")}>
-                              {item.grammage && <span className="font-semibold">{item.grammage} </span>}
-                              {item.rawName}
-                              <Pencil className="inline-block h-2.5 w-2.5 ml-1 opacity-0 group-hover/name:opacity-60 transition-opacity" />
-                            </p>
-                          )}
-                          <div className="flex gap-2 flex-wrap">
-                            {editingItem?.dayIdx === di && editingItem?.itemIdx === ii && editingItem?.field === "side_dish" ? (
-                              <input
-                                ref={editInputRef}
-                                placeholder="Príloha..."
-                                className="text-[10px] bg-background border border-primary/40 rounded px-1 py-0 outline-none focus:ring-1 focus:ring-primary/50 w-28"
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") commitEdit();
-                                  if (e.key === "Escape") setEditingItem(null);
-                                }}
-                                onBlur={commitEdit}
-                              />
-                            ) : (
-                              <span
-                                className="text-[10px] text-primary/80 cursor-pointer hover:underline"
-                                onClick={() => handleEditItem(di, ii, "side_dish")}
-                                title="Klikni pre úpravu prílohy"
-                              >
-                                🍽 {item.side_dish || "—"}
-                              </span>
-                            )}
-                            <span className="text-[10px] text-muted-foreground">·</span>
-                            {editingItem?.dayIdx === di && editingItem?.itemIdx === ii && editingItem?.field === "extras" ? (
-                              <input
-                                ref={editInputRef}
-                                placeholder="Extra..."
-                                className="text-[10px] bg-background border border-primary/40 rounded px-1 py-0 outline-none focus:ring-1 focus:ring-primary/50 w-28"
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") commitEdit();
-                                  if (e.key === "Escape") setEditingItem(null);
-                                }}
-                                onBlur={commitEdit}
-                              />
-                            ) : (
-                              <span
-                                className="text-[10px] text-accent-foreground/70 cursor-pointer hover:underline"
-                                onClick={() => handleEditItem(di, ii, "extras")}
-                                title="Klikni pre úpravu extras"
-                              >
-                                + {item.extras || "—"}
-                              </span>
-                            )}
-                          </div>
+                          <p className="truncate text-xs">
+                            {item.grammage && <span className="font-semibold">{item.grammage} </span>}
+                            {item.rawName}
+                          </p>
                           {item.matchedDish && (
                             <p className="text-[10px] text-muted-foreground truncate">
                               → {item.matchedDish.name}{" "}
@@ -1133,37 +748,11 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                             </p>
                           )}
                           {!item.matchedDish && (
-                            <div className="flex items-center gap-1 flex-wrap">
-                              <p className="text-[10px] text-destructive/80">Nenájdené</p>
-                              <select
-                                className="text-[10px] bg-background border border-border rounded px-1 py-0 h-5 text-foreground"
-                                value={categoryOverrides[`${di}-${ii}`] || inferCategoryFromSlot(item.slot)}
-                                onChange={(e) => setCategoryOverrides(prev => ({ ...prev, [`${di}-${ii}`]: e.target.value as DishCategory }))}
-                              >
-                                {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
-                                  <option key={val} value={val}>{label}</option>
-                                ))}
-                              </select>
-                              <button
-                                type="button"
-                                className="inline-flex items-center gap-0.5 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
-                                onClick={() => handleCreateDishFromItem(di, ii)}
-                                disabled={createDishMutation.isPending || isCreatingAll}
-                                title="Vytvoriť nové jedlo v databáze"
-                              >
-                                <PlusCircle className="h-3 w-3" />
-                                Vytvoriť
-                              </button>
-                            </div>
+                            <p className="text-[10px] text-destructive/80">Nenájdené v databáze</p>
                           )}
                         </div>
                         {item.price != null && item.price > 0 && (
                           <span className="text-xs font-semibold shrink-0">{item.price.toFixed(2)} €</span>
-                        )}
-                        {item.allergens.length > 0 && (
-                          <Badge variant="outline" className="text-[9px] shrink-0 gap-0.5 px-1 py-0 h-4 border-amber-500/40 text-amber-600 dark:text-amber-400">
-                            A: {item.allergens.join(",")}
-                          </Badge>
                         )}
                       </div>
                     ))}
@@ -1197,23 +786,6 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
               </div>
             </div>
 
-            {rows.length - matchedRows.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-2"
-                onClick={handleCreateAllUnmatchedRows}
-                disabled={isCreatingAll || createDishMutation.isPending}
-              >
-                {isCreatingAll ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <PlusCircle className="h-3.5 w-3.5" />
-                )}
-                {isCreatingAll ? "Vytvárám..." : `Vytvoriť všetky nepriradené (${rows.length - matchedRows.length})`}
-              </Button>
-            )}
-
             <ScrollArea className="max-h-[300px]">
               <div className="space-y-1.5">
                 {rows.map((row, i) => (
@@ -1239,28 +811,7 @@ export function ImportMenuDialog({ open, onOpenChange, dishes, onApply, onApplyW
                         </p>
                       )}
                       {!row.matchedDish && (
-                        <div className="flex items-center gap-1 flex-wrap">
-                          <p className="text-xs text-destructive/80">Nenájdené</p>
-                          <select
-                            className="text-[10px] bg-background border border-border rounded px-1 py-0 h-5 text-foreground"
-                            value={categoryOverrides[`row-${i}`] || "hlavne_jedlo"}
-                            onChange={(e) => setCategoryOverrides(prev => ({ ...prev, [`row-${i}`]: e.target.value as DishCategory }))}
-                          >
-                            {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
-                              <option key={val} value={val}>{label}</option>
-                            ))}
-                          </select>
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-0.5 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
-                            onClick={() => handleCreateDishFromRow(i)}
-                            disabled={createDishMutation.isPending || isCreatingAll}
-                            title="Vytvoriť nové jedlo v databáze"
-                          >
-                            <PlusCircle className="h-3 w-3" />
-                            Vytvoriť
-                          </button>
-                        </div>
+                        <p className="text-xs text-destructive/80">Nenájdené v databáze</p>
                       )}
                     </div>
                     <Button variant="ghost" size="sm" className="h-7 text-xs shrink-0" onClick={() => toggleRow(i)}>

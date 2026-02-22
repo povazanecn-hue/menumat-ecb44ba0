@@ -1,11 +1,9 @@
 import { useState, useCallback } from "react";
 import { addWeeks, format, isToday, parseISO } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2, Save } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { Dish, useDishes } from "@/hooks/useDishes";
@@ -50,7 +48,7 @@ export default function DailyMenu() {
   const [aiApplying, setAiApplying] = useState(false);
   const [importDate, setImportDate] = useState<Date | null>(null);
   const [importApplying, setImportApplying] = useState(false);
-  const [savingAll, setSavingAll] = useState(false);
+
   const weekdays = getWeekdays(weekStart);
   const { data: menus = [], isLoading } = useWeekMenus(weekStart);
   const { data: recentUsage = {} } = useRecentDishUsage(nonRepeatDays);
@@ -228,29 +226,6 @@ export default function DailyMenu() {
     }
   };
 
-  const handleSaveAll = async () => {
-    setSavingAll(true);
-    try {
-      let savedCount = 0;
-      for (const date of weekdays) {
-        const dateKey = formatDateKey(date);
-        const existing = getMenuForDate(date);
-        if (!existing) {
-          // Create menu record for days that don't have one yet
-          await upsertMenu.mutateAsync(dateKey);
-          savedCount++;
-        } else if (existing.menu_items.length > 0) {
-          savedCount++;
-        }
-      }
-      toast({ title: `${savedCount} dní uložených`, description: "Všetky dni boli uložené." });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    } finally {
-      setSavingAll(false);
-    }
-  };
-
   // AI generation
   const handleAiApply = async (dishIds: string[]) => {
     if (!aiDate) return;
@@ -319,8 +294,6 @@ export default function DailyMenu() {
             dishId: item.matchedDish!.id,
             sortOrder,
             overridePrice: item.price ?? undefined,
-            sideDish: item.side_dish || undefined,
-            extras: item.extras || undefined,
           });
           sortOrder++;
           totalAdded++;
@@ -361,7 +334,7 @@ export default function DailyMenu() {
             Týždenný prehľad pondelok – piatok
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           {hasAnyItems && (
             <Button variant="outline" onClick={handleWeeklyPrint} title="Tlač týždňa na A4">
               <Printer className="h-4 w-4 mr-1.5" />
@@ -380,15 +353,6 @@ export default function DailyMenu() {
           >
             {regenerating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1.5" />}
             AI Týždeň
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleSaveAll}
-            disabled={savingAll}
-            title="Uložiť všetky dni naraz"
-          >
-            {savingAll ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
-            Uložiť všetky dni
           </Button>
           <Button onClick={handlePublishAll} variant="default">
             Publikovať všetky koncepty
@@ -427,19 +391,7 @@ export default function DailyMenu() {
 
       {/* Day cards */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Card key={i} className="bg-card/60 backdrop-blur-md">
-              <CardContent className="p-4 space-y-3">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-8 w-full mt-2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <div className="text-center py-12 text-muted-foreground">Načítavam menu...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {weekdays.map((date) => (

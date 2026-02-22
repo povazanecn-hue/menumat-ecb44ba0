@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
@@ -187,23 +186,9 @@ export default function Dishes() {
 
       {/* List */}
       {isLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Card key={i} className="bg-card/60 backdrop-blur-md">
-              <CardContent className="flex items-center gap-4 py-3 px-4">
-                <Skeleton className="h-5 w-16 rounded" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-3 w-32" />
-                </div>
-                <Skeleton className="h-5 w-20 hidden sm:block" />
-                <Skeleton className="h-8 w-8" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <div className="text-center py-12 text-muted-foreground">Načítavam jedlá...</div>
       ) : filtered.length === 0 ? (
-        <Card className="bg-card/60 backdrop-blur-md">
+        <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
               {dishes.length === 0
@@ -222,7 +207,7 @@ export default function Dishes() {
               : 0;
 
             return (
-              <Card key={dish.id} className="bg-card/60 backdrop-blur-md border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
+              <Card key={dish.id} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
                 <CardContent className="flex items-center gap-4 py-3 px-4">
                   {/* Category badge */}
                   <Badge variant="secondary" className="shrink-0 text-xs font-normal">
