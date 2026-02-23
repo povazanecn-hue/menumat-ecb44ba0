@@ -1,0 +1,24 @@
+# Cursor AI Rules – MENUMAT (menumat-ecb44ba0)
+
+## Projekt
+MENUMAT – inteligentný nástroj na správu denného menu pre reštaurácie.
+Majiteľ: Mgr. Norbert Považanec.
+Jazyk UI: slovenčina. Jazyk kódu: angličtina.
+
+## Pravidlá
+- NIKDY necommituj .env (Supabase kľúče, ElevenLabs kľúče!)
+- main branch = Lovable sync – necommituj priamo!
+- feature/* vetvy pre Claude/Codex zmeny → PR → merge
+- Zachovaj Supabase RLS politiky – nemeniť bez zadania
+- Commit správy: feat:, fix:, docs:, refactor:
+
+## Stack
+- React 18 + TypeScript + Vite
+- Supabase (databáza + auth)
+- ElevenLabs (AI hlas – slovenčina)
+- shadcn/ui + Tailwind CSS
+- Lovable (deploy platforma)
+
+## Citlivé oblasti
+- /supabase – databázové migrácie (opatrne!)
+- .env – NIKDY necommitovať
