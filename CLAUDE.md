@@ -38,3 +38,39 @@ bun test         # testy (Vitest)
 
 ## Aktualny stav
 Pozri .ai-context/current-sprint.md
+
+---
+
+## 🤖 Pravidlá pre AI asistentov
+
+> Sekcia pridaná 2026-02-23 po audite repozitárov
+
+### ✅ Povolené
+- Upravovať kód vo všetkých priečinkoch podľa zadania
+- Opravovať chyby, pridávať features
+- Aktualizovať dokumentáciu a README
+
+### ❌ ZAKÁZANÉ
+- Commitovať `.env`, API kľúče, Supabase tokeny, ElevenLabs kľúče
+- Meniť `main` branch priamo – vždy cez PR
+- Mazať alebo meniť databázové migrácie bez potvrdenia
+- Zmeniť Supabase schému bez explicitného zadania
+- Pridávať npm závislosti bez schválenia majiteľom
+
+### ⚠️ Citlivé oblasti
+- `/supabase` – databázové migrácie (opatrne!)
+- `.env` – NIKDY necommitovať
+- Supabase RLS politiky – nemeniť bez zadania
+
+## 🔄 Changelog pre AI (história zmien)
+
+- **2026-02-23** – Pridaný `.env` do `.gitignore` (security fix)
+- **2026-02-23** – Pridaný `.env.example` template
+- **2026-02-23** – Doplnené AI pravidlá do CLAUDE.md
+- **2026-02-21** – Posledná produkčná zmena
+
+## 🤝 Súvisiace projekty
+
+- `SmartAir` – SmartAir web (rovnaký majiteľ)
+- `MENUGENERATOR` – starší experimentálny menu generátor
+- DreamAir s.r.o. – sesterská firma Norberta Považanca
