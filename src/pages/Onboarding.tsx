@@ -94,6 +94,10 @@ export default function Onboarding() {
           </form>
         </div>
       </div>
+
+      <p className="mt-8 text-[10px] text-muted-foreground/50">
+        Powered by N-[vision] | N-oLiMiT gastro
+      </p>
     </div>
   );
 }
