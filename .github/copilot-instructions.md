@@ -35,3 +35,7 @@ Update it after completing a session.
 - NEVER commit .env or API keys
 - Always update .ai-context/current-sprint.md after session
 - Branch: main = Lovable sync, feature/* = Copilot/Claude changes → PR
+
+## Doppler – správa kľúčov
+Projekt používa Doppler. Príkazy spúšťaj cez `doppler run --`.
+Nikdy nenavrhuj commitovanie .env. GitHub Secrets sú sync z Doppler.
