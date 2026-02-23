@@ -1,22 +1,26 @@
 
 
-# Oprava Auth page -- zobrazenie aj pre prihlasenych
+# Zjednotenie brandingu na MENUMAT
 
-## Problem
-Aktualne `Auth.tsx` obsahuje redirect na `/dashboard` ked uz existuje session (riadky 39-41). To znamena, ze prihlaseny pouzivatel nikdy neuvidí Auth stranku.
+## Prehlad
+V 4 suboroch sa stale nachadza stary nazov "MENU MASTER". Vsetky vyskyty budu nahradene na "MENUMAT".
 
-## Riesenie
-Odstranit podmienku `if (session) { return <Navigate to="/dashboard" replace />; }` z `Auth.tsx`. Tymto sa Auth stranka zobrazi vzdy, bez ohladu na stav prihlasenia.
+## Zmeny
 
-## Technicke detaily
+### 1. `src/components/AppSidebar.tsx`
+- Riadok 53: `MENU MASTER` -> `MENUMAT`
+- Riadok 111: `MENU MASTER v1.0` -> `MENUMAT v1.0`
 
-### Subor: `src/pages/Auth.tsx`
-- Zmazat riadky 39-41 (redirect pri existujucej session)
-- Ponechat loading stav (riadky 32-37) pre plynule nacitanie
-- Po uspesnom prihlaseni/registracii sa pouzivatel stale presmeruje cez `onAuthStateChange` a `ProtectedRoute` logiku v `App.tsx`
+### 2. `src/pages/Auth.tsx`
+- Riadok 79: `MENU MASTER` -> `MENUMAT`
 
-### Dopad
-- Auth stranka bude pristupna vzdy
-- Prihlasovaci formular sa zobrazi aj ked je pouzivatel uz prihlaseny
-- Navigacia po prihlaseni stale funguje cez React Router a `ProtectedRoute`
+### 3. `src/pages/Onboarding.tsx`
+- Riadok 51: `MENU MASTER` -> `MENUMAT`
+- Riadok 56: `Vitajte v Menu Master` -> `Vitajte v MENUMAT`
+
+### 4. `src/pages/Landing.tsx`
+- Riadok 290: `Menu Master` -> `MENUMAT`
+
+## Rozsah
+6 textovych nahrad v 4 suboroch. Ziadne strukturalne zmeny, ziadne nove zavislosti.
 
