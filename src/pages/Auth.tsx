@@ -213,6 +213,10 @@ export default function Auth() {
             </button>
           </div>
         </div>
+
+        <p className="text-center text-[10px] text-muted-foreground/50 mt-6">
+          Powered by N-[vision] | N-oLiMiT gastro
+        </p>
       </div>
     </div>
   );
