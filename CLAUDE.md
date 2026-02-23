@@ -74,3 +74,32 @@ Pozri .ai-context/current-sprint.md
 - `SmartAir` – SmartAir web (rovnaký majiteľ)
 - `MENUGENERATOR` – starší experimentálny menu generátor
 - DreamAir s.r.o. – sesterská firma Norberta Považanca
+
+
+---
+
+## 🔑 Správa tajomstiev – Doppler
+
+Tento projekt používa **Doppler** na centrálnu správu API kľúčov.
+
+### Spustenie projektu
+```bash
+# SPRÁVNE – kľúče sa načítajú automaticky
+doppler run -- npm run dev
+
+# NESPRÁVNE – nikdy nespúšťaj bez Doppleru ak nemáš .env
+npm run dev
+```
+
+### Prvé nastavenie na novom PC
+```bash
+npm install -g @doppler/cli
+doppler login
+doppler setup   # v root priečinku projektu
+```
+
+### Pre AI asistentov
+- Vždy použi `doppler run --` prefix pri spúšťaní príkazov
+- Nikdy nevytváraj `.env` s reálnymi hodnotami
+- Dokumentácia: pozri `DOPPLER.md` v tomto repozitári
+- GitHub Secrets sú synchronizované automaticky z Doppler
