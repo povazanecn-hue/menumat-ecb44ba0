@@ -286,8 +286,9 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 px-4 py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} MENUMAT. Všetky práva vyhradené.
+      <footer className="border-t border-border/50 px-4 py-8 text-center text-sm text-muted-foreground space-y-1">
+        <p>© {new Date().getFullYear()} MENUMAT. Všetky práva vyhradené.</p>
+        <p className="text-[10px] text-muted-foreground/50">Powered by N-[vision] | N-oLiMiT gastro</p>
       </footer>
     </div>
   );
