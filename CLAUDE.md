@@ -71,7 +71,7 @@ Pozri .ai-context/current-sprint.md
 
 ## 🤝 Súvisiace projekty
 
-- `SmartAir` – SmartAir web (rovnaký majiteľ)
+- `dreamair-web` – dreamair-web web (rovnaký majiteľ)
 - `MENUGENERATOR` – starší experimentálny menu generátor
 - DreamAir s.r.o. – sesterská firma Norberta Považanca
 
