@@ -107,8 +107,9 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-4 py-3 border-t border-sidebar-border">
+      <SidebarFooter className="px-4 py-3 border-t border-sidebar-border space-y-0.5">
         <p className="text-[10px] text-sidebar-foreground/30 tracking-wide">MENUMAT v1.0</p>
+        <p className="text-[9px] text-sidebar-foreground/25 leading-tight">Powered by N-[vision] | N-oLiMiT gastro</p>
       </SidebarFooter>
     </Sidebar>
   );
