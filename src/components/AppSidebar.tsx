@@ -50,7 +50,7 @@ export function AppSidebar() {
         <div className="flex items-center gap-2.5">
           <ChefHat className="h-7 w-7 text-sidebar-primary" />
           <div className="flex flex-col">
-            <span className="font-serif font-bold text-sm tracking-wider text-sidebar-primary">MENU MASTER</span>
+            <span className="font-serif font-bold text-sm tracking-wider text-sidebar-primary">MENUMAT</span>
             <span className="text-[10px] text-sidebar-foreground/50">Správa reštaurácie</span>
           </div>
         </div>
@@ -108,7 +108,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="px-4 py-3 border-t border-sidebar-border">
-        <p className="text-[10px] text-sidebar-foreground/30 tracking-wide">MENU MASTER v1.0</p>
+        <p className="text-[10px] text-sidebar-foreground/30 tracking-wide">MENUMAT v1.0</p>
       </SidebarFooter>
     </Sidebar>
   );

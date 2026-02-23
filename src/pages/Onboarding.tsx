@@ -48,12 +48,12 @@ export default function Onboarding() {
       {/* Logo */}
       <div className="mb-8 flex items-center gap-3">
         <ChefHat className="h-8 w-8 text-primary" />
-        <h1 className="font-serif text-2xl font-bold tracking-wide text-primary">MENU MASTER</h1>
+        <h1 className="font-serif text-2xl font-bold tracking-wide text-primary">MENUMAT</h1>
       </div>
 
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <h2 className="font-serif text-2xl font-bold text-foreground">Vitajte v Menu Master</h2>
+          <h2 className="font-serif text-2xl font-bold text-foreground">Vitajte v MENUMAT</h2>
           <p className="text-muted-foreground text-sm">Nastavte si svoju reštauráciu a začnite tvoriť menu</p>
         </div>
 

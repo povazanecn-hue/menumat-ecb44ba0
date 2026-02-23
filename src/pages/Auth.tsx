@@ -76,7 +76,7 @@ export default function Auth() {
       {/* Logo */}
       <div className="mb-8 flex items-center gap-3">
         <ChefHat className="h-8 w-8 text-primary" />
-        <h1 className="font-serif text-2xl font-bold tracking-wide text-primary">MENU MASTER</h1>
+        <h1 className="font-serif text-2xl font-bold tracking-wide text-primary">MENUMAT</h1>
       </div>
 
       <div className="w-full max-w-sm space-y-6">
