@@ -35,3 +35,9 @@ Update it after completing a session.
 - NEVER commit .env or API keys
 - Always update .ai-context/current-sprint.md after session
 - Branch: main = Lovable sync, feature/* = Copilot/Claude changes → PR
+## Lovable Compatibility (POVINNÉ)
+- Pred refaktorom skontroluj: existuje v Lovable editor ten istý súbor?
+- Nemeň názvy props/komponentov bez upozornenia — Lovable to nezvládne
+- Každá väčšia zmena štruktúry = PR, nie direct push
+- Po každej session aktualizuj `.ai-context/current-sprint.md`
+- Prečítaj `.ai-context/cloud-knowledge.md` pred začatím práce na config/deps
