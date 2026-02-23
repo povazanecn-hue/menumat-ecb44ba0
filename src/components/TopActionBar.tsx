@@ -1,10 +1,14 @@
-import { CalendarDays, FileOutput, Bell, ChefHat } from "lucide-react";
+import { CalendarDays, FileOutput, Bell, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 
-export function TopActionBar() {
+interface TopActionBarProps {
+  onOliviaToggle?: () => void;
+}
+
+export function TopActionBar({ onOliviaToggle }: TopActionBarProps) {
   const navigate = useNavigate();
 
   return (
@@ -14,10 +18,9 @@ export function TopActionBar() {
       <div className="h-5 w-px bg-border" />
 
       <div className="flex items-center gap-2 mr-auto">
-        <ChefHat className="h-5 w-5 text-primary" />
-        <h1 className="font-serif text-lg font-semibold text-primary tracking-wide">
-          MENU MASTER
-        </h1>
+        <span className="font-serif text-lg font-semibold text-primary tracking-wide">
+          MENUMAT
+        </span>
       </div>
 
       <div className="flex items-center gap-1">
@@ -46,6 +49,17 @@ export function TopActionBar() {
           <Badge className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px]">
             0
           </Badge>
+        </Button>
+
+        {/* Olivia trigger */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-primary hover:bg-primary/10"
+          onClick={onOliviaToggle}
+        >
+          <Bot className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs font-medium">Olivia</span>
         </Button>
       </div>
     </header>
