@@ -1,0 +1,16 @@
+name: Sync Doppler Secrets to GitHub
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  sync-secrets:
+    name: Doppler → GitHub Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync MENUMAT secrets
+        uses: dopplerhq/secrets-fetch-action@v1
+        with:
+          doppler-token: ${{ secrets.DOPPLER_TOKEN }}
