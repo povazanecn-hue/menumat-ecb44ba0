@@ -22,3 +22,8 @@ Jazyk UI: slovenčina. Jazyk kódu: angličtina.
 ## Citlivé oblasti
 - /supabase – databázové migrácie (opatrne!)
 - .env – NIKDY necommitovať
+
+
+## Doppler
+Vždy spúšťaj príkazy cez `doppler run -- <príkaz>`.
+Nikdy nenavrhuj .env s reálnymi hodnotami. Pozri DOPPLER.md.
