@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   CalendarDays,
   Utensils,
@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { DISH_CATEGORIES } from "@/lib/constants";
+import type { WizardDefaults } from "@/hooks/useRestaurant";
 
 // ── Types ──
 export interface WizardSlots {
@@ -68,6 +69,7 @@ interface MenuCreationWizardProps {
   onOpenChange: (open: boolean) => void;
   defaultNonRepeatDays: number;
   defaultWeekStart: Date;
+  wizardDefaults?: WizardDefaults;
   onConfirm: (config: WizardConfig) => Promise<void>;
 }
 
@@ -102,24 +104,38 @@ export function MenuCreationWizard({
   onOpenChange,
   defaultNonRepeatDays,
   defaultWeekStart,
+  wizardDefaults,
   onConfirm,
 }: MenuCreationWizardProps) {
   const [step, setStep] = useState(0);
   const [applying, setApplying] = useState(false);
 
   // Step 1 — Days
-  const [selectedDays, setSelectedDays] = useState<number[]>([0, 1, 2, 3, 4]); // Mon-Fri
+  const [selectedDays, setSelectedDays] = useState<number[]>(() =>
+    wizardDefaults?.selectedDays ?? [0, 1, 2, 3, 4]
+  );
   const [weekStart, setWeekStart] = useState(() => defaultWeekStart);
 
   // Step 2 — Slots
-  const [slots, setSlots] = useState<WizardSlots>({ soups: 1, mains: 4, desserts: 1 });
-  const [extraSlots, setExtraSlots] = useState<CategorySlot[]>([]);
+  const [slots, setSlots] = useState<WizardSlots>(() =>
+    wizardDefaults?.slots ?? { soups: 1, mains: 4, desserts: 1 }
+  );
+  const [extraSlots, setExtraSlots] = useState<CategorySlot[]>(() =>
+    wizardDefaults?.extraSlots ?? []
+  );
 
   // Step 3 — Mode
   const [mode, setMode] = useState<WizardMode>("ai");
 
   // Step 4 — Rules
   const [nonRepeatDays, setNonRepeatDays] = useState(defaultNonRepeatDays);
+
+  // Sync defaults when they change (e.g. after restaurant loads)
+  useEffect(() => {
+    if (wizardDefaults?.selectedDays) setSelectedDays(wizardDefaults.selectedDays);
+    if (wizardDefaults?.slots) setSlots(wizardDefaults.slots);
+    if (wizardDefaults?.extraSlots) setExtraSlots(wizardDefaults.extraSlots);
+  }, [wizardDefaults]);
 
   const toggleDay = (idx: number) => {
     setSelectedDays((prev) =>

@@ -2,10 +2,17 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+export interface WizardDefaults {
+  slots?: { soups: number; mains: number; desserts: number };
+  extraSlots?: { category: string; count: number }[];
+  selectedDays?: number[];
+}
+
 interface RestaurantSettings {
   default_margin: number;
   vat_rate: number;
   non_repeat_days: number;
+  wizard_defaults?: WizardDefaults;
 }
 
 const DEFAULT_SETTINGS: RestaurantSettings = {
@@ -69,6 +76,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
           default_margin: s.default_margin ?? DEFAULT_SETTINGS.default_margin,
           vat_rate: s.vat_rate ?? DEFAULT_SETTINGS.vat_rate,
           non_repeat_days: s.non_repeat_days ?? DEFAULT_SETTINGS.non_repeat_days,
+          wizard_defaults: s.wizard_defaults ?? undefined,
         });
       }
     } else {

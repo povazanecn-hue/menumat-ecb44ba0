@@ -485,6 +485,7 @@ export default function DailyMenu() {
         onOpenChange={setWizardOpen}
         defaultNonRepeatDays={nonRepeatDays}
         defaultWeekStart={weekStart}
+        wizardDefaults={settings.wizard_defaults}
         onConfirm={handleWizardConfirm}
       />
     </div>
