@@ -70,7 +70,7 @@ export default function Onboarding() {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Klub Koliesko"
+                placeholder="Názov prevádzky"
                 required
                 className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
               />
