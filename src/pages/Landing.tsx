@@ -89,6 +89,16 @@ const scaleIn = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const } },
 };
 
+const logoReveal = {
+  hidden: { opacity: 0, scale: 0.5, filter: "blur(12px)" },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const },
+  },
+};
+
 export default function Landing() {
   const { session, loading } = useAuth();
 
@@ -118,7 +128,7 @@ export default function Landing() {
           variants={containerStagger}
         >
           {/* Glowing logo */}
-          <motion.div variants={scaleIn}>
+          <motion.div variants={logoReveal}>
             <LogoBrand size="lg" glow />
           </motion.div>
 
