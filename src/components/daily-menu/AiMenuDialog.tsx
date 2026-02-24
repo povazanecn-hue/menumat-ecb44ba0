@@ -121,6 +121,12 @@ export function AiMenuDialog({
         return;
       }
 
+      if (data.repeated) {
+        setError(
+          `⚠️ Opakované jedlá: ${data.warnings?.join("; ") || "Niektoré jedlá sa opakujú kvôli nedostatku unikátnych jedál."}`
+        );
+      }
+
       setResult(data.menu);
     } catch (e: any) {
       setError(e.message || "Nepodarilo sa spojiť s AI");
