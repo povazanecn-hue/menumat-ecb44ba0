@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  ChefHat,
   UtensilsCrossed,
   Calendar,
   FileText,
@@ -17,6 +16,7 @@ import {
   LogIn,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { LogoBrand } from "@/components/LogoBrand";
 
 const features = [
   {
@@ -95,7 +95,7 @@ export default function Landing() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <ChefHat className="h-8 w-8 animate-pulse text-primary" />
+        <LogoBrand size="sm" />
       </div>
     );
   }
@@ -118,22 +118,14 @@ export default function Landing() {
           variants={containerStagger}
         >
           {/* Glowing logo */}
-          <motion.div variants={scaleIn} className="relative">
-            <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-2xl" />
-            <div className="relative mx-auto flex h-28 w-28 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 shadow-[0_0_40px_hsl(40_55%_55%/0.3),inset_0_0_20px_hsl(40_55%_55%/0.1)]">
-              <ChefHat className="h-14 w-14 text-primary drop-shadow-[0_0_8px_hsl(40_55%_55%/0.6)]" />
-            </div>
+          <motion.div variants={scaleIn}>
+            <LogoBrand size="lg" glow />
           </motion.div>
 
-          {/* Title */}
-          <motion.h1
-            variants={fadeUp}
-            className="font-serif text-6xl font-bold tracking-tight sm:text-8xl lg:text-9xl"
-          >
-            <span className="bg-gold-gradient bg-clip-text text-transparent drop-shadow-[0_0_20px_hsl(40_55%_55%/0.4)]">
-              MENU
-            </span>
-          </motion.h1>
+          {/* Subtext */}
+          <motion.p variants={fadeUp} className="text-sm font-medium uppercase tracking-widest text-primary/60">
+            Smart nástroj prevádzok budúcnosti
+          </motion.p>
 
           {/* Description */}
           <motion.p

@@ -1,4 +1,5 @@
 import { CalendarDays, FileOutput, Bell, Bot } from "lucide-react";
+import { LogoBrand } from "@/components/LogoBrand";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -18,9 +19,7 @@ export function TopActionBar({ onOliviaToggle }: TopActionBarProps) {
       <div className="h-5 w-px bg-border" />
 
       <div className="flex items-center gap-2 mr-auto">
-        <span className="font-serif text-lg font-semibold text-primary tracking-wide">
-          MENUMAT
-        </span>
+        <LogoBrand size="sm" />
       </div>
 
       <div className="flex items-center gap-1">
