@@ -558,6 +558,16 @@ export function MenuCreationWizard({
                       <span>Hlavné: {eligibility.mainAvail}/{eligibility.mainNeeded}</span>
                       <span>Dezerty: {eligibility.dessertAvail}/{eligibility.dessertNeeded}</span>
                     </div>
+                    {nonRepeatDays > 7 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-1.5 text-xs h-7 border-destructive/30 hover:bg-destructive/10"
+                        onClick={() => { setNonRepeatDays(7); setStep(3); }}
+                      >
+                        Znížiť na 7 dní
+                      </Button>
+                    )}
                   </AlertDescription>
                 </Alert>
               )}
