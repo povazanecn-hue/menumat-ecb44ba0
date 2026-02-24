@@ -39,6 +39,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { DISH_CATEGORIES } from "@/lib/constants";
 import type { WizardDefaults } from "@/hooks/useRestaurant";
+import { useDishes } from "@/hooks/useDishes";
+import { useRecentDishUsage } from "@/hooks/useMenus";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 // ── Types ──
 export interface WizardSlots {
@@ -130,6 +134,10 @@ export function MenuCreationWizard({
   // Step 4 — Rules
   const [nonRepeatDays, setNonRepeatDays] = useState(defaultNonRepeatDays);
 
+  // ── Eligible dish check ──
+  const { data: allDishes } = useDishes();
+  const { data: recentUsage } = useRecentDishUsage(nonRepeatDays);
+
   // Sync defaults when they change (e.g. after restaurant loads)
   useEffect(() => {
     if (wizardDefaults?.selectedDays) setSelectedDays(wizardDefaults.selectedDays);
@@ -161,6 +169,43 @@ export function MenuCreationWizard({
   );
 
   const totalDishesPerDay = slots.soups + slots.mains + slots.desserts + extraSlots.reduce((s, e) => s + e.count, 0);
+
+  // ── Eligible dishes per category (respecting non-repeat rule) ──
+  const eligibility = useMemo(() => {
+    if (!allDishes) return null;
+    const recentIds = new Set(Object.keys(recentUsage ?? {}));
+    const eligible = allDishes.filter((d) => d.is_daily_menu && !recentIds.has(d.id));
+
+    const byCat: Record<string, number> = {};
+    for (const d of eligible) {
+      byCat[d.category] = (byCat[d.category] || 0) + 1;
+    }
+
+    const totalRequired = totalDishesPerDay * selectedDays.length;
+    const totalAvailable = eligible.length;
+    const soupAvail = byCat["polievka"] || 0;
+    const mainAvail = byCat["hlavne_jedlo"] || 0;
+    const dessertAvail = byCat["dezert"] || 0;
+
+    const soupNeeded = slots.soups * selectedDays.length;
+    const mainNeeded = slots.mains * selectedDays.length;
+    const dessertNeeded = slots.desserts * selectedDays.length;
+
+    const hasShortage =
+      totalAvailable < totalRequired ||
+      soupAvail < soupNeeded ||
+      mainAvail < mainNeeded ||
+      dessertAvail < dessertNeeded;
+
+    return {
+      totalAvailable,
+      totalRequired,
+      soupAvail, soupNeeded,
+      mainAvail, mainNeeded,
+      dessertAvail, dessertNeeded,
+      hasShortage,
+    };
+  }, [allDishes, recentUsage, totalDishesPerDay, selectedDays.length, slots]);
 
   const canProceed = () => {
     if (step === 0) return selectedDays.length > 0;
@@ -499,6 +544,23 @@ export function MenuCreationWizard({
               <p className="text-sm text-muted-foreground">
                 Skontrolujte nastavenie a potvrďte vytvorenie menu.
               </p>
+
+              {/* Eligibility warning */}
+              {mode === "ai" && eligibility?.hasShortage && (
+                <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-xs space-y-1">
+                    <p className="font-medium">
+                      Máte len {eligibility.totalAvailable} dostupných jedál, ale potrebujete {eligibility.totalRequired}. Niektoré dni nemusia byť kompletné.
+                    </p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-muted-foreground">
+                      <span>Polievky: {eligibility.soupAvail}/{eligibility.soupNeeded}</span>
+                      <span>Hlavné: {eligibility.mainAvail}/{eligibility.mainNeeded}</span>
+                      <span>Dezerty: {eligibility.dessertAvail}/{eligibility.dessertNeeded}</span>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Skeleton preview */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
