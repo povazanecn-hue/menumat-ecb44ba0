@@ -95,7 +95,7 @@ export default function Onboarding() {
         </div>
       </div>
 
-      <p className="mt-8 text-[10px] text-muted-foreground/50">
+      <p className="mt-8 text-[10px] text-white/70">
         Powered by N-[vision] | N-oLiMiT gastro
       </p>
     </div>

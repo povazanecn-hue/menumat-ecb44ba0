@@ -214,7 +214,7 @@ export default function Auth() {
           </div>
         </div>
 
-        <p className="text-center text-[10px] text-muted-foreground/50 mt-6">
+        <p className="text-center text-[10px] text-white/70 mt-6">
           Powered by N-[vision] | N-oLiMiT gastro
         </p>
       </div>
