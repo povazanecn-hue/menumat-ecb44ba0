@@ -17,8 +17,28 @@ Deno.serve(async (req) => {
     const recentIds = new Set(Object.keys(recentUsage || {}));
     const eligibleDishes = dishes.filter((d: any) => !recentIds.has(d.id));
 
-    // Build dish list for context (only eligible dishes)
-    const dishList = eligibleDishes.map((d: any) =>
+    // Pre-check: do we have enough eligible dishes per category?
+    const eligibleByCategory: Record<string, any[]> = {};
+    for (const d of eligibleDishes) {
+      const cat = d.category as string;
+      if (!eligibleByCategory[cat]) eligibleByCategory[cat] = [];
+      eligibleByCategory[cat].push(d);
+    }
+    const allByCategory: Record<string, any[]> = {};
+    for (const d of dishes) {
+      const cat = d.category as string;
+      if (!allByCategory[cat]) allByCategory[cat] = [];
+      allByCategory[cat].push(d);
+    }
+
+    const shortageDetected =
+      (eligibleByCategory["polievka"]?.length || 0) < (slots.soups || 0) ||
+      (eligibleByCategory["hlavne_jedlo"]?.length || 0) < (slots.mains || 0) ||
+      (eligibleByCategory["dezert"]?.length || 0) < (slots.desserts || 0);
+
+    // If shortage, include ALL dishes (not just eligible) so AI can pick repeats
+    const dishPool = shortageDetected ? dishes : eligibleDishes;
+    const dishList = dishPool.map((d: any) =>
       `ID:${d.id} | ${d.name} | category:${d.category} | price:${d.final_price ?? d.recommended_price}€ | daily_menu:${d.is_daily_menu}`
     ).join("\n");
 
@@ -43,7 +63,9 @@ Your job is to select dishes from the available dish database to fill the reques
 
 RULES:
 1. Select exactly the requested number of dishes per category.
-2. NEVER select a dish that was used in the last ${nonRepeatDays || 14} days (check recentUsage).
+2. ${shortageDetected
+      ? `There are NOT enough unique dishes. Prefer dishes NOT in recentUsage, but you MAY repeat recently used dishes if needed to fill all slots. Prioritize variety.`
+      : `NEVER select a dish that was used in the last ${nonRepeatDays || 14} days (check recentUsage).`}
 3. Only select dishes marked as is_daily_menu=true if available, otherwise use any dish of the correct category.
 4. Category mapping: polievka=soups, hlavne_jedlo=mains, dezert=desserts.
 5. For extra category slots, match the dish category exactly.
@@ -126,9 +148,10 @@ Return format:
       });
     }
 
-    // Server-side validation: remove any dish IDs that are in recentUsage
-    const validateIds = (ids: string[]) =>
-      (ids || []).filter((id: string) => !recentIds.has(id));
+    // Server-side validation: if no shortage, strip recently used; if shortage, allow them
+    const validateIds = shortageDetected
+      ? (ids: string[]) => ids || []
+      : (ids: string[]) => (ids || []).filter((id: string) => !recentIds.has(id));
 
     parsed.soups = validateIds(parsed.soups);
     parsed.mains = validateIds(parsed.mains);
@@ -151,7 +174,45 @@ Return format:
       }
     }
 
-    return new Response(JSON.stringify({ menu: parsed }), {
+    // Fallback: if AI still didn't fill enough slots, fill from available dishes (allowing repeats)
+    const warnings: string[] = [];
+    const fillSlots = (current: string[], needed: number, category: string): string[] => {
+      if (current.length >= needed) return current.slice(0, needed);
+      // Need more — pick from all dishes of this category
+      const pool = (allByCategory[category] || []).map((d: any) => d.id);
+      const result = [...current];
+      let poolIdx = 0;
+      while (result.length < needed && pool.length > 0) {
+        const candidate = pool[poolIdx % pool.length];
+        result.push(candidate);
+        poolIdx++;
+        if (poolIdx >= pool.length * 3) break; // safety: don't loop forever
+      }
+      if (result.length > current.length) {
+        warnings.push(`${category}: doplnené ${result.length - current.length} opakovaných jedál`);
+      }
+      return result.slice(0, needed);
+    };
+
+    parsed.soups = fillSlots(parsed.soups, slots.soups || 0, "polievka");
+    parsed.mains = fillSlots(parsed.mains, slots.mains || 0, "hlavne_jedlo");
+    parsed.desserts = fillSlots(parsed.desserts, slots.desserts || 0, "dezert");
+
+    if (parsed.extras) {
+      for (const es of (extraSlots || [])) {
+        if (es.count > 0 && parsed.extras[es.category]) {
+          parsed.extras[es.category] = fillSlots(parsed.extras[es.category], es.count, es.category);
+        }
+      }
+    }
+
+    const repeated = shortageDetected || warnings.length > 0;
+
+    return new Response(JSON.stringify({
+      menu: parsed,
+      repeated,
+      warnings: warnings.length > 0 ? warnings : undefined,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

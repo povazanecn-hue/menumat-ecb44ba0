@@ -134,6 +134,12 @@ export default function DailyMenu() {
             toast({ title: "AI chyba", description: data.error, variant: "destructive" });
             continue;
           }
+          if (data.repeated) {
+            toast({
+              title: "⚠️ Opakované jedlá",
+              description: data.warnings?.join("; ") || "Niektoré jedlá sa opakujú kvôli nedostatku unikátnych jedál v databáze.",
+            });
+          }
           const menu = data.menu;
           const dateKey = formatDateKey(date);
           const menuId = await upsertMenu.mutateAsync(dateKey);
