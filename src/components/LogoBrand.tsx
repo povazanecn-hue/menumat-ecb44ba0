@@ -2,9 +2,9 @@ import logo from "@/assets/logo-menumat.png";
 import { cn } from "@/lib/utils";
 
 const sizeMap = {
-  sm: "h-12",
-  md: "h-16",
-  lg: "h-28",
+  sm: "h-24",
+  md: "h-32",
+  lg: "h-56",
 } as const;
 
 interface LogoBrandProps {
