@@ -53,8 +53,8 @@ export default function Onboarding() {
 
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <h2 className="font-serif text-2xl font-bold text-foreground">Vitajte v MENUMAT</h2>
-          <p className="text-muted-foreground text-sm">Nastavte si svoju reštauráciu a začnite tvoriť menu</p>
+          <h2 className="font-serif text-2xl font-bold text-white">Vitajte v MENUMAT</h2>
+          <p className="text-white/70 text-sm">Nastavte si svoju reštauráciu a začnite tvoriť menu</p>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6 shadow-2xl shadow-black/40">
