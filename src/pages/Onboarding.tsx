@@ -84,7 +84,7 @@ export default function Onboarding() {
                 id="address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="Hlavná 1, Bratislava"
+                placeholder="Banšelová 3, Bratislava"
                 className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
