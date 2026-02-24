@@ -2,7 +2,7 @@ import logo from "@/assets/logo-menumat.png";
 import { cn } from "@/lib/utils";
 
 const sizeMap = {
-  sm: "h-8",
+  sm: "h-10",
   md: "h-14",
   lg: "h-24",
 } as const;
