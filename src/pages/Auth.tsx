@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { ChefHat, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { LogoBrand } from "@/components/LogoBrand";
 
 const ROLE_OPTIONS = [
   { value: "owner", label: "Šéf" },
@@ -74,9 +75,8 @@ export default function Auth() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       {/* Logo */}
-      <div className="mb-8 flex items-center gap-3">
-        <ChefHat className="h-8 w-8 text-primary" />
-        <h1 className="font-serif text-2xl font-bold tracking-wide text-primary">MENUMAT</h1>
+      <div className="mb-8">
+        <LogoBrand size="md" glow />
       </div>
 
       <div className="w-full max-w-sm space-y-6">

@@ -8,11 +8,11 @@ import {
   FileOutput,
   Palette,
   Settings,
-  ChefHat,
   ClipboardList,
   ClipboardCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { LogoBrand } from "@/components/LogoBrand";
 import {
   Sidebar,
   SidebarContent,
@@ -47,13 +47,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="px-4 py-5 border-b border-sidebar-border">
-        <div className="flex items-center gap-2.5">
-          <ChefHat className="h-7 w-7 text-sidebar-primary" />
-          <div className="flex flex-col">
-            <span className="font-serif font-bold text-sm tracking-wider text-sidebar-primary">MENUMAT</span>
-            <span className="text-[10px] text-sidebar-foreground/50">Správa reštaurácie</span>
-          </div>
-        </div>
+        <LogoBrand size="sm" />
       </SidebarHeader>
 
       <SidebarContent>

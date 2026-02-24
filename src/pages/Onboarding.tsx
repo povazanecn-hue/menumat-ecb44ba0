@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, MapPin, Store } from "lucide-react";
+import { MapPin, Store } from "lucide-react";
+import { LogoBrand } from "@/components/LogoBrand";
 
 export default function Onboarding() {
   const { user } = useAuth();
@@ -46,9 +47,8 @@ export default function Onboarding() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       {/* Logo */}
-      <div className="mb-8 flex items-center gap-3">
-        <ChefHat className="h-8 w-8 text-primary" />
-        <h1 className="font-serif text-2xl font-bold tracking-wide text-primary">MENUMAT</h1>
+      <div className="mb-8">
+        <LogoBrand size="md" glow />
       </div>
 
       <div className="w-full max-w-md space-y-6">
