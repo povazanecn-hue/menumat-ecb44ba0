@@ -2,9 +2,9 @@ import logo from "@/assets/logo-menumat.png";
 import { cn } from "@/lib/utils";
 
 const sizeMap = {
-  sm: "h-12 sm:h-24",
-  md: "h-20 sm:h-32",
-  lg: "h-32 sm:h-56",
+  sm: "h-10 sm:h-14",
+  md: "h-14 sm:h-20",
+  lg: "h-20 sm:h-28",
 } as const;
 
 interface LogoBrandProps {
@@ -27,8 +27,9 @@ export function LogoBrand({ size = "md", glow = false, className }: LogoBrandPro
       <img
         src={logo}
         alt="MENUMAT logo"
-        className={cn("relative", sizeMap[size])}
+        className={cn("relative object-contain", sizeMap[size])}
         draggable={false}
+        loading="eager"
       />
     </div>
   );
