@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
-import { addWeeks, format, isToday, parseISO } from "date-fns";
+import { addDays, addWeeks, format, isToday, parseISO } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2, Plus } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +25,9 @@ import { DayMenuCard } from "@/components/daily-menu/DayMenuCard";
 import { DishPickerDialog } from "@/components/daily-menu/DishPickerDialog";
 import { AiMenuDialog } from "@/components/daily-menu/AiMenuDialog";
 import { ImportMenuDialog, type ImportDayResult } from "@/components/daily-menu/ImportMenuDialog";
+import { MenuCreationWizard, type WizardConfig } from "@/components/daily-menu/MenuCreationWizard";
 import { buildPrintDays, printWeeklyA4 } from "@/lib/weeklyPrintExport";
+import { supabase } from "@/integrations/supabase/client";
 
 const DAY_NAME_TO_INDEX: Record<string, number> = {
   pondelok: 0, utorok: 1, streda: 2, štvrtok: 3, piatok: 4,
@@ -33,7 +35,7 @@ const DAY_NAME_TO_INDEX: Record<string, number> = {
 
 export default function DailyMenu() {
   const { toast } = useToast();
-  const { settings, restaurantName } = useRestaurant();
+  const { settings, restaurantName, restaurantId } = useRestaurant();
   const nonRepeatDays = settings.non_repeat_days;
   const [searchParams] = useSearchParams();
   const [weekStart, setWeekStart] = useState(() => {
@@ -48,6 +50,7 @@ export default function DailyMenu() {
   const [aiApplying, setAiApplying] = useState(false);
   const [importDate, setImportDate] = useState<Date | null>(null);
   const [importApplying, setImportApplying] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const weekdays = getWeekdays(weekStart);
   const { data: menus = [], isLoading } = useWeekMenus(weekStart);
@@ -64,6 +67,110 @@ export default function DailyMenu() {
   const { loading: regenerating, regenerateSideDish, regenerateDish, regenerateDay, regenerateWeek } =
     useMenuRegenerate({ dishes: allDishes, recentUsage, nonRepeatDays });
 
+  // ── Wizard confirm handler ──
+  const handleWizardConfirm = async (config: WizardConfig) => {
+    // Save wizard config as restaurant default
+    if (restaurantId) {
+      try {
+        await supabase
+          .from("restaurants")
+          .update({
+            settings: {
+              ...settings,
+              non_repeat_days: config.nonRepeatDays,
+              wizard_defaults: {
+                slots: config.slots,
+                extraSlots: config.extraSlots,
+                selectedDays: config.selectedDays,
+              },
+            } as any,
+          })
+          .eq("id", restaurantId);
+      } catch {
+        // non-critical
+      }
+    }
+
+    // Update week start to wizard's week
+    setWeekStart(config.weekStart);
+
+    const dates = config.selectedDays.map((d) => addDays(config.weekStart, d));
+
+    if (config.mode === "manual") {
+      // Create empty draft menus for selected days
+      for (const date of dates) {
+        const dateKey = formatDateKey(date);
+        await upsertMenu.mutateAsync(dateKey);
+      }
+      toast({ title: `${dates.length} prázdnych menu vytvorených` });
+    } else if (config.mode === "ai") {
+      // Call AI for each day
+      let totalAdded = 0;
+      for (const date of dates) {
+        try {
+          const resp = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-menu`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              },
+              body: JSON.stringify({
+                dishes: allDishes.map((d) => ({
+                  id: d.id, name: d.name, category: d.category,
+                  final_price: d.final_price, recommended_price: d.recommended_price,
+                  is_daily_menu: d.is_daily_menu,
+                })),
+                recentUsage,
+                slots: config.slots,
+                extraSlots: config.extraSlots,
+                nonRepeatDays: config.nonRepeatDays,
+              }),
+            }
+          );
+          const data = await resp.json();
+          if (!resp.ok) {
+            toast({ title: "AI chyba", description: data.error, variant: "destructive" });
+            continue;
+          }
+          const menu = data.menu;
+          const dateKey = formatDateKey(date);
+          const menuId = await upsertMenu.mutateAsync(dateKey);
+
+          const allIds = [
+            ...(menu.soups || []),
+            ...(menu.mains || []),
+            ...(menu.desserts || []),
+            ...Object.values(menu.extras || {}).flat(),
+          ] as string[];
+
+          let sortOrder = 1;
+          for (const dishId of allIds) {
+            await addMenuItem.mutateAsync({ menuId, dishId, sortOrder });
+            sortOrder++;
+            totalAdded++;
+          }
+
+          // Add used dishes to recentUsage to prevent repeats in next day
+          for (const dishId of allIds) {
+            (recentUsage as Record<string, string>)[dishId] = dateKey;
+          }
+        } catch (e: any) {
+          toast({ title: "Chyba", description: e.message, variant: "destructive" });
+        }
+      }
+      toast({ title: `AI vytvorilo ${totalAdded} jedál pre ${dates.length} dní` });
+    } else if (config.mode === "import") {
+      // Create empty menus then open import dialog for first day
+      for (const date of dates) {
+        await upsertMenu.mutateAsync(formatDateKey(date));
+      }
+      setImportDate(dates[0]);
+      toast({ title: `${dates.length} menu pripravených — otváram import` });
+    }
+  };
+
   const handleRegenerateSideDish = async (itemId: string, dishName: string) => {
     const result = await regenerateSideDish(dishName);
     if (result?.side_dish) {
@@ -75,11 +182,7 @@ export default function DailyMenu() {
   const handleRegenerateDish = async (date: Date, itemId: string, dishId: string, dishName: string, category: string) => {
     const result = await regenerateDish(dishId, dishName, category);
     if (result?.dish_id) {
-      await updateMenuItem.mutateAsync({
-        id: itemId,
-        dish_id: result.dish_id,
-        side_dish: result.side_dish || null,
-      });
+      await updateMenuItem.mutateAsync({ id: itemId, dish_id: result.dish_id, side_dish: result.side_dish || null });
       const newDish = allDishes.find(d => d.id === result.dish_id);
       toast({ title: `Nahradené: ${newDish?.name ?? "nové jedlo"}` });
     }
@@ -90,20 +193,13 @@ export default function DailyMenu() {
     if (!result) return;
     const dateKey = formatDateKey(date);
     const menuId = await upsertMenu.mutateAsync(dateKey);
-    // Remove existing items first
     const menu = getMenuForDate(date);
     if (menu?.menu_items) {
-      for (const item of menu.menu_items) {
-        await removeMenuItem.mutateAsync(item.id);
-      }
+      for (const item of menu.menu_items) await removeMenuItem.mutateAsync(item.id);
     }
-    // Add new items
     const allIds = [...(result.soups || []), ...(result.mains || []), ...(result.desserts || [])];
     let sortOrder = 1;
-    for (const dishId of allIds) {
-      await addMenuItem.mutateAsync({ menuId, dishId, sortOrder });
-      sortOrder++;
-    }
+    for (const dishId of allIds) { await addMenuItem.mutateAsync({ menuId, dishId, sortOrder }); sortOrder++; }
     toast({ title: `Deň pregenerovaný (${allIds.length} jedál)` });
   };
 
@@ -116,20 +212,11 @@ export default function DailyMenu() {
       const targetDate = weekdays[i];
       const dateKey = formatDateKey(targetDate);
       const menuId = await upsertMenu.mutateAsync(dateKey);
-      // Remove existing
       const menu = getMenuForDate(targetDate);
-      if (menu?.menu_items) {
-        for (const item of menu.menu_items) {
-          await removeMenuItem.mutateAsync(item.id);
-        }
-      }
+      if (menu?.menu_items) { for (const item of menu.menu_items) await removeMenuItem.mutateAsync(item.id); }
       const allIds = [...(day.soups || []), ...(day.mains || []), ...(day.desserts || [])];
       let sortOrder = 1;
-      for (const dishId of allIds) {
-        await addMenuItem.mutateAsync({ menuId, dishId, sortOrder });
-        sortOrder++;
-        totalAdded++;
-      }
+      for (const dishId of allIds) { await addMenuItem.mutateAsync({ menuId, dishId, sortOrder }); sortOrder++; totalAdded++; }
     }
     toast({ title: `Týždeň pregenerovaný (${totalAdded} jedál)` });
   };
@@ -147,11 +234,7 @@ export default function DailyMenu() {
         const menuId = await upsertMenu.mutateAsync(dateKey);
         const menu = getMenuForDate(pickerDate);
         const sortOrder = (menu?.menu_items?.length ?? 0) + 1;
-        await addMenuItem.mutateAsync({
-          menuId,
-          dishId: dish.id,
-          sortOrder,
-        });
+        await addMenuItem.mutateAsync({ menuId, dishId: dish.id, sortOrder });
         toast({ title: `${dish.name} pridané` });
       } catch (e: any) {
         toast({ title: "Chyba", description: e.message, variant: "destructive" });
@@ -161,72 +244,40 @@ export default function DailyMenu() {
   );
 
   const handleRemoveItem = async (itemId: string) => {
-    try {
-      await removeMenuItem.mutateAsync(itemId);
-      toast({ title: "Jedlo odstránené" });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    }
+    try { await removeMenuItem.mutateAsync(itemId); toast({ title: "Jedlo odstránené" }); }
+    catch (e: any) { toast({ title: "Chyba", description: e.message, variant: "destructive" }); }
   };
 
   const handleUpdateSideDish = async (itemId: string, sideDish: string) => {
-    try {
-      await updateMenuItem.mutateAsync({ id: itemId, side_dish: sideDish || null });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    }
+    try { await updateMenuItem.mutateAsync({ id: itemId, side_dish: sideDish || null }); }
+    catch (e: any) { toast({ title: "Chyba", description: e.message, variant: "destructive" }); }
   };
 
   const handleReorderItems = async (reorderedIds: { id: string; sort_order: number }[]) => {
-    try {
-      await Promise.all(
-        reorderedIds.map(({ id, sort_order }) =>
-          updateMenuItem.mutateAsync({ id, sort_order })
-        )
-      );
-    } catch (e: any) {
-      toast({ title: "Chyba pri radení", description: e.message, variant: "destructive" });
-    }
+    try { await Promise.all(reorderedIds.map(({ id, sort_order }) => updateMenuItem.mutateAsync({ id, sort_order }))); }
+    catch (e: any) { toast({ title: "Chyba pri radení", description: e.message, variant: "destructive" }); }
   };
 
   const handleUpdateExtras = async (itemId: string, extras: string) => {
-    try {
-      await updateMenuItem.mutateAsync({ id: itemId, extras: extras || null });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    }
+    try { await updateMenuItem.mutateAsync({ id: itemId, extras: extras || null }); }
+    catch (e: any) { toast({ title: "Chyba", description: e.message, variant: "destructive" }); }
   };
 
   const handlePublish = async (menuId: string) => {
-    try {
-      await updateStatus.mutateAsync({ id: menuId, status: "published" });
-      toast({ title: "Menu publikované" });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    }
+    try { await updateStatus.mutateAsync({ id: menuId, status: "published" }); toast({ title: "Menu publikované" }); }
+    catch (e: any) { toast({ title: "Chyba", description: e.message, variant: "destructive" }); }
   };
 
   const handlePublishAll = async () => {
-    const drafts = menus.filter(
-      (m) => m.status === "draft" && m.menu_items.length > 0
-    );
-    if (drafts.length === 0) {
-      toast({ title: "Žiadne menu na publikovanie" });
-      return;
-    }
+    const drafts = menus.filter((m) => m.status === "draft" && m.menu_items.length > 0);
+    if (drafts.length === 0) { toast({ title: "Žiadne menu na publikovanie" }); return; }
     try {
-      await Promise.all(
-        drafts.map((m) =>
-          updateStatus.mutateAsync({ id: m.id, status: "published" })
-        )
-      );
+      await Promise.all(drafts.map((m) => updateStatus.mutateAsync({ id: m.id, status: "published" })));
       toast({ title: `${drafts.length} menu publikovaných` });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    }
+    } catch (e: any) { toast({ title: "Chyba", description: e.message, variant: "destructive" }); }
   };
 
-  // AI generation
+  // AI generation (single day from card)
   const handleAiApply = async (dishIds: string[]) => {
     if (!aiDate) return;
     setAiApplying(true);
@@ -235,19 +286,12 @@ export default function DailyMenu() {
       const menuId = await upsertMenu.mutateAsync(dateKey);
       const menu = getMenuForDate(aiDate);
       let sortOrder = (menu?.menu_items?.length ?? 0) + 1;
-      for (const dishId of dishIds) {
-        await addMenuItem.mutateAsync({ menuId, dishId, sortOrder });
-        sortOrder++;
-      }
+      for (const dishId of dishIds) { await addMenuItem.mutateAsync({ menuId, dishId, sortOrder }); sortOrder++; }
       toast({ title: `${dishIds.length} jedál pridaných cez AI` });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    } finally {
-      setAiApplying(false);
-    }
+    } catch (e: any) { toast({ title: "Chyba", description: e.message, variant: "destructive" }); }
+    finally { setAiApplying(false); }
   };
 
-  // Simple import: apply dish IDs from flat list
   const handleImportApply = async (dishIds: string[]) => {
     if (!importDate) return;
     setImportApplying(true);
@@ -256,68 +300,43 @@ export default function DailyMenu() {
       const menuId = await upsertMenu.mutateAsync(dateKey);
       const menu = getMenuForDate(importDate);
       let sortOrder = (menu?.menu_items?.length ?? 0) + 1;
-      for (const dishId of dishIds) {
-        await addMenuItem.mutateAsync({ menuId, dishId, sortOrder });
-        sortOrder++;
-      }
+      for (const dishId of dishIds) { await addMenuItem.mutateAsync({ menuId, dishId, sortOrder }); sortOrder++; }
       toast({ title: `${dishIds.length} jedál importovaných` });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    } finally {
-      setImportApplying(false);
-    }
+    } catch (e: any) { toast({ title: "Chyba", description: e.message, variant: "destructive" }); }
+    finally { setImportApplying(false); }
   };
 
-  // Weekly Koliesko import: apply structured multi-day data
   const handleWeeklyImport = async (days: ImportDayResult[]) => {
     setImportApplying(true);
     try {
       let totalAdded = 0;
       for (const day of days) {
-        // Map day name to weekday date
         const dayIndex = DAY_NAME_TO_INDEX[day.dayName.toLowerCase()];
         if (dayIndex === undefined) continue;
         const targetDate = weekdays[dayIndex];
         if (!targetDate) continue;
-
         const matchedItems = day.items.filter(i => i.matchedDish);
         if (matchedItems.length === 0) continue;
-
         const dateKey = formatDateKey(targetDate);
         const menuId = await upsertMenu.mutateAsync(dateKey);
         const existingMenu = getMenuForDate(targetDate);
         let sortOrder = (existingMenu?.menu_items?.length ?? 0) + 1;
-
         for (const item of matchedItems) {
-          await addMenuItem.mutateAsync({
-            menuId,
-            dishId: item.matchedDish!.id,
-            sortOrder,
-            overridePrice: item.price ?? undefined,
-          });
-          sortOrder++;
-          totalAdded++;
+          await addMenuItem.mutateAsync({ menuId, dishId: item.matchedDish!.id, sortOrder, overridePrice: item.price ?? undefined });
+          sortOrder++; totalAdded++;
         }
       }
       toast({ title: `${totalAdded} jedál importovaných do ${days.length} dní` });
-    } catch (e: any) {
-      toast({ title: "Chyba", description: e.message, variant: "destructive" });
-    } finally {
-      setImportApplying(false);
-    }
+    } catch (e: any) { toast({ title: "Chyba", description: e.message, variant: "destructive" }); }
+    finally { setImportApplying(false); }
   };
 
-  // Weekly A4 print
   const handleWeeklyPrint = () => {
     const printDays = buildPrintDays(menus, weekdays);
     printWeeklyA4(printDays, restaurantName || "Reštaurácia", weekLabel);
   };
 
-  const weekLabel = `${format(weekdays[0], "d. MMM", { locale: sk })} – ${format(
-    weekdays[4],
-    "d. MMM yyyy",
-    { locale: sk }
-  )}`;
+  const weekLabel = `${format(weekdays[0], "d. MMM", { locale: sk })} – ${format(weekdays[4], "d. MMM yyyy", { locale: sk })}`;
 
   const pickerMenu = pickerDate ? getMenuForDate(pickerDate) : undefined;
   const pickerAlreadyAdded = pickerMenu?.menu_items.map((i) => i.dish.id) ?? [];
@@ -334,7 +353,12 @@ export default function DailyMenu() {
             Týždenný prehľad pondelok – piatok
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* NEW: Wizard trigger buttons */}
+          <Button onClick={() => setWizardOpen(true)}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Nové menu
+          </Button>
           {hasAnyItems && (
             <Button variant="outline" onClick={handleWeeklyPrint} title="Tlač týždňa na A4">
               <Printer className="h-4 w-4 mr-1.5" />
@@ -347,11 +371,11 @@ export default function DailyMenu() {
           </Button>
           <Button
             variant="outline"
-            onClick={handleRegenerateWeek}
+            onClick={() => setWizardOpen(true)}
             disabled={regenerating}
-            title="Pregenerovať celý týždeň cez AI"
+            title="AI sprievodca tvorbou menu na celý týždeň"
           >
-            {regenerating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1.5" />}
+            {regenerating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Wand2 className="h-4 w-4 mr-1.5" />}
             AI Týždeň
           </Button>
           <Button onClick={handlePublishAll} variant="default">
@@ -362,37 +386,42 @@ export default function DailyMenu() {
 
       {/* Week navigation */}
       <div className="flex items-center justify-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setWeekStart((w) => addWeeks(w, -1))}
-        >
+        <Button variant="outline" size="icon" onClick={() => setWeekStart((w) => addWeeks(w, -1))}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-2 min-w-[200px] justify-center">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium text-sm">{weekLabel}</span>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setWeekStart((w) => addWeeks(w, 1))}
-        >
+        <Button variant="outline" size="icon" onClick={() => setWeekStart((w) => addWeeks(w, 1))}>
           <ChevronRight className="h-4 w-4" />
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setWeekStart(getWeekStart(new Date()))}
-        >
+        <Button variant="ghost" size="sm" onClick={() => setWeekStart(getWeekStart(new Date()))}>
           Dnes
         </Button>
       </div>
 
+      {/* Empty state with wizard CTA */}
+      {!isLoading && !hasAnyItems && menus.length === 0 && (
+        <div className="text-center py-16 space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Wand2 className="h-8 w-8 text-primary" />
+          </div>
+          <h2 className="font-serif text-lg font-semibold text-foreground">Žiadne menu pre tento týždeň</h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Spustite sprievodcu tvorbou menu — nastavte dni, počty jedál a režim generovania.
+          </p>
+          <Button onClick={() => setWizardOpen(true)} size="lg">
+            <Plus className="h-4 w-4 mr-2" />
+            Vytvoriť menu
+          </Button>
+        </div>
+      )}
+
       {/* Day cards */}
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Načítavam menu...</div>
-      ) : (
+      ) : (hasAnyItems || menus.length > 0) ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {weekdays.map((date) => (
             <DayMenuCard
@@ -417,7 +446,7 @@ export default function DailyMenu() {
             />
           ))}
         </div>
-      )}
+      ) : null}
 
       {/* Dish picker */}
       <DishPickerDialog
@@ -429,7 +458,7 @@ export default function DailyMenu() {
         nonRepeatDays={nonRepeatDays}
       />
 
-      {/* AI generator */}
+      {/* AI generator (single day) */}
       <AiMenuDialog
         open={!!aiDate}
         onOpenChange={(open) => !open && setAiDate(null)}
@@ -440,7 +469,7 @@ export default function DailyMenu() {
         isApplying={aiApplying}
       />
 
-      {/* Excel/CSV Import — supports both flat + weekly Koliesko format */}
+      {/* Import dialog */}
       <ImportMenuDialog
         open={!!importDate}
         onOpenChange={(open) => !open && setImportDate(null)}
@@ -448,6 +477,15 @@ export default function DailyMenu() {
         onApply={handleImportApply}
         onApplyWeekly={handleWeeklyImport}
         isApplying={importApplying}
+      />
+
+      {/* Menu Creation Wizard */}
+      <MenuCreationWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        defaultNonRepeatDays={nonRepeatDays}
+        defaultWeekStart={weekStart}
+        onConfirm={handleWizardConfirm}
       />
     </div>
   );
