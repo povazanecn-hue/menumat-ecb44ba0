@@ -172,21 +172,21 @@ export default function Landing() {
           {/* CTA Buttons */}
           <motion.div
             variants={fadeUp}
-            className="flex flex-wrap items-center justify-center gap-4 pt-4"
+            className="flex w-full flex-col items-center gap-3 pt-4 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4"
           >
-            <Button size="lg" className="h-14 px-10 text-lg shadow-[0_0_20px_hsl(40_55%_55%/0.3)]" asChild>
+            <Button size="lg" className="h-14 w-full px-10 text-lg shadow-[0_0_20px_hsl(40_55%_55%/0.3)] sm:w-auto" asChild>
               <Link to="/auth">
                 <Sparkles className="mr-2 h-5 w-5" />
                 Vyskúšať zadarmo
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="h-14 border-primary/30 px-10 text-lg hover:border-primary/60 hover:shadow-[0_0_15px_hsl(40_55%_55%/0.15)]" asChild>
+            <Button size="lg" variant="outline" className="h-14 w-full border-primary/30 px-10 text-lg hover:border-primary/60 hover:shadow-[0_0_15px_hsl(40_55%_55%/0.15)] sm:w-auto" asChild>
               <Link to="/auth">
                 <UserPlus className="mr-2 h-5 w-5" />
                 Zaregistruj sa
               </Link>
             </Button>
-            <Button size="lg" variant="ghost" className="h-14 px-10 text-lg text-muted-foreground hover:text-foreground" asChild>
+            <Button size="lg" variant="ghost" className="h-14 w-full px-10 text-lg text-muted-foreground hover:text-foreground sm:w-auto" asChild>
               <Link to="/auth">
                 <LogIn className="mr-2 h-5 w-5" />
                 Prihlásiť sa
