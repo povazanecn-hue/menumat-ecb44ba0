@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   UtensilsCrossed, Carrot, CalendarDays, FileOutput,
   Plus, ChefHat, ShoppingCart, ArrowRight, BookOpen,
-  TrendingUp, TrendingDown, AlertTriangle,
+  TrendingUp, TrendingDown, AlertTriangle, Info, Tag, DollarSign,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,15 @@ interface CostTrendPoint {
   marginPercent: number;
 }
 
+interface DashboardAlert {
+  id: string;
+  type: "warning" | "info" | "destructive";
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  action?: { label: string; path: string };
+}
+
 function getWeekDays(): { days: Date[]; monday: string; friday: string } {
   const now = new Date();
   const monday = startOfWeek(now, { weekStartsOn: 1 });
@@ -62,6 +72,7 @@ function useDashboardData() {
       const [
         dishRes, ingredientRes, todayMenuRes, exportsRes,
         recentExportsRes, weekMenusRes, recipesRes, allDishesRes,
+        allIngredientsRes, promoRes,
       ] = await Promise.all([
         supabase.from("dishes").select("id", { count: "exact", head: true }).eq("restaurant_id", restaurantId),
         supabase.from("ingredients").select("id", { count: "exact", head: true }).eq("restaurant_id", restaurantId),
@@ -70,7 +81,9 @@ function useDashboardData() {
         supabase.from("menu_exports").select("id, format, template_name, created_at, menu:menus!inner(menu_date, restaurant_id)").eq("menu.restaurant_id", restaurantId).order("created_at", { ascending: false }).limit(5),
         supabase.from("menus").select("menu_date, status, menu_items(id)").eq("restaurant_id", restaurantId).gte("menu_date", monday).lte("menu_date", friday),
         supabase.from("recipes").select("dish_id, dish:dishes!inner(restaurant_id)").eq("dish.restaurant_id", restaurantId),
-        supabase.from("dishes").select("id, cost, vat_rate, final_price, recommended_price, created_at").eq("restaurant_id", restaurantId).order("created_at", { ascending: true }),
+        supabase.from("dishes").select("id, name, cost, vat_rate, final_price, recommended_price, created_at").eq("restaurant_id", restaurantId).order("created_at", { ascending: true }),
+        supabase.from("ingredients").select("id, name, base_price").eq("restaurant_id", restaurantId),
+        supabase.from("supplier_prices").select("id, supplier_name, ingredient_id, is_promo, price, valid_from, valid_to, ingredient:ingredients!inner(restaurant_id, name)").eq("ingredient.restaurant_id", restaurantId).eq("is_promo", true),
       ]);
 
       const todayMenu = todayMenuRes.data;
@@ -106,11 +119,10 @@ function useDashboardData() {
       const dishCount = dishRes.count ?? 0;
       const recipeCoverage = dishCount > 0 ? Math.round((recipeCount / dishCount) * 100) : 0;
 
-      // Cost trend — aggregate dishes by week over last 30 days
+      // Cost trend
       const allDishes = (allDishesRes.data ?? []) as any[];
       const costTrend = buildCostTrend(allDishes);
 
-      // Top costly dishes (for insight)
       const noPricedCount = allDishes.filter((d: any) => d.cost === 0).length;
       const avgMargin = allDishes.length > 0
         ? allDishes.reduce((sum: number, d: any) => {
@@ -119,6 +131,93 @@ function useDashboardData() {
             return cwv > 0 ? sum + ((price - cwv) / cwv) * 100 : sum;
           }, 0) / allDishes.filter((d: any) => d.cost > 0).length
         : 0;
+
+      // --- Build alerts ---
+      const alerts: DashboardAlert[] = [];
+
+      // 1. Missing menu days this week
+      const missingDays = weekDays.filter(d => d.status === "none" && d.dateObj >= new Date(today));
+      if (missingDays.length > 0) {
+        alerts.push({
+          id: "missing-menu-days",
+          type: "warning",
+          icon: CalendarDays,
+          title: `${missingDays.length} deň/dní bez menu tento týždeň`,
+          description: `Chýba menu na: ${missingDays.map(d => d.date).join(", ")}`,
+          action: { label: "Vytvoriť menu", path: "/daily-menu" },
+        });
+      }
+
+      // 2. Dishes without final price
+      const noPriceDishes = allDishes.filter((d: any) => !d.final_price && d.final_price !== 0);
+      if (noPriceDishes.length > 0) {
+        alerts.push({
+          id: "missing-prices",
+          type: "warning",
+          icon: DollarSign,
+          title: `${noPriceDishes.length} jedál bez finálnej ceny`,
+          description: noPriceDishes.length <= 3
+            ? noPriceDishes.map((d: any) => d.name).join(", ")
+            : `${noPriceDishes.slice(0, 3).map((d: any) => d.name).join(", ")} a ďalšie…`,
+          action: { label: "Upraviť jedlá", path: "/dishes" },
+        });
+      }
+
+      // 3. Dishes with zero cost (missing ingredient prices)
+      if (noPricedCount > 0 && dishCount > 0) {
+        alerts.push({
+          id: "missing-costs",
+          type: "destructive",
+          icon: AlertTriangle,
+          title: `${noPricedCount} jedál bez kalkulácie nákladov`,
+          description: "Doplňte suroviny a ich ceny pre správny výpočet marže.",
+          action: { label: "Suroviny", path: "/ingredients" },
+        });
+      }
+
+      // 4. Ingredients with zero base price
+      const zeroPriceIngredients = (allIngredientsRes.data ?? []).filter((i: any) => i.base_price === 0);
+      if (zeroPriceIngredients.length > 0) {
+        alerts.push({
+          id: "zero-ingredient-price",
+          type: "warning",
+          icon: Carrot,
+          title: `${zeroPriceIngredients.length} surovín bez ceny`,
+          description: zeroPriceIngredients.length <= 3
+            ? zeroPriceIngredients.map((i: any) => i.name).join(", ")
+            : `${zeroPriceIngredients.slice(0, 3).map((i: any) => i.name).join(", ")} a ďalšie…`,
+          action: { label: "Aktualizovať ceny", path: "/ingredients" },
+        });
+      }
+
+      // 5. Active promos from suppliers
+      const activePromos = (promoRes.data ?? []).filter((p: any) => {
+        if (!p.valid_to) return true;
+        return p.valid_to >= today;
+      });
+      if (activePromos.length > 0) {
+        const uniqueSuppliers = [...new Set(activePromos.map((p: any) => p.supplier_name))];
+        alerts.push({
+          id: "active-promos",
+          type: "info",
+          icon: Tag,
+          title: `${activePromos.length} aktívnych promo cien`,
+          description: `Od: ${uniqueSuppliers.slice(0, 3).join(", ")}${uniqueSuppliers.length > 3 ? " a ďalší…" : ""}`,
+          action: { label: "Pozrieť suroviny", path: "/ingredients" },
+        });
+      }
+
+      // 6. Low margin warning
+      if (avgMargin < 30 && allDishes.filter((d: any) => d.cost > 0).length > 0) {
+        alerts.push({
+          id: "low-margin",
+          type: "destructive",
+          icon: TrendingDown,
+          title: `Priemerná marža len ${Math.round(avgMargin)}%`,
+          description: "Zvážte úpravu cien alebo zmenu surovín pre lepšiu ziskovosť.",
+          action: { label: "Jedlá a ceny", path: "/dishes" },
+        });
+      }
 
       return {
         dishCount,
@@ -134,6 +233,7 @@ function useDashboardData() {
         costTrend,
         noPricedCount,
         avgMargin: Math.round(avgMargin),
+        alerts,
       };
     },
     enabled: !!restaurantId,
@@ -141,7 +241,6 @@ function useDashboardData() {
 }
 
 function buildCostTrend(dishes: any[]): CostTrendPoint[] {
-  // Group dishes into 4-week buckets ending today
   const now = new Date();
   const points: CostTrendPoint[] = [];
 
@@ -151,7 +250,6 @@ function buildCostTrend(dishes: any[]): CostTrendPoint[] {
     const label = format(start, "d.M.", { locale: sk });
     const dateStr = format(end, "yyyy-MM-dd");
 
-    // Dishes created up to this point
     const eligible = dishes.filter(
       (d: any) => d.created_at && d.created_at.slice(0, 10) <= dateStr
     );
@@ -313,24 +411,71 @@ function CostTrendChart({ data, isLoading }: { data?: CostTrendPoint[]; isLoadin
               );
             }}
           />
-          <Line
-            type="monotone"
-            dataKey="avgCost"
-            stroke="hsl(var(--destructive))"
-            strokeWidth={2}
-            dot={{ r: 3 }}
-            name="Náklady"
-          />
-          <Line
-            type="monotone"
-            dataKey="avgPrice"
-            stroke="hsl(var(--primary))"
-            strokeWidth={2}
-            dot={{ r: 3 }}
-            name="Cena"
-          />
+          <Line type="monotone" dataKey="avgCost" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} name="Náklady" />
+          <Line type="monotone" dataKey="avgPrice" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} name="Cena" />
         </LineChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+const ALERT_VARIANT_MAP: Record<string, "default" | "destructive"> = {
+  warning: "default",
+  info: "default",
+  destructive: "destructive",
+};
+
+function AlertsSection({ alerts, isLoading }: { alerts?: DashboardAlert[]; isLoading: boolean }) {
+  const navigate = useNavigate();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+      </div>
+    );
+  }
+
+  if (!alerts || alerts.length === 0) {
+    return (
+      <Alert className="border-primary/20 bg-primary/5">
+        <Info className="h-4 w-4 text-primary" />
+        <AlertTitle>Všetko v poriadku</AlertTitle>
+        <AlertDescription className="text-muted-foreground">
+          Žiadne upozornenia — vaše dáta sú kompletné.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {alerts.map((alert) => (
+        <Alert
+          key={alert.id}
+          variant={ALERT_VARIANT_MAP[alert.type]}
+          className={cn(
+            alert.type === "warning" && "border-amber-500/30 bg-amber-500/5 [&>svg]:text-amber-600",
+            alert.type === "info" && "border-primary/20 bg-primary/5 [&>svg]:text-primary",
+          )}
+        >
+          <alert.icon className="h-4 w-4" />
+          <AlertTitle className="text-sm">{alert.title}</AlertTitle>
+          <AlertDescription className="flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground">{alert.description}</span>
+            {alert.action && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0 text-xs h-7 px-2"
+                onClick={() => navigate(alert.action!.path)}
+              >
+                {alert.action.label} <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            )}
+          </AlertDescription>
+        </Alert>
+      ))}
     </div>
   );
 }
@@ -387,6 +532,24 @@ export default function Dashboard() {
         </h1>
         <p className="text-muted-foreground text-sm mt-1">Prehľad vašej reštaurácie</p>
       </div>
+
+      {/* Actionable Alerts */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            Upozornenia
+            {data?.alerts && data.alerts.length > 0 && (
+              <Badge variant="destructive" className="text-[10px] ml-1">
+                {data.alerts.length}
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AlertsSection alerts={data?.alerts} isLoading={isLoading} />
+        </CardContent>
+      </Card>
 
       {/* Primary Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
