@@ -14,6 +14,7 @@ import { ALLERGENS, DISH_CATEGORIES } from "@/lib/constants";
 import { Dish } from "@/hooks/useDishes";
 import { Database } from "@/integrations/supabase/types";
 import { TrendingUp, AlertTriangle, Lock } from "lucide-react";
+import { OliviaContextTip } from "@/components/OliviaContextTip";
 
 type DishCategory = Database["public"]["Enums"]["dish_category"];
 
@@ -132,6 +133,14 @@ export function DishFormDialog({ open, onOpenChange, dish, onSubmit, submitting,
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Olivia pricing tip */}
+          <OliviaContextTip
+            id="pricing-engine-tip"
+            text="**Cenový engine:** Zadajte náklady a nastavte maržu posuvníkom (50–300%). **Finálna cena** je vždy na vás — AI ju nikdy nezmení."
+            condition={!dish && open}
+            delay={1200}
+          />
+
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="dish-name">Názov *</Label>
