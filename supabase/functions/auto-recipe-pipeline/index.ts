@@ -35,6 +35,46 @@ const INGREDIENT_VAT_RATES: Record<string, number> = {
   ostatne: 20,
 };
 
+/**
+ * Fetch with exponential backoff retry for rate-limit (429) and payment (402) errors.
+ * Retries up to `maxRetries` times with exponential delay + jitter.
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise<Response> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const resp = await fetch(url, options);
+
+    if (resp.status === 429 || resp.status === 402) {
+      if (attempt >= maxRetries) {
+        console.error(`Rate limit: giving up after ${maxRetries + 1} attempts for ${url}`);
+        return resp;
+      }
+
+      // Use Retry-After header if available, otherwise exponential backoff
+      const retryAfter = resp.headers.get("Retry-After");
+      let delay: number;
+      if (retryAfter && !isNaN(Number(retryAfter))) {
+        delay = Number(retryAfter) * 1000;
+      } else {
+        delay = baseDelay * Math.pow(2, attempt) + Math.random() * 500;
+      }
+
+      console.warn(`Rate limited (${resp.status}) on attempt ${attempt + 1}, retrying in ${Math.round(delay)}ms...`);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+
+    return resp;
+  }
+
+  // Should never reach here, but TypeScript safety
+  return fetch(url, options);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -62,7 +102,7 @@ Deno.serve(async (req) => {
 
     if (PERPLEXITY_API_KEY) {
       try {
-        const pxResp = await fetch("https://api.perplexity.ai/chat/completions", {
+        const pxResp = await fetchWithRetry("https://api.perplexity.ai/chat/completions", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${PERPLEXITY_API_KEY}`,
@@ -101,7 +141,7 @@ Deno.serve(async (req) => {
 
     // Fallback: use Gemini to generate recipe if Perplexity unavailable
     if (!recipeText) {
-      const fallbackResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const fallbackResp = await fetchWithRetry("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -138,7 +178,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Phase B: Extract structured data via Gemini ──
-    const extractResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const extractResp = await fetchWithRetry("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -405,7 +445,7 @@ async function findIngredientPrice(
   ingredientId: string
 ): Promise<boolean> {
   // Search for price using Firecrawl
-  const searchResp = await fetch("https://api.firecrawl.dev/v1/search", {
+  const searchResp = await fetchWithRetry("https://api.firecrawl.dev/v1/search", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${firecrawlKey}`,
@@ -439,7 +479,7 @@ async function findIngredientPrice(
   else if (url.includes("tesco")) supplierName = "Tesco";
   else if (url.includes("metro")) supplierName = "Metro";
 
-  const extractResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const extractResp = await fetchWithRetry("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${lovableKey}`,
