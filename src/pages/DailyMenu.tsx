@@ -30,6 +30,7 @@ import { MenuCreationWizard, type WizardConfig } from "@/components/daily-menu/M
 import { buildPrintDays, printWeeklyA4 } from "@/lib/weeklyPrintExport";
 import { supabase } from "@/integrations/supabase/client";
 import { useShoppingList } from "@/hooks/useShoppingList";
+import { OliviaContextTip } from "@/components/OliviaContextTip";
 import * as XLSX from "xlsx";
 
 const DAY_NAME_TO_INDEX: Record<string, number> = {
@@ -399,6 +400,21 @@ export default function DailyMenu() {
 
   return (
     <div className="space-y-6">
+      {/* Olivia contextual tips */}
+      <OliviaContextTip
+        id="daily-menu-empty"
+        text={'**Vytvorte prvé menu** — kliknite na "Nové menu" alebo "AI Týždeň" a nechajte AI zostaviť celý týždeň za pár sekúnd.'}
+        icon="bot"
+        condition={!hasAnyItems}
+      />
+      <OliviaContextTip
+        id="daily-menu-save-all"
+        text={'**Nezabudnite uložiť!** Po úpravách kliknite "Uložiť všetky dni" pre hromadné uloženie celého týždňa.'}
+        condition={hasAnyItems}
+        delay={5000}
+        autoDismiss={10000}
+      />
+
       {/* Pipeline progress banner */}
       {pipelineRunning && pipelineProgress && (
         <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 flex items-center gap-3">

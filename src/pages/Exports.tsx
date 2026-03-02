@@ -7,6 +7,7 @@ import { ExportActions } from "@/components/exports/ExportActions";
 import { ExportHistoryTable } from "@/components/exports/ExportHistoryTable";
 import { MenuPreview } from "@/components/exports/MenuPreview";
 import { useTemplateSettings } from "@/hooks/useTemplates";
+import { OliviaContextTip } from "@/components/OliviaContextTip";
 
 export default function Exports() {
   const { data: menus, isLoading } = usePublishedMenus();
@@ -19,6 +20,20 @@ export default function Exports() {
 
   return (
     <div className="space-y-6">
+      {/* Olivia export tips */}
+      <OliviaContextTip
+        id="export-first-visit"
+        text="**Vyberte menu** a exportujte ho ako **TV obraz** (1920×1080), **PDF** na tlač, **Excel** pre kuchyňu alebo **web embed** pre Webflow."
+        icon="bot"
+        condition={!isLoading && !selectedMenuId}
+      />
+      <OliviaContextTip
+        id="export-template-tip"
+        text="**Tip:** V sekcii Šablóny môžete nastaviť primárnu šablónu (rustikálna, minimalistická, moderná), ktorá sa automaticky použije pri exportoch."
+        condition={!!selectedMenuId && !activeTemplate}
+        delay={3000}
+      />
+
       <div>
         <h1 className="font-serif text-2xl font-bold">Export centrum</h1>
         <p className="text-muted-foreground text-sm">

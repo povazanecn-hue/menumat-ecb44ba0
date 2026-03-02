@@ -23,6 +23,7 @@ import { useCanViewFinancials } from "@/hooks/useUserRole";
 import { DishFormDialog, DishFormData } from "@/components/dishes/DishFormDialog";
 import { WordImportDialog } from "@/components/dishes/WordImportDialog";
 import { RecipeDetailDialog } from "@/components/recipes/RecipeDetailDialog";
+import { OliviaContextTip } from "@/components/OliviaContextTip";
 import { DISH_CATEGORIES, ALLERGENS } from "@/lib/constants";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -130,6 +131,20 @@ export default function Dishes() {
 
   return (
     <div className="space-y-6">
+      {/* Olivia contextual tips */}
+      <OliviaContextTip
+        id="first-dish-empty"
+        text="**Pridajte prvé jedlo** — zadajte názov, kategóriu, alergény a cenu. Jedlá potom použijete pri tvorbe denného menu."
+        icon="bot"
+        condition={!isLoading && dishes.length === 0}
+      />
+      <OliviaContextTip
+        id="dishes-missing-prices"
+        text="**Niektoré jedlá nemajú kompletné náklady.** Doplňte ceny ingrediencií v sekcii Ingrediencie, aby sa správne počítala marža."
+        condition={!isLoading && dishesWithMissingPrices.size > 0 && dishes.length >= 3}
+        delay={2000}
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
