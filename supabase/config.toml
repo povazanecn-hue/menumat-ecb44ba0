@@ -1,1 +1,4 @@
 project_id = "hvaoqjvuddzkvxlzrtco"
+
+[functions.auto-recipe-pipeline]
+verify_jwt = false

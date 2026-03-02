@@ -6,6 +6,7 @@ import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useRestaurant } from "@/hooks/useRestaurant";
+import { useAutoRecipePipeline } from "@/hooks/useAutoRecipePipeline";
 import { Dish, useDishes } from "@/hooks/useDishes";
 import {
   useWeekMenus,
@@ -74,6 +75,9 @@ export default function DailyMenu() {
   const { loading: regenerating, regenerateSideDish, regenerateDish, regenerateDay, regenerateWeek } =
     useMenuRegenerate({ dishes: allDishes, recentUsage, nonRepeatDays });
 
+  // Auto-recipe pipeline
+  const { runPipeline, running: pipelineRunning, progress: pipelineProgress } = useAutoRecipePipeline();
+
   // ── Wizard confirm handler ──
   const handleWizardConfirm = async (config: WizardConfig) => {
     // Save wizard config as restaurant default
@@ -113,6 +117,8 @@ export default function DailyMenu() {
     } else if (config.mode === "ai") {
       // Call AI for each day
       let totalAdded = 0;
+      const pipelineDishIds: string[] = [];
+      const pipelineDishNames: string[] = [];
       for (const date of dates) {
         try {
           const resp = await fetch(
@@ -165,6 +171,15 @@ export default function DailyMenu() {
             totalAdded++;
           }
 
+          // Collect unique dish IDs for pipeline
+          for (const dishId of allIds) {
+            if (!pipelineDishIds.includes(dishId)) {
+              pipelineDishIds.push(dishId);
+              const dish = allDishes.find(d => d.id === dishId);
+              pipelineDishNames.push(dish?.name || "");
+            }
+          }
+
           // Add used dishes to recentUsage to prevent repeats in next day
           for (const dishId of allIds) {
             (recentUsage as Record<string, string>)[dishId] = dateKey;
@@ -174,6 +189,12 @@ export default function DailyMenu() {
         }
       }
       toast({ title: `AI vytvorilo ${totalAdded} jedál pre ${dates.length} dní` });
+
+      // Trigger auto-recipe pipeline in background
+      if (pipelineDishIds.length > 0) {
+        toast({ title: "🔄 Spúšťam pipeline", description: "Hľadám recepty, suroviny a ceny na pozadí..." });
+        runPipeline(pipelineDishIds, pipelineDishNames);
+      }
     } else if (config.mode === "import") {
       // Create empty menus then open import dialog for first day
       for (const date of dates) {
@@ -378,6 +399,16 @@ export default function DailyMenu() {
 
   return (
     <div className="space-y-6">
+      {/* Pipeline progress banner */}
+      {pipelineRunning && pipelineProgress && (
+        <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-3 flex items-center gap-3">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          <span className="text-sm font-medium">
+            Spracovávam {pipelineProgress.current}/{pipelineProgress.total}
+            {pipelineProgress.currentDishName && `: ${pipelineProgress.currentDishName}`}
+          </span>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
