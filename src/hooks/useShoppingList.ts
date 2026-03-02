@@ -10,6 +10,8 @@ export interface ShoppingItem {
   basePrice: number;
   estimatedCost: number;
   dishNames: string[];
+  isMissingPrice: boolean;
+  isAiExtracted: boolean;
 }
 
 /**
@@ -51,6 +53,25 @@ export function useShoppingList(from: string, to: string) {
         .select("dish_id, quantity, unit, ingredient:ingredients(id, name, unit, base_price)")
         .in("dish_id", dishIds);
       if (diErr) throw diErr;
+
+      // Fetch supplier prices to detect AI-extracted ingredients
+      const ingredientIds = new Set<string>();
+      for (const row of diRows ?? []) {
+        const ing = (row as any).ingredient;
+        if (ing) ingredientIds.add(ing.id);
+      }
+
+      const aiIngredientIds = new Set<string>();
+      if (ingredientIds.size > 0) {
+        const { data: supplierRows } = await supabase
+          .from("supplier_prices")
+          .select("ingredient_id, confidence")
+          .in("ingredient_id", Array.from(ingredientIds))
+          .eq("confidence", "ai_extracted");
+        for (const sp of supplierRows ?? []) {
+          aiIngredientIds.add(sp.ingredient_id);
+        }
+      }
 
       // Count how many times each dish appears across menus
       const dishCount = new Map<string, number>();
@@ -96,6 +117,8 @@ export function useShoppingList(from: string, to: string) {
           basePrice: v.basePrice,
           estimatedCost: Math.round(v.qty * v.basePrice * 100) / 100,
           dishNames: Array.from(v.dishes).filter(Boolean),
+          isMissingPrice: v.basePrice === 0,
+          isAiExtracted: aiIngredientIds.has(id),
         }))
         .sort((a, b) => a.ingredientName.localeCompare(b.ingredientName));
     },
