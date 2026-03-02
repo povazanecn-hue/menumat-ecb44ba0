@@ -3,6 +3,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopActionBar } from "@/components/TopActionBar";
 import { OliviaAssistant } from "@/components/OliviaAssistant";
+import { OliviaGreeting } from "@/components/OliviaGreeting";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Outlet } from "react-router-dom";
 
@@ -21,6 +22,7 @@ export function AppLayout() {
         </div>
         <MobileBottomNav />
         <OliviaAssistant open={oliviaOpen} onOpenChange={setOliviaOpen} />
+        <OliviaGreeting />
       </div>
     </SidebarProvider>
   );
