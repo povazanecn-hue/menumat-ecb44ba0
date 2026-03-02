@@ -4,23 +4,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Store, UtensilsCrossed, CalendarDays, Rocket, ChevronRight, ChevronLeft, Check, Sparkles } from "lucide-react";
+import { Store, UtensilsCrossed, CalendarDays, FileOutput, Rocket, ChevronRight, ChevronLeft } from "lucide-react";
 import { LogoBrand } from "@/components/LogoBrand";
-import { DISH_CATEGORIES } from "@/lib/constants";
 import { Database } from "@/integrations/supabase/types";
+import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
+import { OliviaOnboardingTip } from "@/components/onboarding/OliviaOnboardingTip";
+import { StepRestaurant } from "@/components/onboarding/StepRestaurant";
+import { StepFirstDish } from "@/components/onboarding/StepFirstDish";
+import { StepMenuGeneration } from "@/components/onboarding/StepMenuGeneration";
+import { StepExportPreview } from "@/components/onboarding/StepExportPreview";
+import { StepDone } from "@/components/onboarding/StepDone";
+import { motion, AnimatePresence } from "framer-motion";
 
 type DishCategory = Database["public"]["Enums"]["dish_category"];
 
 const STEPS = [
   { id: "restaurant", label: "Reštaurácia", icon: Store },
   { id: "dish", label: "Prvé jedlo", icon: UtensilsCrossed },
-  { id: "menu", label: "Denné menu", icon: CalendarDays },
+  { id: "menu", label: "Menu", icon: CalendarDays },
+  { id: "exports", label: "Exporty", icon: FileOutput },
   { id: "done", label: "Hotovo", icon: Rocket },
 ] as const;
+
+const OLIVIA_TIPS: Record<string, string> = {
+  restaurant: "Vitajte v MENUMAT! Zadajte názov vašej reštaurácie — adresa je voliteľná, ale pomôže pri fakturácii a exportoch.",
+  dish: "Pridajte prvé jedlo, aby ste videli ako funguje databáza. Kategória a cena sa dajú kedykoľvek upraviť.",
+  menu: "Odporúčam AI generovanie — stačí mať aspoň 5 jedál v databáze a menu sa vytvorí za pár sekúnd.",
+  exports: "MENUMAT podporuje 4 formáty exportu. TV zobrazenie je obľúbené v reštauráciách s obrazovkami.",
+  done: "Skvelé! Všetko je pripravené. Na dashboarde uvidíte prehľad a upozornenia na chýbajúce dáta.",
+};
 
 export default function Onboarding() {
   const { user } = useAuth();
@@ -31,16 +44,19 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Step 1: Restaurant
+  // Step 0: Restaurant
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
-  // Step 2: First dish
+  // Step 1: First dish
   const [dishName, setDishName] = useState("");
   const [dishCategory, setDishCategory] = useState<DishCategory>("hlavne_jedlo");
   const [dishPrice, setDishPrice] = useState("");
   const [dishSkipped, setDishSkipped] = useState(false);
+
+  // Step 2: Menu mode
+  const [menuMode, setMenuMode] = useState<"ai" | "manual" | "import" | null>(null);
 
   const userRole = (user?.user_metadata?.app_role as string) || "owner";
 
@@ -87,7 +103,7 @@ export default function Onboarding() {
     }
   };
 
-  const handleFinish = async () => {
+  const handleFinish = () => {
     navigate("/dashboard");
   };
 
@@ -103,8 +119,11 @@ export default function Onboarding() {
       if (dishSkipped) setStep(2);
       else handleCreateDish();
     } else if (step === 2) setStep(3);
+    else if (step === 3) setStep(4);
     else handleFinish();
   };
+
+  const currentStepId = STEPS[step]?.id ?? "done";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -112,185 +131,51 @@ export default function Onboarding() {
         <LogoBrand size="md" glow />
       </div>
 
-      <div className="w-full max-w-lg space-y-6">
-        {/* Stepper */}
-        <div className="flex items-center justify-center gap-1">
-          {STEPS.map((s, i) => {
-            const Icon = s.icon;
-            const isActive = i === step;
-            const isDone = i < step;
-            return (
-              <div key={s.id} className="flex items-center gap-1">
-                <div
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : isDone
-                        ? "bg-primary/20 text-primary"
-                        : "bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  {isDone ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
-                  <span className="hidden sm:inline">{s.label}</span>
-                </div>
-                {i < STEPS.length - 1 && (
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40" />
-                )}
-              </div>
-            );
-          })}
-        </div>
+      <div className="w-full max-w-lg space-y-5">
+        <OnboardingStepper steps={[...STEPS]} currentStep={step} />
 
-        {/* Card */}
+        {/* Olivia AI tip */}
+        <OliviaOnboardingTip tip={OLIVIA_TIPS[currentStepId]} step={step} />
+
+        {/* Card with step content */}
         <div className="rounded-xl border border-border bg-card p-6 shadow-2xl shadow-black/40">
-          {/* Step 0: Restaurant */}
-          {step === 0 && (
-            <div className="space-y-4">
-              <div className="text-center space-y-1 mb-4">
-                <h2 className="font-serif text-xl font-bold text-foreground">Nová reštaurácia</h2>
-                <p className="text-sm text-muted-foreground">Zadajte základné údaje vašej prevádzky</p>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-foreground">Názov reštaurácie *</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Koliesko Country Club"
-                  required
-                  className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="address" className="text-foreground flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" />
-                  Adresa
-                </Label>
-                <Input
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Banšelová 3, Bratislava"
-                  className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Step 1: First dish */}
-          {step === 1 && (
-            <div className="space-y-4">
-              <div className="text-center space-y-1 mb-4">
-                <h2 className="font-serif text-xl font-bold text-foreground">Pridajte prvé jedlo</h2>
-                <p className="text-sm text-muted-foreground">
-                  Rýchlo si vyskúšajte ako funguje databáza jedál
-                </p>
-              </div>
-              {!dishSkipped && (
-                <>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="dish-name" className="text-foreground">Názov jedla *</Label>
-                    <Input
-                      id="dish-name"
-                      value={dishName}
-                      onChange={(e) => setDishName(e.target.value)}
-                      placeholder="Hovädzí guláš s knedľou"
-                      className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-foreground">Kategória</Label>
-                      <Select value={dishCategory} onValueChange={(v) => setDishCategory(v as DishCategory)}>
-                        <SelectTrigger className="bg-secondary border-border text-foreground">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(DISH_CATEGORIES).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="dish-price" className="text-foreground">Cena (€)</Label>
-                      <Input
-                        id="dish-price"
-                        type="number"
-                        step="0.10"
-                        min={0}
-                        value={dishPrice}
-                        onChange={(e) => setDishPrice(e.target.value)}
-                        placeholder="6.90"
-                        className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                      />
-                    </div>
-                  </div>
-                </>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {step === 0 && (
+                <StepRestaurant name={name} setName={setName} address={address} setAddress={setAddress} />
               )}
-              <button
-                type="button"
-                onClick={() => {
-                  setDishSkipped(!dishSkipped);
-                  setDishName("");
-                }}
-                className="text-xs text-muted-foreground hover:text-primary underline-offset-4 hover:underline transition-colors"
-              >
-                {dishSkipped ? "Chcem pridať jedlo" : "Preskočiť tento krok"}
-              </button>
-            </div>
-          )}
-
-          {/* Step 2: Menu intro */}
-          {step === 2 && (
-            <div className="space-y-5 text-center">
-              <div className="space-y-1">
-                <h2 className="font-serif text-xl font-bold text-foreground">Denné menu na dosah</h2>
-                <p className="text-sm text-muted-foreground">
-                  MENUMAT vám pomôže vytvoriť menu za pár minút
-                </p>
-              </div>
-              <div className="grid gap-3 text-left">
-                {[
-                  { icon: Sparkles, title: "AI generovanie", desc: "Nechajte AI navrhnúť menu z vašej databázy jedál" },
-                  { icon: UtensilsCrossed, title: "Manuálna tvorba", desc: "Vyberte jedlá ručne do polievok, hlavných jedál a dezertov" },
-                  { icon: CalendarDays, title: "Týždenný prehľad", desc: "Pondelok–Piatok na jednej obrazovke s drag & drop" },
-                ].map((item) => (
-                  <div key={item.title} className="flex items-start gap-3 rounded-lg bg-secondary/50 p-3">
-                    <item.icon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Done */}
-          {step === 3 && (
-            <div className="space-y-5 text-center py-4">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
-                <Rocket className="h-8 w-8 text-primary" />
-              </div>
-              <div className="space-y-1">
-                <h2 className="font-serif text-xl font-bold text-foreground">Všetko pripravené!</h2>
-                <p className="text-sm text-muted-foreground">
-                  <strong className="text-foreground">{name}</strong> je nastavená. Začnite tvoriť menu.
-                </p>
-              </div>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>✓ Reštaurácia vytvorená</p>
-                {!dishSkipped && dishName && <p>✓ Prvé jedlo pridané: {dishName}</p>}
-                <p>✓ Dashboard a menu generátor čakajú</p>
-              </div>
-            </div>
-          )}
+              {step === 1 && (
+                <StepFirstDish
+                  dishName={dishName} setDishName={setDishName}
+                  dishCategory={dishCategory} setDishCategory={setDishCategory}
+                  dishPrice={dishPrice} setDishPrice={setDishPrice}
+                  dishSkipped={dishSkipped} setDishSkipped={setDishSkipped}
+                />
+              )}
+              {step === 2 && (
+                <StepMenuGeneration selectedMode={menuMode} setSelectedMode={setMenuMode} />
+              )}
+              {step === 3 && <StepExportPreview />}
+              {step === 4 && (
+                <StepDone
+                  restaurantName={name}
+                  dishName={dishName}
+                  dishSkipped={dishSkipped}
+                  menuModeChosen={!!menuMode}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-            {step > 0 && step < 3 ? (
+            {step > 0 && step < 4 ? (
               <Button
                 type="button"
                 variant="ghost"
@@ -311,7 +196,7 @@ export default function Onboarding() {
             >
               {submitting
                 ? "Spracovávam..."
-                : step === 3
+                : step === 4
                   ? "Prejsť na Dashboard"
                   : step === 0
                     ? "Vytvoriť reštauráciu"
@@ -321,13 +206,13 @@ export default function Onboarding() {
                         ? "Pridať jedlo"
                         : "Ďalej"
               }
-              {step < 3 && !submitting && <ChevronRight className="h-4 w-4 ml-1" />}
+              {step < 4 && !submitting && <ChevronRight className="h-4 w-4 ml-1" />}
             </Button>
           </div>
         </div>
       </div>
 
-      <p className="mt-8 text-[10px] text-white/70">
+      <p className="mt-8 text-[10px] text-muted-foreground/70">
         Powered by N-[vision] | N-oLiMiT gastro
       </p>
     </div>
