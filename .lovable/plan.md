@@ -1,46 +1,69 @@
 
-# Implementacia noveho MENUMAT loga so ziarenim
 
-## Zhrnutie
-Nahradime sucasne ChefHat ikony + textovy "MENUMAT" novym uploadnutym logom (`logo.png`) na vsetkych miestach v aplikacii. Logo dostane jemny glow efekt (ziarenie) na pozadi.
+# Doplnenie: Automaticke generovanie nakupneho zoznamu po pipeline
 
-## Co sa zmeni
+## Sucasny stav
 
-### 1. Skopirovanie loga do projektu
-- Skopirujem `user-uploads://logo.png` do `src/assets/logo-menumat.png`
+Nakupny zoznam (`/shopping-list`) uz existuje a funguje - agreguje suroviny z menu podla datumoveho rozsahu cez retazec: `menus -> menu_items -> dishes -> dish_ingredients -> ingredients`.
 
-### 2. Vytvorenie zdielaneho LogoBrand komponentu
-- Novy subor `src/components/LogoBrand.tsx`
-- Prijima props pre velkost (`sm`, `md`, `lg`) a volitelne `glow` (boolean)
-- Pouziva `<img>` s importovanym logom
-- Glow efekt: absolutne poziciovany rozmazany element za logom s primary farbou
+## Problem
 
-### 3. Nahradenie loga na 5 miestach
+Po dokonceni auto-recipe pipeline (jedlo -> recept -> suroviny) sa automaticky vytvoria zaznamy v `dish_ingredients`. Nakupny zoznam by sa mal okamzite aktualizovat, ale uzivatel o tom nevie a nema priamy pristup k vysledku.
 
-| Miesto | Subor | Aktualne | Nove |
-|--------|-------|----------|------|
-| Landing hero | `src/pages/Landing.tsx` | ChefHat v kruhu + "MENU" text | LogoBrand `lg` s glow |
-| Auth stranka | `src/pages/Auth.tsx` | ChefHat + "MENUMAT" | LogoBrand `md` s glow |
-| Onboarding | `src/pages/Onboarding.tsx` | ChefHat + "MENUMAT" | LogoBrand `md` s glow |
-| Sidebar header | `src/components/AppSidebar.tsx` | ChefHat + "MENUMAT" text | LogoBrand `sm` |
-| Top bar | `src/components/TopActionBar.tsx` | "MENUMAT" text | LogoBrand `sm` |
+## Riesenie
 
-### 4. Glow efekt (technicke detaily)
+### 1. Automaticka notifikacia po pipeline
+
+Po dokonceni `auto-recipe-pipeline` pre vsetky jedla v menu:
+- Zobrazit toast s odkazom: "Suroviny pripravene. Otvorit nakupny zoznam?"
+- Kliknutie presmeruje na `/shopping-list` s predvolenym tyzdnom
+
+### 2. Rozsirenie nakupneho zoznamu
+
+Pridat do `ShoppingList.tsx`:
+- **Novy zdroj dat**: okrem tyzdnoveho rozsahu aj moznost vybrat konkretne menu (dropdown)
+- **Indikator AI surovinam**: badge "AI" pri surovinnach ktore boli automaticky pridane pipeline
+- **Chybajuce ceny**: zvyraznit polozky kde `base_price = 0` (surovina pridana AI ale bez najdenej ceny)
+- **CTA na doplnenie cien**: odkaz na `/ingredients` pre polozky bez ceny
+
+### 3. Quick-export po generovani
+
+V `DailyMenu.tsx` po uspesnom generovani menu + pipeline:
+- Pridat tlacidlo "Exportovat nakupny zoznam" priamo v menu view
+- Spusti Excel export pre dany den/tyzden bez nutnosti navigacie na `/shopping-list`
+
+## Technicke zmeny
+
+| Subor | Zmena |
+|-------|-------|
+| `src/hooks/useAutoRecipePipeline.ts` | Po dokonceni pipeline invalidovat `shopping-list` query key + zobrazit toast s odkazom |
+| `src/pages/ShoppingList.tsx` | Pridat filter na konkretne menu, AI badge, zvyraznenie chybajucich cien |
+| `src/hooks/useShoppingList.ts` | Pridat variantu s menu ID namiesto date range |
+| `src/pages/DailyMenu.tsx` | Quick-export tlacidlo nakupneho zoznamu |
+
+## Tok dat (kompletna pipeline)
+
 ```text
-+----------------------------------+
-|  [blur glow layer: primary/25]   |
-|     +------------------------+   |
-|     |   logo-menumat.png     |   |
-|     +------------------------+   |
-+----------------------------------+
+AI generuje menu
+    |
+    v
+auto-recipe-pipeline (recept + suroviny + ceny)
+    |
+    v
+dish_ingredients zaznamy vytvorene
+    |
+    v
+useShoppingList query sa invaliduje
+    |
+    v
+Toast: "Nakupny zoznam aktualizovany" [Otvorit]
+    |
+    v
+/shopping-list zobrazuje vsetky suroviny s cenami
+    |
+    v
+Excel export / Tlac
 ```
-- CSS: `absolute inset-0 bg-primary/20 blur-xl rounded-full` za logom
-- Na Landing stranke: vacsi glow s `blur-2xl` a jemna animacia (`animate-pulse`)
-- Na Auth/Onboarding: stredny glow
-- V Sidebar/TopBar: bez glow (priestorove obmedzenia)
 
-## Technicke poznamky
-- Logo sa importuje cez ES6 modul: `import logo from "@/assets/logo-menumat.png"`
-- Existujuci `bg-gold-gradient` text v Landing hero sa odstrani (nahradi ho logo)
-- Zachovame "smart nastroj prevadzok buducnosti" subtext pod logom na Landing stranke
-- Komponent LogoBrand bude mat `alt="MENUMAT logo"` pre pristupnost
+Toto je posledny chybajuci clanok v retazci: generovanie -> recepty -> suroviny -> nakupny zoznam. Po implementacii bude cely flow automaticky od generovania az po nakup.
+
