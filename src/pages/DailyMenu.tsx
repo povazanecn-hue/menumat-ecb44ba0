@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { addDays, addWeeks, format, isToday, parseISO } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Wand2, FileUp, Printer, RefreshCw, Loader2, Plus, ShoppingCart } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,8 @@ import { ImportMenuDialog, type ImportDayResult } from "@/components/daily-menu/
 import { MenuCreationWizard, type WizardConfig } from "@/components/daily-menu/MenuCreationWizard";
 import { buildPrintDays, printWeeklyA4 } from "@/lib/weeklyPrintExport";
 import { supabase } from "@/integrations/supabase/client";
+import { useShoppingList } from "@/hooks/useShoppingList";
+import * as XLSX from "xlsx";
 
 const DAY_NAME_TO_INDEX: Record<string, number> = {
   pondelok: 0, utorok: 1, streda: 2, štvrtok: 3, piatok: 4,
@@ -56,6 +58,11 @@ export default function DailyMenu() {
   const { data: menus = [], isLoading } = useWeekMenus(weekStart);
   const { data: recentUsage = {} } = useRecentDishUsage(nonRepeatDays);
   const { data: allDishes = [] } = useDishes();
+
+  // Shopping list for quick-export
+  const weekFrom = format(weekStart, "yyyy-MM-dd");
+  const weekTo = format(addDays(weekStart, 6), "yyyy-MM-dd");
+  const { data: shoppingItems } = useShoppingList(weekFrom, weekTo);
 
   const upsertMenu = useUpsertMenu();
   const addMenuItem = useAddMenuItem();
@@ -342,6 +349,26 @@ export default function DailyMenu() {
     printWeeklyA4(printDays, restaurantName || "Reštaurácia", weekLabel);
   };
 
+  const handleQuickExportShoppingList = () => {
+    if (!shoppingItems?.length) {
+      toast({ title: "Žiadne suroviny", description: "Menu nemá priradené ingrediencie." });
+      return;
+    }
+    const rows = shoppingItems.map((i) => ({
+      Ingrediencia: i.ingredientName,
+      Množstvo: i.totalQuantity,
+      Jednotka: i.unit,
+      "Cena/j (€)": i.basePrice,
+      "Odhadovaná cena (€)": i.estimatedCost,
+      "Použité v jedlách": i.dishNames.join(", "),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Nákupný zoznam");
+    XLSX.writeFile(wb, `nakupny-zoznam-${weekFrom}-${weekTo}.xlsx`);
+    toast({ title: "Nákupný zoznam exportovaný" });
+  };
+
   const weekLabel = `${format(weekdays[0], "d. MMM", { locale: sk })} – ${format(weekdays[4], "d. MMM yyyy", { locale: sk })}`;
 
   const pickerMenu = pickerDate ? getMenuForDate(pickerDate) : undefined;
@@ -366,10 +393,16 @@ export default function DailyMenu() {
             Nové menu
           </Button>
           {hasAnyItems && (
-            <Button variant="outline" onClick={handleWeeklyPrint} title="Tlač týždňa na A4">
-              <Printer className="h-4 w-4 mr-1.5" />
-              Tlač A4
-            </Button>
+            <>
+              <Button variant="outline" onClick={handleQuickExportShoppingList} title="Exportovať nákupný zoznam">
+                <ShoppingCart className="h-4 w-4 mr-1.5" />
+                Nákup
+              </Button>
+              <Button variant="outline" onClick={handleWeeklyPrint} title="Tlač týždňa na A4">
+                <Printer className="h-4 w-4 mr-1.5" />
+                Tlač A4
+              </Button>
+            </>
           )}
           <Button variant="outline" onClick={() => setImportDate(weekdays[0])} title="Import z Excel">
             <FileUp className="h-4 w-4 mr-1.5" />

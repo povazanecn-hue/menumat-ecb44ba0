@@ -8,6 +8,8 @@ import {
   ChevronRight,
   FileSpreadsheet,
   Package,
+  AlertTriangle,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,8 +26,88 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 
+/* ── Summary cards ── */
+function SummaryCards({
+  itemCount,
+  totalCost,
+  missingPriceCount,
+}: {
+  itemCount: number;
+  totalCost: number;
+  missingPriceCount: number;
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 print:grid-cols-3">
+      <Card>
+        <CardHeader className="pb-1 pt-3 px-4">
+          <CardTitle className="text-xs text-muted-foreground font-normal">Ingrediencií</CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-3">
+          <span className="text-xl font-bold">{itemCount}</span>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-1 pt-3 px-4">
+          <CardTitle className="text-xs text-muted-foreground font-normal">Odhadované náklady</CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-3">
+          <span className="text-xl font-bold">{totalCost.toFixed(2)} €</span>
+        </CardContent>
+      </Card>
+      {missingPriceCount > 0 && (
+        <Card className="border-destructive/40">
+          <CardHeader className="pb-1 pt-3 px-4">
+            <CardTitle className="text-xs text-destructive font-normal flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              Chýbajúce ceny
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <span className="text-xl font-bold text-destructive">{missingPriceCount}</span>
+            <Button
+              variant="link"
+              size="sm"
+              className="ml-2 text-xs h-auto p-0"
+              onClick={() => navigate("/ingredients")}
+            >
+              Doplniť →
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+/* ── Dish badges ── */
+function DishBadges({ dishNames }: { dishNames: string[] }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {dishNames.slice(0, 3).map((d) => (
+        <Tooltip key={d}>
+          <TooltipTrigger>
+            <Badge variant="outline" className="text-[10px]">
+              {d.length > 18 ? d.slice(0, 18) + "…" : d}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>{d}</TooltipContent>
+        </Tooltip>
+      ))}
+      {dishNames.length > 3 && (
+        <Badge variant="secondary" className="text-[10px]">
+          +{dishNames.length - 3}
+        </Badge>
+      )}
+    </div>
+  );
+}
+
+/* ── Main page ── */
 export default function ShoppingList() {
   const [weekOffset, setWeekOffset] = useState(0);
 
@@ -45,9 +127,12 @@ export default function ShoppingList() {
     [items]
   );
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const missingPriceCount = useMemo(
+    () => items?.filter((i) => i.isMissingPrice).length ?? 0,
+    [items]
+  );
+
+  const handlePrint = () => window.print();
 
   const handleExportExcel = () => {
     if (!items?.length) return;
@@ -58,14 +143,13 @@ export default function ShoppingList() {
       "Cena/j (€)": i.basePrice,
       "Odhadovaná cena (€)": i.estimatedCost,
       "Použité v jedlách": i.dishNames.join(", "),
+      "Chýba cena": i.isMissingPrice ? "ÁNO" : "",
+      "AI surovina": i.isAiExtracted ? "ÁNO" : "",
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Nákupný zoznam");
-    XLSX.writeFile(
-      wb,
-      `nakupny-zoznam-${from}-${to}.xlsx`
-    );
+    XLSX.writeFile(wb, `nakupny-zoznam-${from}-${to}.xlsx`);
     toast({ title: "Excel exportovaný" });
   };
 
@@ -145,29 +229,11 @@ export default function ShoppingList() {
         </Card>
       ) : (
         <>
-          {/* Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 print:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-4">
-                <CardTitle className="text-xs text-muted-foreground font-normal">
-                  Ingrediencií
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-3">
-                <span className="text-xl font-bold">{items.length}</span>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-1 pt-3 px-4">
-                <CardTitle className="text-xs text-muted-foreground font-normal">
-                  Odhadované náklady
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-3">
-                <span className="text-xl font-bold">{totalCost.toFixed(2)} €</span>
-              </CardContent>
-            </Card>
-          </div>
+          <SummaryCards
+            itemCount={items.length}
+            totalCost={totalCost}
+            missingPriceCount={missingPriceCount}
+          />
 
           {/* Table */}
           <Card className="print:shadow-none">
@@ -185,40 +251,54 @@ export default function ShoppingList() {
                 </TableHeader>
                 <TableBody>
                   {items.map((item) => (
-                    <TableRow key={item.ingredientId}>
+                    <TableRow
+                      key={item.ingredientId}
+                      className={item.isMissingPrice ? "bg-destructive/5" : ""}
+                    >
                       <TableCell className="font-medium">
-                        {item.ingredientName}
+                        <span className="flex items-center gap-1.5">
+                          {item.ingredientName}
+                          {item.isAiExtracted && (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-0.5">
+                                  <Bot className="h-2.5 w-2.5" />
+                                  AI
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>Automaticky pridané AI pipeline</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {item.isMissingPrice && (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                              </TooltipTrigger>
+                              <TooltipContent>Chýba základná cena</TooltipContent>
+                            </Tooltip>
+                          )}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         {item.totalQuantity}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.unit}
-                      </TableCell>
+                      <TableCell className="text-muted-foreground">{item.unit}</TableCell>
                       <TableCell className="text-right">
-                        {item.basePrice.toFixed(2)} €
+                        {item.isMissingPrice ? (
+                          <span className="text-destructive text-xs">—</span>
+                        ) : (
+                          `${item.basePrice.toFixed(2)} €`
+                        )}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
-                        {item.estimatedCost.toFixed(2)} €
+                        {item.isMissingPrice ? (
+                          <span className="text-destructive text-xs">—</span>
+                        ) : (
+                          `${item.estimatedCost.toFixed(2)} €`
+                        )}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        <div className="flex flex-wrap gap-1">
-                          {item.dishNames.slice(0, 3).map((d) => (
-                            <Tooltip key={d}>
-                              <TooltipTrigger>
-                                <Badge variant="outline" className="text-[10px]">
-                                  {d.length > 18 ? d.slice(0, 18) + "…" : d}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>{d}</TooltipContent>
-                            </Tooltip>
-                          ))}
-                          {item.dishNames.length > 3 && (
-                            <Badge variant="secondary" className="text-[10px]">
-                              +{item.dishNames.length - 3}
-                            </Badge>
-                          )}
-                        </div>
+                        <DishBadges dishNames={item.dishNames} />
                       </TableCell>
                     </TableRow>
                   ))}
