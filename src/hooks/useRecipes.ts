@@ -18,13 +18,11 @@ export function useRecipes(restaurantId: string | null) {
       if (!restaurantId) return [];
       const { data, error } = await supabase
         .from("recipes")
-        .select("*, dish:dishes(*)")
+        .select("*, dish:dishes!inner(*)")
+        .eq("dish.restaurant_id", restaurantId)
         .order("updated_at", { ascending: false });
       if (error) throw error;
-      // Filter by restaurant through joined dish
-      return (data as RecipeWithDish[]).filter(
-        (r) => r.dish?.restaurant_id === restaurantId
-      );
+      return data as RecipeWithDish[];
     },
     enabled: !!restaurantId,
   });
@@ -56,13 +54,10 @@ export function useDishRecipeIds(restaurantId: string | null) {
       if (!restaurantId) return new Set<string>();
       const { data, error } = await supabase
         .from("recipes")
-        .select("dish_id, dish:dishes(restaurant_id)");
+        .select("dish_id, dish:dishes!inner(restaurant_id)")
+        .eq("dish.restaurant_id", restaurantId);
       if (error) throw error;
-      return new Set(
-        (data ?? [])
-          .filter((r: any) => r.dish?.restaurant_id === restaurantId)
-          .map((r: any) => r.dish_id)
-      );
+      return new Set((data ?? []).map((r: any) => r.dish_id));
     },
     enabled: !!restaurantId,
   });
