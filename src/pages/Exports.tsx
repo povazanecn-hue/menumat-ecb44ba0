@@ -6,6 +6,7 @@ import { usePublishedMenus } from "@/hooks/useExports";
 import { ExportActions } from "@/components/exports/ExportActions";
 import { ExportHistoryTable } from "@/components/exports/ExportHistoryTable";
 import { MenuPreview } from "@/components/exports/MenuPreview";
+import { ExportValidationBanner } from "@/components/exports/ExportValidationBanner";
 import { useTemplateSettings } from "@/hooks/useTemplates";
 import { OliviaContextTip } from "@/components/OliviaContextTip";
 
@@ -78,6 +79,8 @@ export default function Exports() {
               </Select>
             </CardContent>
           </Card>
+
+          {selectedMenu && <ExportValidationBanner menu={selectedMenu} />}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <MenuPreview menu={selectedMenu} templateStyle={activeTemplate || templateSettings?.primary_template || "country"} showFinancials={showFinancials} fonts={templateSettings?.fonts} />
