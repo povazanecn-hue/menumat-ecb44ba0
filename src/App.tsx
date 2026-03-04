@@ -8,6 +8,7 @@ import { RestaurantProvider } from "@/hooks/useRestaurant";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
 import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/Dashboard";
 import Dishes from "@/pages/Dishes";
@@ -35,6 +36,7 @@ const App = () => (
           <RestaurantProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route
                 path="/onboarding"
                 element={
