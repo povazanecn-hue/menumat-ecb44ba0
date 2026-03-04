@@ -16,14 +16,12 @@ export function useExportHistory() {
       if (!restaurantId) return [];
       const { data, error } = await supabase
         .from("menu_exports")
-        .select("*, menu:menus(menu_date, restaurant_id)")
+        .select("*, menu:menus!inner(menu_date, restaurant_id)")
+        .eq("menu.restaurant_id", restaurantId)
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      // Filter by restaurant via joined menu
-      return (data ?? []).filter(
-        (e: any) => e.menu?.restaurant_id === restaurantId
-      );
+      return data ?? [];
     },
     enabled: !!restaurantId,
   });
