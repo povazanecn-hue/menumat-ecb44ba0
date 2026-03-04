@@ -124,7 +124,11 @@ export function OliviaGreeting() {
           body: JSON.stringify({ text: greeting.voice }),
         });
 
-        if (!response.ok) throw new Error("TTS failed");
+        if (!response.ok) {
+          // TTS unavailable — auto-dismiss after delay
+          timeoutRef.current = setTimeout(() => setVisible(false), 6000);
+          return;
+        }
 
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
@@ -145,7 +149,8 @@ export function OliviaGreeting() {
           setIsSpeaking(false);
         });
       } catch {
-        // TTS failed silently — text greeting still shows
+        // TTS failed silently — auto-dismiss after delay
+        timeoutRef.current = setTimeout(() => setVisible(false), 6000);
       }
     };
 
