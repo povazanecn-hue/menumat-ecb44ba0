@@ -142,6 +142,7 @@ export default function Onboarding() {
       <p className="mt-8 text-[10px] text-muted-foreground/70">
         Powered by N-[vision] | N-oLiMiT gastro
       </p>
+      <OliviaGreeting />
     </div>
   );
 }
