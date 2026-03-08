@@ -9,6 +9,7 @@ import { Store, Sparkles, Rocket, ChevronRight, ChevronLeft } from "lucide-react
 import { LogoBrand } from "@/components/LogoBrand";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
 import { OliviaOnboardingTip } from "@/components/onboarding/OliviaOnboardingTip";
+import { OliviaGreeting } from "@/components/OliviaGreeting";
 import { StepWelcome } from "@/components/onboarding/StepWelcome";
 import { StepRestaurant } from "@/components/onboarding/StepRestaurant";
 import { StepAiDemo } from "@/components/onboarding/StepAiDemo";
@@ -141,6 +142,7 @@ export default function Onboarding() {
       <p className="mt-8 text-[10px] text-muted-foreground/70">
         Powered by N-[vision] | N-oLiMiT gastro
       </p>
+      <OliviaGreeting />
     </div>
   );
 }
