@@ -52,6 +52,10 @@ const PAGE_GREETINGS: Record<string, { text: string; voice: string }> = {
     text: "Vitajte na **Nástenke**! Spravujte návrhy jedál od vášho tímu.",
     voice: "Vitajte na Nástenke! Spravujte návrhy jedál od vášho tímu.",
   },
+  "/onboarding": {
+    text: "Vitajte v **MENUMAT**! Som Olivia, vaša AI asistentka. Prevediem vás rýchlym nastavením — bude to hotové za minútku.",
+    voice: "Vitajte v MENUMAT! Som Olivia, vaša AI asistentka. Prevediem vás rýchlym nastavením — bude to hotové za minútku.",
+  },
 };
 
 const SEEN_KEY = "olivia_greeted_pages";

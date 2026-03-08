@@ -9,6 +9,7 @@ import { Store, Sparkles, Rocket, ChevronRight, ChevronLeft } from "lucide-react
 import { LogoBrand } from "@/components/LogoBrand";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
 import { OliviaOnboardingTip } from "@/components/onboarding/OliviaOnboardingTip";
+import { OliviaGreeting } from "@/components/OliviaGreeting";
 import { StepWelcome } from "@/components/onboarding/StepWelcome";
 import { StepRestaurant } from "@/components/onboarding/StepRestaurant";
 import { StepAiDemo } from "@/components/onboarding/StepAiDemo";
