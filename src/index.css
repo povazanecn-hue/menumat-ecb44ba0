@@ -98,17 +98,17 @@
     --destructive: 12 85% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 38 100% 80% / 0.25;
-    --input: 38 100% 80% / 0.18;
+    --border: 25 25% 16%;
+    --input: 25 22% 19%;
     --ring: 38 81% 67%;
 
     --sidebar-background: 20 30% 4%;
     --sidebar-foreground: 36 40% 78%;
     --sidebar-primary: 38 81% 67%;
     --sidebar-primary-foreground: 22 38% 8%;
-    --sidebar-accent: 38 100% 80% / 0.14;
+    --sidebar-accent: 30 20% 14%;
     --sidebar-accent-foreground: 36 93% 93%;
-    --sidebar-border: 38 100% 80% / 0.25;
+    --sidebar-border: 25 25% 16%;
     --sidebar-ring: 38 81% 67%;
   }
 }
