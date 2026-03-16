@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ShoppingCart, FileDown, TrendingUp, Download, Printer, Tv, FileSpreadsheet, Loader2, ArrowRight } from "lucide-react";
+import { ShoppingCart, FileDown, TrendingUp, Download, Printer, Tv, FileSpreadsheet, Loader2, ArrowRight, Instagram } from "lucide-react";
 import { GlassPanel, GlassRow } from "@/components/ui/glass-panel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
