@@ -7,6 +7,8 @@ import {
   FileOutput,
   Palette,
   Settings,
+  BarChart3,
+  ShoppingCart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
