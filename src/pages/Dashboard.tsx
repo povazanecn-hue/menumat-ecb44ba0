@@ -25,9 +25,9 @@ export default function Dashboard() {
   const dayNames = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"];
 
   const oliviaActions = [
-    { label: "Generuj nákupný zoznam", badge: "AUTO", badgeStyle: "bg-primary/20 text-primary" },
-    { label: "Export TV + PDF + Excel", badge: "READY", badgeStyle: "bg-primary/20 text-primary" },
-    { label: "Návrh marže pre menu", badge: `${data?.avgMargin ?? 0}%`, badgeStyle: "bg-primary/20 text-primary" },
+    { label: "Generuj nákupný zoznam", badge: "AUTO", badgeStyle: "bg-primary/20 text-primary", onClick: () => navigate("/shopping-list") },
+    { label: "Export TV + PDF + Excel", badge: "READY", badgeStyle: "bg-primary/20 text-primary", onClick: () => navigate("/exports") },
+    { label: "Návrh marže pre menu", badge: `${data?.avgMargin ?? 0}%`, badgeStyle: "bg-primary/20 text-primary", onClick: () => navigate("/daily-menu") },
   ];
 
   return (
@@ -116,6 +116,7 @@ export default function Dashboard() {
                   label={action.label}
                   badge={action.badge}
                   badgeStyle={action.badgeStyle}
+                  onClick={action.onClick}
                 />
               ))}
             </div>
