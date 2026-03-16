@@ -239,6 +239,18 @@ export default function Ingredients() {
                           className="h-8 w-8"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setAiTarget(ing);
+                          }}
+                          title="AI náhrada ingrediencie"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setWebSearchTarget(ing);
                           }}
                           title="Hľadať ceny na webe"
