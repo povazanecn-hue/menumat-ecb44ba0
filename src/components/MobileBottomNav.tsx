@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Carrot, BookOpen, ShoppingCart, Palette, Settings, ClipboardList, ClipboardCheck } from "lucide-react";
+import { Carrot, BookOpen, ShoppingCart, Palette, Settings, ClipboardList, ClipboardCheck, BarChart3 } from "lucide-react";
 
 const mainTabs = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
