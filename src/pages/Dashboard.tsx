@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { PageHeader } from "@/components/ui/page-header";
 import { GlassPanel, GlassRow } from "@/components/ui/glass-panel";
+import { DashboardQuickActions } from "@/components/dashboard/DashboardQuickActions";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
@@ -24,11 +25,7 @@ export default function Dashboard() {
 
   const dayNames = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"];
 
-  const oliviaActions = [
-    { label: "Generuj nákupný zoznam", badge: "AUTO", badgeStyle: "bg-primary/20 text-primary", onClick: () => navigate("/shopping-list") },
-    { label: "Export TV + PDF + Excel", badge: "READY", badgeStyle: "bg-primary/20 text-primary", onClick: () => navigate("/exports") },
-    { label: "Návrh marže pre menu", badge: `${data?.avgMargin ?? 0}%`, badgeStyle: "bg-primary/20 text-primary", onClick: () => navigate("/daily-menu") },
-  ];
+  // oliviaActions removed — now handled by DashboardQuickActions component
 
   return (
     <div className="space-y-6">
@@ -107,20 +104,11 @@ export default function Dashboard() {
         </div>
 
         <div className="lg:col-span-2">
-          <GlassPanel title="AI Olivia">
-            <p className="text-sm text-muted-foreground mb-4">Rýchle akcie a návrhy marže.</p>
-            <div className="space-y-2">
-              {oliviaActions.map((action) => (
-                <GlassRow
-                  key={action.label}
-                  label={action.label}
-                  badge={action.badge}
-                  badgeStyle={action.badgeStyle}
-                  onClick={action.onClick}
-                />
-              ))}
-            </div>
-          </GlassPanel>
+          <DashboardQuickActions
+            avgMargin={data?.avgMargin ?? 0}
+            dishCount={data?.dishCount ?? 0}
+            hasTodayMenu={data?.hasTodayMenu ?? false}
+          />
         </div>
       </div>
 
