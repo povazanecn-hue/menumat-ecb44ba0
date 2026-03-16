@@ -116,6 +116,7 @@ export default function Dashboard() {
                   label={action.label}
                   badge={action.badge}
                   badgeStyle={action.badgeStyle}
+                  onClick={action.onClick}
                 />
               ))}
             </div>
