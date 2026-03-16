@@ -25,11 +25,7 @@ export default function Dashboard() {
 
   const dayNames = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"];
 
-  const oliviaActions = [
-    { label: "Generuj nákupný zoznam", badge: "AUTO", badgeStyle: "bg-primary/20 text-primary", onClick: () => navigate("/shopping-list") },
-    { label: "Export TV + PDF + Excel", badge: "READY", badgeStyle: "bg-primary/20 text-primary", onClick: () => navigate("/exports") },
-    { label: "Návrh marže pre menu", badge: `${data?.avgMargin ?? 0}%`, badgeStyle: "bg-primary/20 text-primary", onClick: () => navigate("/daily-menu") },
-  ];
+  // oliviaActions removed — now handled by DashboardQuickActions component
 
   return (
     <div className="space-y-6">
