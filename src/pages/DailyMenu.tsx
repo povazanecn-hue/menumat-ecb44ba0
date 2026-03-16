@@ -484,11 +484,11 @@ export default function DailyMenu() {
         </div>
       )}
 
-      {/* Day cards */}
+      {/* Day cards — two-column grid matching Figma */}
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Načítavam menu...</div>
       ) : (hasAnyItems || menus.length > 0) ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {weekdays.map((date) => (
             <DayMenuCard
               key={formatDateKey(date)}
@@ -513,6 +513,31 @@ export default function DailyMenu() {
           ))}
         </div>
       ) : null}
+
+      {/* Publikovanie section */}
+      {hasAnyItems && (
+        <div className="rounded-xl border border-border bg-card/60 p-6">
+          <h2 className="font-serif text-xl font-bold text-foreground mb-4">Publikovanie</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={handlePublishAll}
+              className="flex items-center justify-between py-3.5 px-4 rounded-lg border border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
+            >
+              <span className="text-sm text-foreground/90">Všetky koncepty pripravené</span>
+              <span className="text-xs font-mono font-medium px-2.5 py-1 rounded-full bg-primary/20 text-primary">
+                {menus.filter(m => m.status === "draft" && m.menu_items.length > 0).length} dní
+              </span>
+            </button>
+            <button
+              onClick={() => setWizardOpen(true)}
+              className="flex items-center justify-between py-3.5 px-4 rounded-lg border border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
+            >
+              <span className="text-sm text-foreground/90">AI návrh vegánskeho menu</span>
+              <span className="text-xs font-mono font-medium px-2.5 py-1 rounded-full bg-primary/20 text-primary">NÁVRH</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Dish picker */}
       <DishPickerDialog

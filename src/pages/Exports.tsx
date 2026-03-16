@@ -35,11 +35,19 @@ export default function Exports() {
         delay={3000}
       />
 
-      <div>
-        <h1 className="font-serif text-2xl font-bold">Export centrum</h1>
-        <p className="text-muted-foreground text-sm">
-          Exportujte denné menu pre TV, tlač, kuchyňu alebo web.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Export centrum</h1>
+          <p className="text-muted-foreground text-sm mt-1">TV, PDF/Tlač, Excel kuchyňa, Web embed</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="border-border text-foreground hover:bg-secondary rounded-full px-5">
+            História exportov
+          </Button>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5">
+            Exportovať
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="export">

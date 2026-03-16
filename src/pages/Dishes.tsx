@@ -146,20 +146,23 @@ export default function Dishes() {
       />
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">Jedlá</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {dishes.length} jedál v databáze
-          </p>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Jedla</h1>
+          <p className="text-muted-foreground text-sm mt-1">Zoznam, ceny a modal akcie</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setWordImportOpen(true)}>
-            <FileUp className="h-4 w-4 mr-1" />
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            className="border-border text-foreground hover:bg-secondary rounded-full px-5"
+            onClick={() => setWordImportOpen(true)}
+          >
             Import z Word
           </Button>
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5"
+            onClick={() => setFormOpen(true)}
+          >
             Nové jedlo
           </Button>
         </div>

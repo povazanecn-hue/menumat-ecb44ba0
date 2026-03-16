@@ -86,11 +86,19 @@ export default function Templates() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-serif text-2xl font-bold text-foreground">Šablóny</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Vyberte štýl a prispôsobte typografiu pre export denného menu.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Šablóny</h1>
+          <p className="text-muted-foreground text-sm mt-1">Primárne a sekundárne style sety</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="border-border text-foreground hover:bg-secondary rounded-full px-5">
+            Cloudinary AI
+          </Button>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5">
+            Nastaviť primárnu
+          </Button>
+        </div>
       </div>
 
       {!isLoading && (

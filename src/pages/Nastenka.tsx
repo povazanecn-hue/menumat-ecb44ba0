@@ -107,20 +107,19 @@ export default function Nastenka() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground flex items-center gap-2">
-            <ClipboardCheck className="h-6 w-6 text-primary" />
-            Nástenka
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Návrhy jedál pre nadchádzajúce týždne
-          </p>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Nástenka</h1>
+          <p className="text-muted-foreground text-sm mt-1">Tímové zadania a briefing</p>
         </div>
-        <Button onClick={() => setShowAdd(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Pridať návrh
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="border-border text-foreground hover:bg-secondary rounded-full px-5">
+            Filter
+          </Button>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5" onClick={() => setShowAdd(true)}>
+            Nová správa
+          </Button>
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
