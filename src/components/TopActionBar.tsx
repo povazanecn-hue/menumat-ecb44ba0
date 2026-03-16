@@ -1,4 +1,4 @@
-import { CalendarDays, FileOutput, Bell, Bot, CheckCheck } from "lucide-react";
+import { CalendarDays, FileOutput, Bell, Bot, CheckCheck, Search } from "lucide-react";
 import { LogoBrand } from "@/components/LogoBrand";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,9 +16,10 @@ import { sk } from "date-fns/locale";
 
 interface TopActionBarProps {
   onOliviaToggle?: () => void;
+  onCommandPalette?: () => void;
 }
 
-export function TopActionBar({ onOliviaToggle }: TopActionBarProps) {
+export function TopActionBar({ onOliviaToggle, onCommandPalette }: TopActionBarProps) {
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
@@ -38,6 +39,15 @@ export function TopActionBar({ onOliviaToggle }: TopActionBarProps) {
       <div className="flex items-center gap-0.5 sm:gap-1">
         <Button
           variant="ghost"
+          size="icon"
+          className="h-9 w-9 sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 text-muted-foreground hover:text-primary"
+          onClick={onCommandPalette}
+        >
+          <Search className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs">⌘K</span>
+        </Button>
+
+        <Button
           size="icon"
           className="h-9 w-9 sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 text-muted-foreground hover:text-primary"
           onClick={() => navigate("/daily-menu")}
