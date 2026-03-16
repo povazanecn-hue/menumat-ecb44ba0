@@ -392,6 +392,17 @@ export default function Ingredients() {
           onAddPrice={handleWebPriceAdd}
         />
       )}
+
+      {/* AI Alternative Dialog */}
+      {aiTarget && (
+        <AiAlternativeDialog
+          open={!!aiTarget}
+          onOpenChange={(open) => !open && setAiTarget(null)}
+          ingredientName={aiTarget.name}
+          currentPrice={aiTarget.base_price}
+          unit={aiTarget.unit}
+        />
+      )}
     </div>
   );
 }
