@@ -1,4 +1,4 @@
-import { CalendarDays, FileOutput, Bell, Bot, CheckCheck } from "lucide-react";
+import { CalendarDays, FileOutput, Bell, Bot, CheckCheck, Search } from "lucide-react";
 import { LogoBrand } from "@/components/LogoBrand";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
