@@ -31,6 +31,7 @@ export function RecipeDetailDialog({
   const [prepTime, setPrepTime] = useState<number | "">("");
   const [cookTime, setCookTime] = useState<number | "">("");
   const [servings, setServings] = useState<number | "">(1);
+  const [wastePercent, setWastePercent] = useState<number | "">(0);
   const [isLocked, setIsLocked] = useState(false);
   const [sourceMetadata, setSourceMetadata] = useState("");
 
@@ -40,6 +41,7 @@ export function RecipeDetailDialog({
       setPrepTime(recipe.prep_time_minutes ?? "");
       setCookTime(recipe.cook_time_minutes ?? "");
       setServings(recipe.servings ?? 1);
+      setWastePercent((recipe as any).waste_percent ?? 0);
       setIsLocked(recipe.is_locked);
       setSourceMetadata(recipe.source_metadata ?? "");
     } else if (!isLoading) {
@@ -47,6 +49,7 @@ export function RecipeDetailDialog({
       setPrepTime("");
       setCookTime("");
       setServings(1);
+      setWastePercent(0);
       setIsLocked(false);
       setSourceMetadata("");
     }
@@ -61,9 +64,10 @@ export function RecipeDetailDialog({
           prep_time_minutes: prepTime === "" ? null : Number(prepTime),
           cook_time_minutes: cookTime === "" ? null : Number(cookTime),
           servings: servings === "" ? null : Number(servings),
+          waste_percent: wastePercent === "" ? 0 : Number(wastePercent),
           is_locked: isLocked,
           source_metadata: sourceMetadata || null,
-        },
+        } as any,
       });
       toast({ title: "Recept uložený" });
       onOpenChange(false);
@@ -94,8 +98,8 @@ export function RecipeDetailDialog({
           <div className="py-8 text-center text-muted-foreground">Načítavam recept...</div>
         ) : (
           <div className="space-y-4">
-            {/* Time & servings row */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Time & servings & waste row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="prep-time" className="flex items-center gap-1 text-xs">
                   <Clock className="h-3 w-3" /> Príprava (min)
@@ -133,6 +137,21 @@ export function RecipeDetailDialog({
                   value={servings}
                   onChange={(e) => setServings(e.target.value === "" ? "" : Number(e.target.value))}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="waste" className="flex items-center gap-1 text-xs">
+                  🗑️ Odpad (%)
+                </Label>
+                <Input
+                  id="waste"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={wastePercent}
+                  onChange={(e) => setWastePercent(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="0"
+                />
+                <p className="text-[10px] text-muted-foreground">Pripočíta sa k nákladom jedla</p>
               </div>
             </div>
 

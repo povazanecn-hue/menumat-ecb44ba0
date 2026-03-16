@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,8 @@ import { IngredientFormDialog, IngredientFormData } from "@/components/ingredien
 import { SupplierPriceDialog, SupplierPriceFormData } from "@/components/ingredients/SupplierPriceDialog";
 import { SupplierPriceTable } from "@/components/ingredients/SupplierPriceTable";
 import { WebPriceSearchDialog } from "@/components/ingredients/WebPriceSearchDialog";
+import { PriceHistoryChart } from "@/components/ingredients/PriceHistoryChart";
+import { AiAlternativeDialog } from "@/components/ingredients/AiAlternativeDialog";
 
 export default function Ingredients() {
   const { data: ingredients = [], isLoading } = useIngredients();
@@ -48,6 +50,7 @@ export default function Ingredients() {
   const [supplierTarget, setSupplierTarget] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [webSearchTarget, setWebSearchTarget] = useState<IngredientWithSuppliers | null>(null);
+  const [aiTarget, setAiTarget] = useState<IngredientWithSuppliers | null>(null);
 
   const filtered = useMemo(() => {
     return ingredients.filter((i) =>
@@ -236,6 +239,18 @@ export default function Ingredients() {
                           className="h-8 w-8"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setAiTarget(ing);
+                          }}
+                          title="AI náhrada ingrediencie"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setWebSearchTarget(ing);
                           }}
                           title="Hľadať ceny na webe"
@@ -301,6 +316,15 @@ export default function Ingredients() {
                         onUsePrice={(price) => handleUsePrice(ing.id, price)}
                         currentBasePrice={ing.base_price}
                       />
+                      {/* Price history chart */}
+                      {ing.supplier_prices.length >= 2 && (
+                        <div className="mt-4 pt-3 border-t border-border/40">
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
+                            História cien
+                          </span>
+                          <PriceHistoryChart prices={ing.supplier_prices} unit={ing.unit} />
+                        </div>
+                      )}
                     </CollapsibleContent>
                   </CardContent>
                 </Collapsible>
@@ -366,6 +390,17 @@ export default function Ingredients() {
           onOpenChange={(open) => !open && setWebSearchTarget(null)}
           ingredientName={webSearchTarget.name}
           onAddPrice={handleWebPriceAdd}
+        />
+      )}
+
+      {/* AI Alternative Dialog */}
+      {aiTarget && (
+        <AiAlternativeDialog
+          open={!!aiTarget}
+          onOpenChange={(open) => !open && setAiTarget(null)}
+          ingredientName={aiTarget.name}
+          currentPrice={aiTarget.base_price}
+          unit={aiTarget.unit}
         />
       )}
     </div>

@@ -22,6 +22,7 @@ import Settings from "@/pages/Settings";
 import PermanentMenu from "@/pages/PermanentMenu";
 import Landing from "@/pages/Landing";
 import Nastenka from "@/pages/Nastenka";
+import Analytics from "@/pages/Analytics";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const App = () => (
                 <Route path="/recipes" element={<Recipes />} />
                 <Route path="/permanent-menu" element={<PermanentMenu />} />
                 <Route path="/nastenka" element={<Nastenka />} />
+                <Route path="/analytics" element={<Analytics />} />
                 <Route path="/shopping-list" element={<ShoppingList />} />
                 <Route path="/exports" element={<Exports />} />
                 <Route path="/templates" element={<Templates />} />

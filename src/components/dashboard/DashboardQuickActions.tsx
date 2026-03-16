@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { sk } from "date-fns/locale";
-import { ShoppingCart, FileDown, TrendingUp, Download, Printer, Tv, FileSpreadsheet, Loader2, ArrowRight } from "lucide-react";
+import { ShoppingCart, FileDown, TrendingUp, Download, Printer, Tv, FileSpreadsheet, Loader2, ArrowRight, Instagram } from "lucide-react";
 import { GlassPanel, GlassRow } from "@/components/ui/glass-panel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -84,6 +84,10 @@ export function DashboardQuickActions({ avgMargin, dishCount, hasTodayMenu }: Da
         const result = await exportTV(menu as any);
         window.open(result.url, "_blank");
         toast({ title: "✅ TV displej otvorený", description: "Odkaz na FullHD zobrazenie" });
+      } else if (format === "instagram") {
+        const { exportInstagramStory } = await import("@/lib/exportUtils");
+        exportInstagramStory(menu as any);
+        toast({ title: "✅ Instagram Story otvorená", description: "1080×1920 formát" });
       }
     } catch (err: any) {
       toast({ title: "Chyba exportu", description: err.message, variant: "destructive" });
@@ -252,6 +256,18 @@ export function DashboardQuickActions({ avgMargin, dishCount, hasTodayMenu }: Da
                   <p className="text-xs text-muted-foreground">1920×1080 displej</p>
                 </div>
                 {exporting === "tv" && <Loader2 className="h-4 w-4 animate-spin" />}
+              </button>
+              <button
+                onClick={() => handleQuickExport("instagram" as any)}
+                disabled={!!exporting}
+                className="w-full flex items-center gap-3 p-4 rounded-lg border border-border bg-card/40 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
+              >
+                <Instagram className="h-5 w-5 text-primary" />
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">Instagram Story</p>
+                  <p className="text-xs text-muted-foreground">1080×1920 story formát</p>
+                </div>
+                {exporting === "instagram" && <Loader2 className="h-4 w-4 animate-spin" />}
               </button>
 
               <Button

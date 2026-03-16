@@ -7,6 +7,8 @@ import {
   FileOutput,
   Palette,
   Settings,
+  BarChart3,
+  ShoppingCart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -27,7 +29,9 @@ const navItems = [
   { title: "Jedla", url: "/dishes", icon: UtensilsCrossed },
   { title: "Ingrediencie", url: "/ingredients", icon: Carrot },
   { title: "Recepty", url: "/recipes", icon: BookOpen },
+  { title: "Nákupný zoznam", url: "/shopping-list", icon: ShoppingCart },
   { title: "Export centrum", url: "/exports", icon: FileOutput },
+  { title: "Analytika", url: "/analytics", icon: BarChart3 },
   { title: "Sablony", url: "/templates", icon: Palette },
   { title: "Nastavenia", url: "/settings", icon: Settings },
 ];

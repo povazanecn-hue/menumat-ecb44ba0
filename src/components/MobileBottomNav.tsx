@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Carrot, BookOpen, ShoppingCart, Palette, Settings, ClipboardList, ClipboardCheck } from "lucide-react";
+import { Carrot, BookOpen, ShoppingCart, Palette, Settings, ClipboardList, ClipboardCheck, BarChart3 } from "lucide-react";
 
 const mainTabs = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -18,6 +18,7 @@ const moreLinks = [
   { label: "Jedálny lístok", path: "/permanent-menu", icon: ClipboardList },
   { label: "Nástenka", path: "/nastenka", icon: ClipboardCheck },
   { label: "Nákupný zoznam", path: "/shopping-list", icon: ShoppingCart },
+  { label: "Analytika", path: "/analytics", icon: BarChart3 },
   { label: "Šablóny", path: "/templates", icon: Palette },
   { label: "Nastavenia", path: "/settings", icon: Settings },
 ];
