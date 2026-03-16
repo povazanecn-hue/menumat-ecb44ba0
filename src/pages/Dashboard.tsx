@@ -132,7 +132,7 @@ export default function Dashboard() {
                   <s.icon className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-lg font-bold font-serif">{s.value}</div>
+                  <div className="text-lg font-bold font-mono">{s.value}</div>
                   <p className="text-[11px] text-muted-foreground">{s.desc}</p>
                 </div>
                 <span className="text-xs text-muted-foreground font-medium">{s.label}</span>
