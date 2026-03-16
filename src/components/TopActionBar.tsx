@@ -41,6 +41,15 @@ export function TopActionBar({ onOliviaToggle, onCommandPalette }: TopActionBarP
           variant="ghost"
           size="icon"
           className="h-9 w-9 sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 text-muted-foreground hover:text-primary"
+          onClick={onCommandPalette}
+        >
+          <Search className="h-4 w-4" />
+          <span className="hidden sm:inline text-xs">⌘K</span>
+        </Button>
+
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 text-muted-foreground hover:text-primary"
           onClick={() => navigate("/daily-menu")}
         >
           <CalendarDays className="h-4 w-4" />
