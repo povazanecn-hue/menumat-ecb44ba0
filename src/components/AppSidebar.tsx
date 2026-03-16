@@ -4,21 +4,16 @@ import {
   CalendarDays,
   Carrot,
   BookOpen,
-  ShoppingCart,
   FileOutput,
   Palette,
   Settings,
-  ClipboardList,
-  ClipboardCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { LogoBrand } from "@/components/LogoBrand";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -26,69 +21,44 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 
-const mainNav = [
+const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Denné menu", url: "/daily-menu", icon: CalendarDays },
-  { title: "Jedlá", url: "/dishes", icon: UtensilsCrossed },
+  { title: "Denne menu", url: "/daily-menu", icon: CalendarDays },
+  { title: "Jedla", url: "/dishes", icon: UtensilsCrossed },
   { title: "Ingrediencie", url: "/ingredients", icon: Carrot },
   { title: "Recepty", url: "/recipes", icon: BookOpen },
-  { title: "Jedálny lístok", url: "/permanent-menu", icon: ClipboardList },
-  { title: "Nástenka", url: "/nastenka", icon: ClipboardCheck },
-];
-
-const toolsNav = [
-  { title: "Nákupný zoznam", url: "/shopping-list", icon: ShoppingCart },
   { title: "Export centrum", url: "/exports", icon: FileOutput },
-  { title: "Šablóny", url: "/templates", icon: Palette },
+  { title: "Sablony", url: "/templates", icon: Palette },
   { title: "Nastavenia", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
   return (
     <Sidebar>
-      <SidebarHeader className="px-4 py-5 border-b border-sidebar-border">
-        <LogoBrand size="sm" />
+      <SidebarHeader className="px-5 py-6 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-serif font-bold text-lg">
+            M
+          </div>
+          <div>
+            <p className="font-serif font-bold text-sm text-sidebar-foreground tracking-wide">MENUMAT</p>
+            <p className="text-[10px] text-sidebar-foreground/40 uppercase tracking-widest">Správa reštaurácie</p>
+          </div>
+        </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="pt-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 uppercase text-[10px] tracking-widest font-semibold">
-            Hlavné
-          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNav.map((item) => (
+              {navItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink
                       to={item.url}
                       end={item.url === "/dashboard"}
-                      className="text-sidebar-foreground/70 hover:text-sidebar-primary transition-colors rounded-xl"
-                      activeClassName="text-foreground border border-sidebar-border bg-sidebar-accent shadow-[inset_0_0_0_1px_rgba(255,234,194,0.18)] font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 uppercase text-[10px] tracking-widest font-semibold">
-            Nástroje
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {toolsNav.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink
-                      to={item.url}
-                      className="text-sidebar-foreground/70 hover:text-sidebar-primary transition-colors rounded-xl"
-                      activeClassName="text-foreground border border-sidebar-border bg-sidebar-accent shadow-[inset_0_0_0_1px_rgba(255,234,194,0.18)] font-medium"
+                      className="text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors rounded-lg px-3 py-2.5"
+                      activeClassName="text-sidebar-foreground bg-sidebar-accent border border-sidebar-border font-medium"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -101,9 +71,8 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-4 py-3 border-t border-sidebar-border space-y-0.5">
-        <p className="text-[10px] text-sidebar-foreground/30 tracking-wide">MENUMAT v1.0</p>
-        <p className="text-[9px] text-sidebar-foreground/25 leading-tight">Powered by N-[vision] | N-oLiMiT gastro</p>
+      <SidebarFooter className="px-5 py-4 border-t border-sidebar-border">
+        <p className="text-[10px] text-sidebar-foreground/25 tracking-wide">MENUMAT v1.0</p>
       </SidebarFooter>
     </Sidebar>
   );
