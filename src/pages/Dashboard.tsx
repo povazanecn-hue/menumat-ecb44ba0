@@ -104,20 +104,11 @@ export default function Dashboard() {
         </div>
 
         <div className="lg:col-span-2">
-          <GlassPanel title="AI Olivia">
-            <p className="text-sm text-muted-foreground mb-4">Rýchle akcie a návrhy marže.</p>
-            <div className="space-y-2">
-              {oliviaActions.map((action) => (
-                <GlassRow
-                  key={action.label}
-                  label={action.label}
-                  badge={action.badge}
-                  badgeStyle={action.badgeStyle}
-                  onClick={action.onClick}
-                />
-              ))}
-            </div>
-          </GlassPanel>
+          <DashboardQuickActions
+            avgMargin={data?.avgMargin ?? 0}
+            dishCount={data?.dishCount ?? 0}
+            hasTodayMenu={data?.hasTodayMenu ?? false}
+          />
         </div>
       </div>
 
