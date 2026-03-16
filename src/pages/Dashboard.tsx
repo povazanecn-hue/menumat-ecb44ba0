@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   UtensilsCrossed, Carrot, CalendarDays, FileOutput,
-  ArrowRight, BookOpen, TrendingUp, TrendingDown, AlertTriangle,
+  ArrowRight, BookOpen, TrendingUp, TrendingDown, AlertTriangle, Flame,
 } from "lucide-react";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { useNavigate } from "react-router-dom";
