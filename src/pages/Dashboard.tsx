@@ -100,7 +100,7 @@ export default function Dashboard() {
                 {s.badge ? (
                   <Badge variant={s.badge} className="text-sm">{s.value}</Badge>
                 ) : (
-                  <div className="text-2xl font-bold font-serif">{s.value}</div>
+                  <div className="text-2xl font-bold font-mono">{s.value}</div>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">{s.desc}</p>
               </CardContent>
