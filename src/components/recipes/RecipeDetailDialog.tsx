@@ -98,8 +98,8 @@ export function RecipeDetailDialog({
           <div className="py-8 text-center text-muted-foreground">Načítavam recept...</div>
         ) : (
           <div className="space-y-4">
-            {/* Time & servings row */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Time & servings & waste row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="prep-time" className="flex items-center gap-1 text-xs">
                   <Clock className="h-3 w-3" /> Príprava (min)
@@ -137,6 +137,21 @@ export function RecipeDetailDialog({
                   value={servings}
                   onChange={(e) => setServings(e.target.value === "" ? "" : Number(e.target.value))}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="waste" className="flex items-center gap-1 text-xs">
+                  🗑️ Odpad (%)
+                </Label>
+                <Input
+                  id="waste"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={wastePercent}
+                  onChange={(e) => setWastePercent(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="0"
+                />
+                <p className="text-[10px] text-muted-foreground">Pripočíta sa k nákladom jedla</p>
               </div>
             </div>
 
