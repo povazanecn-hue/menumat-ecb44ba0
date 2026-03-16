@@ -64,9 +64,10 @@ export function RecipeDetailDialog({
           prep_time_minutes: prepTime === "" ? null : Number(prepTime),
           cook_time_minutes: cookTime === "" ? null : Number(cookTime),
           servings: servings === "" ? null : Number(servings),
+          waste_percent: wastePercent === "" ? 0 : Number(wastePercent),
           is_locked: isLocked,
           source_metadata: sourceMetadata || null,
-        },
+        } as any,
       });
       toast({ title: "Recept uložený" });
       onOpenChange(false);
