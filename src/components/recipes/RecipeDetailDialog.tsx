@@ -31,6 +31,7 @@ export function RecipeDetailDialog({
   const [prepTime, setPrepTime] = useState<number | "">("");
   const [cookTime, setCookTime] = useState<number | "">("");
   const [servings, setServings] = useState<number | "">(1);
+  const [wastePercent, setWastePercent] = useState<number | "">(0);
   const [isLocked, setIsLocked] = useState(false);
   const [sourceMetadata, setSourceMetadata] = useState("");
 
