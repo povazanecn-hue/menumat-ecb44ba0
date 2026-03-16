@@ -47,7 +47,7 @@ export function TopActionBar({ onOliviaToggle, onCommandPalette }: TopActionBarP
           <span className="hidden sm:inline text-xs">⌘K</span>
         </Button>
 
-          variant="ghost"
+        <Button
           size="icon"
           className="h-9 w-9 sm:h-auto sm:w-auto sm:gap-1.5 sm:px-3 text-muted-foreground hover:text-primary"
           onClick={() => navigate("/daily-menu")}
