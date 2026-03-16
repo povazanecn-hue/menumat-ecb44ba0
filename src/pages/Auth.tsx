@@ -32,7 +32,7 @@ export default function Auth() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-muted-foreground">Načítavam...</p>
+        <LogoBrand size="sm" />
       </div>
     );
   }
@@ -87,26 +87,29 @@ export default function Auth() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      {/* Logo */}
-      <div className="mb-8">
-        <LogoBrand size="md" glow />
+      {/* Ambient glow */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[600px] rounded-full bg-primary/[0.06] blur-[120px]" />
       </div>
 
-      <div className="w-full max-w-sm space-y-6">
-        {/* Card area */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-2xl shadow-black/40">
+      <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
+        <div className="mb-8">
+          <LogoBrand size="md" glow />
+        </div>
+
+        {/* Glass card */}
+        <div className="w-full rounded-xl border border-border bg-card/60 backdrop-blur-sm p-6 shadow-2xl shadow-black/40">
           <h2 className="mb-6 text-center font-serif text-xl font-semibold text-foreground">
             {mode === "login" ? "Prihlásenie" : mode === "register" ? "Registrácia" : "Obnovenie hesla"}
           </h2>
 
           {mode !== "forgot" && (
             <>
-              {/* OAuth */}
               <div className="space-y-2 mb-5">
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
+                  className="w-full border-border/60 bg-card/30 hover:bg-card/60 hover:border-primary/30 transition-all"
                   onClick={async () => {
                     const { error } = await lovable.auth.signInWithOAuth("google", {
                       redirect_uri: window.location.origin,
@@ -125,7 +128,7 @@ export default function Auth() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
+                  className="w-full border-border/60 bg-card/30 hover:bg-card/60 hover:border-primary/30 transition-all"
                   onClick={async () => {
                     const { error } = await lovable.auth.signInWithOAuth("apple", {
                       redirect_uri: window.location.origin,
@@ -142,10 +145,10 @@ export default function Auth() {
 
               <div className="relative mb-5">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
+                  <span className="w-full border-t border-border/60" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">alebo</span>
+                  <span className="bg-card/60 px-3 text-muted-foreground tracking-wider">alebo</span>
                 </div>
               </div>
             </>
@@ -157,25 +160,24 @@ export default function Auth() {
             </p>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "register" && (
               <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="fullName" className="text-foreground">Meno</Label>
+                  <Label htmlFor="fullName" className="text-foreground/80 text-xs uppercase tracking-wider">Meno</Label>
                   <Input
                     id="fullName"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Ján Novák"
                     required
-                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                    className="bg-card/30 border-border/60 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-foreground">Vaša pozícia</Label>
+                  <Label className="text-foreground/80 text-xs uppercase tracking-wider">Vaša pozícia</Label>
                   <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger className="bg-secondary border-border text-foreground">
+                    <SelectTrigger className="bg-card/30 border-border/60 text-foreground">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -188,7 +190,7 @@ export default function Auth() {
               </>
             )}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-foreground">E-mail</Label>
+              <Label htmlFor="email" className="text-foreground/80 text-xs uppercase tracking-wider">E-mail</Label>
               <Input
                 id="email"
                 type="email"
@@ -196,12 +198,12 @@ export default function Auth() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="vas@email.sk"
                 required
-                className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
+                className="bg-card/30 border-border/60 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50"
               />
             </div>
             {mode !== "forgot" && (
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-foreground">Heslo</Label>
+                <Label htmlFor="password" className="text-foreground/80 text-xs uppercase tracking-wider">Heslo</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -211,12 +213,12 @@ export default function Auth() {
                     placeholder="••••••••"
                     required
                     minLength={6}
-                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground pr-10"
+                    className="bg-card/30 border-border/60 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -236,7 +238,7 @@ export default function Auth() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button type="submit" className="w-full rounded-full" disabled={submitting}>
               {submitting
                 ? "Spracovávam..."
                 : mode === "login"
@@ -247,7 +249,7 @@ export default function Auth() {
             </Button>
           </form>
 
-          <div className="mt-5 text-center space-y-1">
+          <div className="mt-5 text-center">
             {mode === "forgot" ? (
               <button
                 type="button"
@@ -268,7 +270,7 @@ export default function Auth() {
           </div>
         </div>
 
-        <p className="text-center text-[10px] text-white/70 mt-6">
+        <p className="mt-8 text-[10px] text-muted-foreground/50">
           Powered by N-[vision] | N-oLiMiT gastro
         </p>
       </div>
