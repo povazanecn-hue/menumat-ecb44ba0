@@ -18,10 +18,12 @@ export function useDashboardData() {
       const weekAgo = format(new Date(Date.now() - 7 * 86400000), "yyyy-MM-dd");
       const { days, monday, friday } = getWeekDays();
 
+      const thirtyDaysAgo = format(new Date(Date.now() - 30 * 86400000), "yyyy-MM-dd");
+
       const [
         dishRes, ingredientRes, todayMenuRes, exportsRes,
         recentExportsRes, weekMenusRes, recipesRes, allDishesRes,
-        allIngredientsRes, promoRes,
+        allIngredientsRes, promoRes, popularDishesRes,
       ] = await Promise.all([
         supabase.from("dishes").select("id", { count: "exact", head: true }).eq("restaurant_id", restaurantId),
         supabase.from("ingredients").select("id", { count: "exact", head: true }).eq("restaurant_id", restaurantId),
