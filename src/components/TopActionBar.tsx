@@ -16,9 +16,10 @@ import { sk } from "date-fns/locale";
 
 interface TopActionBarProps {
   onOliviaToggle?: () => void;
+  onCommandPalette?: () => void;
 }
 
-export function TopActionBar({ onOliviaToggle }: TopActionBarProps) {
+export function TopActionBar({ onOliviaToggle, onCommandPalette }: TopActionBarProps) {
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
