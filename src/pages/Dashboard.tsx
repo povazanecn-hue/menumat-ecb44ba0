@@ -1,9 +1,10 @@
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sparkles, Send, ShoppingCart, FileOutput, BarChart3 } from "lucide-react";
+import { Sparkles, ArrowRight, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { useNavigate } from "react-router-dom";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
+import { PageHeader } from "@/components/ui/page-header";
+import { GlassPanel, GlassRow } from "@/components/ui/glass-panel";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
@@ -12,7 +13,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const kpiCards = [
-    { label: "JEDLA", value: data?.dishCount ?? 0, warn: false },
+    { label: "JEDLÁ", value: data?.dishCount ?? 0, warn: false },
     { label: "INGREDIENCIE", value: data?.ingredientCount ?? 0, warn: false },
     { label: "DNES MENU", value: data?.hasTodayMenu ? (data?.weekDays?.find(d => {
       const today = new Date();
@@ -21,7 +22,6 @@ export default function Dashboard() {
     { label: "BEZ CENY", value: data?.noPricedCount ?? 0, warn: (data?.noPricedCount ?? 0) > 0 },
   ];
 
-  // Build weekly overview from weekDays data
   const dayNames = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"];
 
   const oliviaActions = [
@@ -32,28 +32,23 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-1">Variant A amber glass overview</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium rounded-full px-5"
-            onClick={() => navigate("/daily-menu")}
-          >
-            <Sparkles className="h-4 w-4 mr-1.5" />
-            AI týždeň
-          </Button>
-          <Button
-            variant="outline"
-            className="border-border text-foreground hover:bg-secondary rounded-full px-5"
-          >
-            Publikovať všetko
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        subtitle={restaurantName ? `${restaurantName} — prehľad` : "Amber Glass overview"}
+        actions={[
+          {
+            label: "AI týždeň",
+            icon: <Sparkles className="h-4 w-4" />,
+            onClick: () => navigate("/daily-menu"),
+            variant: "primary",
+          },
+          {
+            label: "Publikovať všetko",
+            onClick: () => navigate("/exports"),
+            variant: "outline",
+          },
+        ]}
+      />
 
       {/* KPI Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -83,60 +78,64 @@ export default function Dashboard() {
 
       {/* Two-column: Weekly Overview + AI Olivia */}
       <div className="grid gap-6 lg:grid-cols-5">
-        {/* Weekly Overview - takes 3 cols */}
-        <div className="lg:col-span-3 rounded-xl border border-border bg-card/60 p-6">
-          <h2 className="font-serif text-xl font-bold text-foreground mb-5">Týždenný prehľad</h2>
-          <div className="space-y-0">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="py-3 border-b border-border/50 last:border-0">
-                  <Skeleton className="h-5 w-full" />
-                </div>
-              ))
-            ) : (
-              data?.weekDays?.map((day, i) => (
-                <button
-                  key={day.date}
-                  onClick={() => navigate(`/daily-menu?date=${day.date}`)}
-                  className="w-full flex items-center justify-between py-3.5 px-4 rounded-lg border border-border/40 bg-card/30 mb-2 last:mb-0 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
-                >
-                  <span className="text-sm text-foreground/90">
-                    <span className="font-medium">{dayNames[i]}:</span>{" "}
-                    <span className="text-muted-foreground">
-                      {day.itemCount > 0 ? `${day.itemCount} jedál` : "—"}
-                    </span>
-                  </span>
-                  <span className="text-sm font-mono text-muted-foreground">
-                    {day.itemCount > 0 ? `${day.itemCount * 2} porcií` : ""}
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
+        <div className="lg:col-span-3">
+          <GlassPanel title="Týždenný prehľad">
+            <div className="space-y-2">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                ))
+              ) : (
+                data?.weekDays?.map((day, i) => {
+                  const hasItems = day.itemCount > 0;
+                  return (
+                    <GlassRow
+                      key={day.date}
+                      label={`${dayNames[i]}: ${hasItems ? `${day.itemCount} jedál` : "—"}`}
+                      badge={hasItems ? "OK" : "CHÝBA"}
+                      badgeStyle={hasItems
+                        ? "bg-[hsl(var(--success))]/20 text-[hsl(var(--success))]"
+                        : "bg-destructive/20 text-destructive"
+                      }
+                      onClick={() => navigate(`/daily-menu?date=${day.date}`)}
+                    />
+                  );
+                })
+              )}
+            </div>
+          </GlassPanel>
         </div>
 
-        {/* AI Olivia - takes 2 cols */}
-        <div className="lg:col-span-2 rounded-xl border border-border bg-card/60 p-6">
-          <h2 className="font-serif text-xl font-bold text-foreground mb-1">AI Olivia</h2>
-          <p className="text-sm text-muted-foreground mb-5">Rýchle akcie a návrhy marže.</p>
-          <div className="space-y-3">
-            {oliviaActions.map((action) => (
-              <button
-                key={action.label}
-                className="w-full flex items-center justify-between py-3.5 px-4 rounded-lg border border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
-              >
-                <span className="text-sm text-foreground/90">{action.label}</span>
-                <span className={cn(
-                  "text-xs font-mono font-medium px-2.5 py-1 rounded-full",
-                  action.badgeStyle
-                )}>
-                  {action.badge}
-                </span>
-              </button>
-            ))}
-          </div>
+        <div className="lg:col-span-2">
+          <GlassPanel title="AI Olivia">
+            <p className="text-sm text-muted-foreground mb-4">Rýchle akcie a návrhy marže.</p>
+            <div className="space-y-2">
+              {oliviaActions.map((action) => (
+                <GlassRow
+                  key={action.label}
+                  label={action.label}
+                  badge={action.badge}
+                  badgeStyle={action.badgeStyle}
+                />
+              ))}
+            </div>
+          </GlassPanel>
         </div>
       </div>
+
+      {/* Alerts */}
+      {!isLoading && (data?.noPricedCount ?? 0) > 0 && (
+        <GlassPanel title="Upozornenia">
+          <div className="space-y-2">
+            <GlassRow
+              label={`${data?.noPricedCount} jedál bez nastavenej ceny`}
+              badge="OPRAVIŤ"
+              badgeStyle="bg-destructive/20 text-destructive"
+              onClick={() => navigate("/dishes")}
+            />
+          </div>
+        </GlassPanel>
+      )}
     </div>
   );
 }

@@ -1,14 +1,12 @@
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   UtensilsCrossed,
   Calendar,
   FileText,
   TrendingUp,
   ShoppingCart,
-  BookOpen,
   Truck,
   ArrowRight,
   Sparkles,
@@ -17,62 +15,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { LogoBrand } from "@/components/LogoBrand";
-
-const features = [
-  {
-    icon: UtensilsCrossed,
-    title: "Auto databáza jedál",
-    desc: "Spravujte kompletný katalóg jedál s alergénmi, gramážou a cenami na jednom mieste.",
-  },
-  {
-    icon: Calendar,
-    title: "AI generovanie menu",
-    desc: "Nechajte AI zostaviť denné menu s pravidlami neopakovania a kategóriami.",
-  },
-  {
-    icon: FileText,
-    title: "Magic importy & exporty",
-    desc: "Import z Excel/CSV, export na TV, PDF, kuchyňu aj web — všetko jedným klikom.",
-  },
-  {
-    icon: ShoppingCart,
-    title: "Inteligentný sklad",
-    desc: "Automatické nákupné zoznamy generované z menu a receptov.",
-  },
-  {
-    icon: TrendingUp,
-    title: "AI Price Power",
-    desc: "Marže, cenotvorba a odporúčané ceny s plnou kontrolou nad finálnou cenou.",
-  },
-  {
-    icon: Truck,
-    title: "Agent surovín & dodávatelia",
-    desc: "Porovnávajte ceny od Lidl, Kaufland, Metro a ďalších dodávateľov v reálnom čase.",
-  },
-];
-
-const steps = [
-  {
-    num: "01",
-    title: "Importuj & plň databázu",
-    desc: "Nahrajte jedlá, suroviny a recepty — ručne alebo importom.",
-  },
-  {
-    num: "02",
-    title: "Generujte menu",
-    desc: "AI alebo manuálne zostavte denné menu s pravidlami a kategóriami.",
-  },
-  {
-    num: "03",
-    title: "Exportujte & publikujte",
-    desc: "TV obrazovky, PDF, Excel pre kuchyňu, web embed — všetky formáty.",
-  },
-  {
-    num: "04",
-    title: "AI Recept book & Sklad",
-    desc: "Recepty, nákupné zoznamy a cenová inteligencia — automaticky.",
-  },
-];
+import { LandingFeatures } from "@/components/landing/LandingFeatures";
+import { LandingHowItWorks } from "@/components/landing/LandingHowItWorks";
 
 const containerStagger = {
   hidden: {},
@@ -99,6 +43,15 @@ const logoReveal = {
   },
 };
 
+const featureIcons = [
+  { icon: UtensilsCrossed, title: "Auto databáza jedál" },
+  { icon: Calendar, title: "AI generovanie menu" },
+  { icon: FileText, title: "Magic importy & exporty" },
+  { icon: ShoppingCart, title: "Inteligentný sklad" },
+  { icon: TrendingUp, title: "AI Price Power" },
+  { icon: Truck, title: "Agent surovín" },
+];
+
 export default function Landing() {
   const { session, loading } = useAuth();
 
@@ -118,8 +71,9 @@ export default function Landing() {
     <div className="min-h-screen overflow-x-hidden">
       {/* Hero */}
       <header className="relative flex min-h-screen flex-col items-center justify-center px-4 text-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-primary/3 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(40_55%_55%/0.06)_0%,transparent_70%)]" />
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[800px] rounded-full bg-primary/[0.06] blur-[140px]" />
+        </div>
 
         <motion.div
           className="relative z-10 flex max-w-4xl flex-col items-center space-y-8"
@@ -127,17 +81,14 @@ export default function Landing() {
           animate="visible"
           variants={containerStagger}
         >
-          {/* Glowing logo */}
           <motion.div variants={logoReveal}>
             <LogoBrand size="lg" glow />
           </motion.div>
 
-          {/* Subtext */}
           <motion.p variants={fadeUp} className="text-sm font-medium uppercase tracking-widest text-primary/60">
             Smart nástroj prevádzok budúcnosti
           </motion.p>
 
-          {/* Description */}
           <motion.p
             variants={fadeUp}
             className="mx-auto max-w-2xl text-xl leading-relaxed text-muted-foreground sm:text-2xl"
@@ -147,21 +98,21 @@ export default function Landing() {
             <span className="font-semibold text-primary">Za minúty, nie hodiny.</span>
           </motion.p>
 
-          {/* Feature icon strip */}
+          {/* Icon strip */}
           <motion.div
             variants={containerStagger}
             initial="hidden"
             animate="visible"
             className="flex flex-wrap items-center justify-center gap-5 py-4"
           >
-            {features.map((f, i) => (
+            {featureIcons.map((f) => (
               <motion.div
                 key={f.title}
                 variants={scaleIn}
                 whileHover={{ scale: 1.2, rotate: 5 }}
-                className="group relative flex h-14 w-14 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 text-primary transition-all duration-300 hover:border-primary/50 hover:bg-primary/15 hover:shadow-[0_0_20px_hsl(40_55%_55%/0.25)]"
+                className="group relative flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card/40 text-primary transition-all duration-300 hover:border-primary/50 hover:bg-card/70 hover:shadow-[0_0_20px_hsl(38_81%_67%/0.2)]"
               >
-                <f.icon className="h-7 w-7 transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(40_55%_55%/0.6)]" />
+                <f.icon className="h-7 w-7 transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(38_81%_67%/0.6)]" />
                 <span className="pointer-events-none absolute -bottom-7 whitespace-nowrap text-[10px] font-medium text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
                   {f.title}
                 </span>
@@ -169,24 +120,24 @@ export default function Landing() {
             ))}
           </motion.div>
 
-          {/* CTA Buttons */}
+          {/* CTA */}
           <motion.div
             variants={fadeUp}
             className="flex w-full flex-col items-center gap-3 pt-4 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4"
           >
-            <Button size="lg" className="h-14 w-full px-10 text-lg shadow-[0_0_20px_hsl(40_55%_55%/0.3)] sm:w-auto" asChild>
+            <Button size="lg" className="h-14 w-full rounded-full px-10 text-lg shadow-[0_0_20px_hsl(38_81%_67%/0.25)] sm:w-auto" asChild>
               <Link to="/auth">
                 <Sparkles className="mr-2 h-5 w-5" />
                 Vyskúšať zadarmo
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="h-14 w-full border-primary/30 px-10 text-lg hover:border-primary/60 hover:shadow-[0_0_15px_hsl(40_55%_55%/0.15)] sm:w-auto" asChild>
+            <Button size="lg" variant="outline" className="h-14 w-full rounded-full border-border px-10 text-lg hover:border-primary/40 hover:bg-card/40 sm:w-auto" asChild>
               <Link to="/auth">
                 <UserPlus className="mr-2 h-5 w-5" />
                 Zaregistruj sa
               </Link>
             </Button>
-            <Button size="lg" variant="ghost" className="h-14 w-full px-10 text-lg text-muted-foreground hover:text-foreground sm:w-auto" asChild>
+            <Button size="lg" variant="ghost" className="h-14 w-full rounded-full px-10 text-lg text-muted-foreground hover:text-foreground sm:w-auto" asChild>
               <Link to="/auth">
                 <LogIn className="mr-2 h-5 w-5" />
                 Prihlásiť sa
@@ -196,71 +147,8 @@ export default function Landing() {
         </motion.div>
       </header>
 
-      {/* Features */}
-      <section className="mx-auto max-w-6xl px-4 py-24">
-        <motion.h2
-          className="mb-14 text-center font-serif text-3xl font-bold sm:text-5xl"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.5 }}
-        >
-          Všetko čo vaša reštaurácia potrebuje
-        </motion.h2>
-        <motion.div
-          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-          variants={containerStagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-        >
-          {features.map((f) => (
-            <motion.div key={f.title} variants={fadeUp}>
-              <Card className="group h-full border-border/50 transition-all duration-300 hover:border-primary/40 hover:shadow-[0_8px_30px_hsl(40_55%_55%/0.1)]">
-                <CardContent className="flex flex-col gap-3 p-6">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-300 group-hover:bg-primary/20 group-hover:shadow-[0_0_15px_hsl(40_55%_55%/0.2)]">
-                    <f.icon className="h-7 w-7 transition-all duration-300 group-hover:drop-shadow-[0_0_6px_hsl(40_55%_55%/0.5)]" />
-                  </div>
-                  <h3 className="font-serif text-xl font-semibold">{f.title}</h3>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* How it works */}
-      <section className="border-y border-border/50 bg-card/50 px-4 py-24">
-        <div className="mx-auto max-w-4xl">
-          <motion.h2
-            className="mb-14 text-center font-serif text-3xl font-bold sm:text-5xl"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5 }}
-          >
-            Ako to funguje
-          </motion.h2>
-          <motion.div
-            className="grid gap-10 sm:grid-cols-2"
-            variants={containerStagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
-          >
-            {steps.map((s) => (
-              <motion.div key={s.num} variants={fadeUp} className="flex gap-5">
-                <span className="font-serif text-5xl font-bold text-primary/25">{s.num}</span>
-                <div>
-                  <h3 className="font-serif text-xl font-semibold">{s.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      <LandingFeatures />
+      <LandingHowItWorks />
 
       {/* CTA */}
       <section className="px-4 py-28 text-center">
@@ -275,10 +163,10 @@ export default function Landing() {
             Prestaňte strácať čas s Excelom
           </h2>
           <p className="text-lg text-muted-foreground">
-            Pripojte sa k reštauráciám, ktoré už používajú Menu na efektívnu tvorbu
+            Pripojte sa k reštauráciám, ktoré už používajú MENUMAT na efektívnu tvorbu
             a publikovanie denného menu.
           </p>
-          <Button size="lg" className="h-14 px-10 text-lg shadow-[0_0_20px_hsl(40_55%_55%/0.3)]" asChild>
+          <Button size="lg" className="h-14 rounded-full px-10 text-lg shadow-[0_0_20px_hsl(38_81%_67%/0.25)]" asChild>
             <Link to="/auth">
               Vyskúšať zadarmo
               <ArrowRight className="ml-2 h-5 w-5" />

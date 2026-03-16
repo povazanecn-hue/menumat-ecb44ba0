@@ -36,7 +36,6 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // Step 1: Restaurant
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [restaurantCreated, setRestaurantCreated] = useState(false);
@@ -79,69 +78,78 @@ export default function Onboarding() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="mb-6">
-        <LogoBrand size="md" glow />
+      {/* Ambient glow */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-1/2 top-1/4 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[700px] rounded-full bg-primary/[0.05] blur-[140px]" />
       </div>
 
-      <div className="w-full max-w-lg space-y-5">
-        <OnboardingStepper steps={[...STEPS]} currentStep={step} />
+      <div className="relative z-10 flex flex-col items-center w-full max-w-lg">
+        <div className="mb-6">
+          <LogoBrand size="md" glow />
+        </div>
 
-        <OliviaOnboardingTip tip={OLIVIA_TIPS[currentStepId]} step={step} />
+        <div className="w-full space-y-5">
+          <OnboardingStepper steps={[...STEPS]} currentStep={step} />
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-2xl shadow-black/40">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              {step === 0 && <StepWelcome />}
-              {step === 1 && (
-                <StepRestaurant name={name} setName={setName} address={address} setAddress={setAddress} />
-              )}
-              {step === 2 && <StepAiDemo />}
-            </motion.div>
-          </AnimatePresence>
+          <OliviaOnboardingTip tip={OLIVIA_TIPS[currentStepId]} step={step} />
 
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-            {step > 0 ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setStep(step - 1)}
-                disabled={step === 2 && restaurantCreated}
+          {/* Glass card */}
+          <div className="rounded-xl border border-border bg-card/60 backdrop-blur-sm p-6 shadow-2xl shadow-black/40">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
               >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Späť
+                {step === 0 && <StepWelcome />}
+                {step === 1 && (
+                  <StepRestaurant name={name} setName={setName} address={address} setAddress={setAddress} />
+                )}
+                {step === 2 && <StepAiDemo />}
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/60">
+              {step > 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setStep(step - 1)}
+                  disabled={step === 2 && restaurantCreated}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Späť
+                </Button>
+              ) : (
+                <div />
+              )}
+              <Button
+                onClick={handleNext}
+                disabled={!canNext() || submitting}
+                className="min-w-[140px] rounded-full"
+              >
+                {submitting
+                  ? "Spracovávam..."
+                  : step === 0
+                    ? "Začať"
+                    : step === 1
+                      ? "Vytvoriť prevádzku"
+                      : "Prejsť na Dashboard"
+                }
+                {!submitting && <ChevronRight className="h-4 w-4 ml-1" />}
               </Button>
-            ) : (
-              <div />
-            )}
-            <Button
-              onClick={handleNext}
-              disabled={!canNext() || submitting}
-              className="min-w-[140px]"
-            >
-              {submitting
-                ? "Spracovávam..."
-                : step === 0
-                  ? "Začať"
-                  : step === 1
-                    ? "Vytvoriť prevádzku"
-                    : "Prejsť na Dashboard"
-              }
-              {!submitting && <ChevronRight className="h-4 w-4 ml-1" />}
-            </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <p className="mt-8 text-[10px] text-muted-foreground/70">
-        Powered by N-[vision] | N-oLiMiT gastro
-      </p>
+        <p className="mt-8 text-[10px] text-muted-foreground/50">
+          Powered by N-[vision] | N-oLiMiT gastro
+        </p>
+      </div>
       <OliviaGreeting />
     </div>
   );
