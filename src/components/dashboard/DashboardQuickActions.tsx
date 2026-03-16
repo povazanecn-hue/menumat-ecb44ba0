@@ -257,6 +257,18 @@ export function DashboardQuickActions({ avgMargin, dishCount, hasTodayMenu }: Da
                 </div>
                 {exporting === "tv" && <Loader2 className="h-4 w-4 animate-spin" />}
               </button>
+              <button
+                onClick={() => handleQuickExport("instagram" as any)}
+                disabled={!!exporting}
+                className="w-full flex items-center gap-3 p-4 rounded-lg border border-border bg-card/40 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
+              >
+                <Instagram className="h-5 w-5 text-primary" />
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">Instagram Story</p>
+                  <p className="text-xs text-muted-foreground">1080×1920 story formát</p>
+                </div>
+                {exporting === "instagram" && <Loader2 className="h-4 w-4 animate-spin" />}
+              </button>
 
               <Button
                 variant="outline"
