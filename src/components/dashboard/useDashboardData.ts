@@ -18,10 +18,12 @@ export function useDashboardData() {
       const weekAgo = format(new Date(Date.now() - 7 * 86400000), "yyyy-MM-dd");
       const { days, monday, friday } = getWeekDays();
 
+      const thirtyDaysAgo = format(new Date(Date.now() - 30 * 86400000), "yyyy-MM-dd");
+
       const [
         dishRes, ingredientRes, todayMenuRes, exportsRes,
         recentExportsRes, weekMenusRes, recipesRes, allDishesRes,
-        allIngredientsRes, promoRes,
+        allIngredientsRes, promoRes, popularDishesRes,
       ] = await Promise.all([
         supabase.from("dishes").select("id", { count: "exact", head: true }).eq("restaurant_id", restaurantId),
         supabase.from("ingredients").select("id", { count: "exact", head: true }).eq("restaurant_id", restaurantId),
@@ -33,6 +35,7 @@ export function useDashboardData() {
         supabase.from("dishes").select("id, name, cost, vat_rate, final_price, recommended_price, created_at").eq("restaurant_id", restaurantId).order("created_at", { ascending: true }),
         supabase.from("ingredients").select("id, name, base_price").eq("restaurant_id", restaurantId),
         supabase.from("supplier_prices").select("id, supplier_name, ingredient_id, is_promo, price, valid_from, valid_to, ingredient:ingredients!inner(restaurant_id, name)").eq("ingredient.restaurant_id", restaurantId).eq("is_promo", true),
+        supabase.from("menu_items").select("dish_id, dish:dishes!inner(name, restaurant_id), menu:menus!inner(menu_date, restaurant_id)").eq("dish.restaurant_id", restaurantId).eq("menu.restaurant_id", restaurantId).gte("menu.menu_date", thirtyDaysAgo),
       ]);
 
       const todayMenu = todayMenuRes.data;
@@ -159,6 +162,22 @@ export function useDashboardData() {
         });
       }
 
+      // Popular dishes (top 5 by menu usage in last 30 days)
+      const popularMap = new Map<string, { name: string; count: number }>();
+      for (const item of (popularDishesRes.data ?? []) as any[]) {
+        const id = item.dish_id;
+        const existing = popularMap.get(id);
+        if (existing) {
+          existing.count++;
+        } else {
+          popularMap.set(id, { name: item.dish?.name ?? "—", count: 1 });
+        }
+      }
+      const popularDishes = Array.from(popularMap.entries())
+        .map(([id, { name, count }]) => ({ id, name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
       return {
         dishCount,
         ingredientCount: ingredientRes.count ?? 0,
@@ -174,6 +193,7 @@ export function useDashboardData() {
         noPricedCount,
         avgMargin: Math.round(avgMargin),
         alerts,
+        popularDishes,
       };
     },
     enabled: !!restaurantId,

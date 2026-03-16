@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   UtensilsCrossed, Carrot, CalendarDays, FileOutput,
-  ArrowRight, BookOpen, TrendingUp, TrendingDown, AlertTriangle,
+  ArrowRight, BookOpen, TrendingUp, TrendingDown, AlertTriangle, Flame,
 } from "lucide-react";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +17,8 @@ import { WeekCalendar } from "@/components/dashboard/WeekCalendar";
 import { CostTrendChart } from "@/components/dashboard/CostTrendChart";
 import { AlertsSection } from "@/components/dashboard/AlertsSection";
 import { QuickActions } from "@/components/dashboard/QuickActions";
+import { PopularDishes } from "@/components/dashboard/PopularDishes";
+import { OliviaInsights } from "@/components/dashboard/OliviaInsights";
 import { FORMAT_LABELS } from "@/components/dashboard/types";
 
 export default function Dashboard() {
@@ -98,7 +100,7 @@ export default function Dashboard() {
                 {s.badge ? (
                   <Badge variant={s.badge} className="text-sm">{s.value}</Badge>
                 ) : (
-                  <div className="text-2xl font-bold font-serif">{s.value}</div>
+                  <div className="text-2xl font-bold font-mono">{s.value}</div>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">{s.desc}</p>
               </CardContent>
@@ -130,7 +132,7 @@ export default function Dashboard() {
                   <s.icon className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-lg font-bold font-serif">{s.value}</div>
+                  <div className="text-lg font-bold font-mono">{s.value}</div>
                   <p className="text-[11px] text-muted-foreground">{s.desc}</p>
                 </div>
                 <span className="text-xs text-muted-foreground font-medium">{s.label}</span>
@@ -154,43 +156,76 @@ export default function Dashboard() {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Cost Trend Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-serif text-lg flex items-center gap-2">
-              Trend nákladov vs. cien
-              <Tooltip>
-                <TooltipTrigger>
-                  <Badge variant="outline" className="text-[10px]">4 týždne</Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Priemerné náklady (s DPH) a predajné ceny jedál za posledné 4 týždne.
-                </TooltipContent>
-              </Tooltip>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CostTrendChart data={data?.costTrend} isLoading={isLoading} />
-            <div className="flex items-center gap-4 justify-center mt-3 text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2 w-6 rounded-sm bg-destructive" /> Náklady
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-2 w-6 rounded-sm bg-primary" /> Cena
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Left column: Cost Trend + Popular Dishes */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-serif text-lg flex items-center gap-2">
+                Trend nákladov vs. cien
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Badge variant="outline" className="text-[10px]">4 týždne</Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Priemerné náklady (s DPH) a predajné ceny jedál za posledné 4 týždne.
+                  </TooltipContent>
+                </Tooltip>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CostTrendChart data={data?.costTrend} isLoading={isLoading} />
+              <div className="flex items-center gap-4 justify-center mt-3 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <span className="inline-block h-2 w-6 rounded-sm bg-destructive" /> Náklady
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="inline-block h-2 w-6 rounded-sm bg-primary" /> Cena
+                </span>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-serif text-lg">Rýchle akcie</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <QuickActions />
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-serif text-lg flex items-center gap-2">
+                <Flame className="h-4 w-4 text-primary" />
+                Populárne jedlá
+                <Badge variant="outline" className="text-[10px]">30 dní</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PopularDishes dishes={data?.popularDishes} isLoading={isLoading} />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right column: Olivia Insights + Quick Actions */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-serif text-lg">Olivia — Insights</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OliviaInsights
+                context={data ? {
+                  avgMargin: data.avgMargin,
+                  noPricedCount: data.noPricedCount,
+                  dishCount: data.dishCount,
+                  alerts: data.alerts.map(a => ({ title: a.title })),
+                } : undefined}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-serif text-lg">Rýchle akcie</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <QuickActions />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Recent Exports */}
