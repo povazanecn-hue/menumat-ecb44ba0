@@ -50,6 +50,7 @@ export default function Ingredients() {
   const [supplierTarget, setSupplierTarget] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [webSearchTarget, setWebSearchTarget] = useState<IngredientWithSuppliers | null>(null);
+  const [aiTarget, setAiTarget] = useState<IngredientWithSuppliers | null>(null);
 
   const filtered = useMemo(() => {
     return ingredients.filter((i) =>
