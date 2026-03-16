@@ -17,6 +17,8 @@ import { WeekCalendar } from "@/components/dashboard/WeekCalendar";
 import { CostTrendChart } from "@/components/dashboard/CostTrendChart";
 import { AlertsSection } from "@/components/dashboard/AlertsSection";
 import { QuickActions } from "@/components/dashboard/QuickActions";
+import { PopularDishes } from "@/components/dashboard/PopularDishes";
+import { OliviaInsights } from "@/components/dashboard/OliviaInsights";
 import { FORMAT_LABELS } from "@/components/dashboard/types";
 
 export default function Dashboard() {
