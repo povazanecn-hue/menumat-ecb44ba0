@@ -274,17 +274,20 @@ export default function PermanentMenu() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">Jedálny lístok</h1>
-          <p className="text-muted-foreground text-sm mt-1">Trvalá ponuka jedál — ťahajte pre zmenu poradia</p>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Jedálny lístok</h1>
+          <p className="text-muted-foreground text-sm mt-1">Digitálny lístok pre hostí</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex items-center gap-3">
           {displayCats.length > 0 && (
             <PermanentMenuPreview categories={displayCats} restaurantName={restaurantName || "Reštaurácia"} />
           )}
-          <Button onClick={() => { setNewCatName(""); setCatFormOpen(true); }}>
-            <FolderPlus className="h-4 w-4 mr-1" /> Nová kategória
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5"
+            onClick={() => { setNewCatName(""); setCatFormOpen(true); }}
+          >
+            Publikovať lístok
           </Button>
         </div>
       </div>

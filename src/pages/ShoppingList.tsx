@@ -158,29 +158,24 @@ export default function ShoppingList() {
   return (
     <div className="space-y-6 print:space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground flex items-center gap-2">
-            <ShoppingCart className="h-6 w-6" />
-            Nákupný zoznam
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Konsolidovaný zoznam ingrediencií z denných menu pre vybraný týždeň.
-          </p>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Nákupný zoznam</h1>
+          <p className="text-muted-foreground text-sm mt-1">AI generovanie zo surovín menu</p>
         </div>
-        <div className="flex gap-2 print:hidden">
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-1" />
-            Tlačiť
-          </Button>
+        <div className="flex items-center gap-3 print:hidden">
           <Button
             variant="outline"
-            size="sm"
+            className="border-border text-foreground hover:bg-secondary rounded-full px-5"
             onClick={handleExportExcel}
             disabled={!items?.length}
           >
-            <FileSpreadsheet className="h-4 w-4 mr-1" />
-            Excel
+            Export do Excel
+          </Button>
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5"
+          >
+            Generuj zoznam
           </Button>
         </div>
       </div>

@@ -60,11 +60,19 @@ export default function Recipes() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="font-serif text-2xl font-bold text-foreground">Recepty</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {recipes.length} receptov v databáze
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Recepty</h1>
+          <p className="text-muted-foreground text-sm mt-1">Editor prípravy, porcií a zamknutia</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="border-border text-foreground hover:bg-secondary rounded-full px-5">
+            Import z Word
+          </Button>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5">
+            Nový recept
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

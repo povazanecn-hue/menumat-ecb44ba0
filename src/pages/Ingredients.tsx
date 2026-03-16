@@ -135,22 +135,25 @@ export default function Ingredients() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">Ingrediencie</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {ingredients.length} ingrediencií v databáze
-            {noPricedCount > 0 && (
-              <span className="text-destructive ml-2">
-                ({noPricedCount} bez ceny)
-              </span>
-            )}
-          </p>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Ingrediencie</h1>
+          <p className="text-muted-foreground text-sm mt-1">Cenník dodávateľov a web porovnanie</p>
         </div>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus className="h-4 w-4 mr-1" />
-          Nová ingrediencia
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            className="border-border text-foreground hover:bg-secondary rounded-full px-5"
+          >
+            Import CSV
+          </Button>
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5"
+            onClick={() => setFormOpen(true)}
+          >
+            Nová ingrediencia
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

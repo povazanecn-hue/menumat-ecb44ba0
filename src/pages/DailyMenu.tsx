@@ -426,46 +426,26 @@ export default function DailyMenu() {
         </div>
       )}
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">Denné menu</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Týždenný prehľad pondelok – piatok
-          </p>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Denne menu</h1>
+          <p className="text-muted-foreground text-sm mt-1">Týždenný prehľad pondelok až piatok</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {/* NEW: Wizard trigger buttons */}
-          <Button onClick={() => setWizardOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Nové menu
-          </Button>
-          {hasAnyItems && (
-            <>
-              <Button variant="outline" onClick={handleQuickExportShoppingList} title="Exportovať nákupný zoznam">
-                <ShoppingCart className="h-4 w-4 mr-1.5" />
-                Nákup
-              </Button>
-              <Button variant="outline" onClick={handleWeeklyPrint} title="Tlač týždňa na A4">
-                <Printer className="h-4 w-4 mr-1.5" />
-                Tlač A4
-              </Button>
-            </>
-          )}
-          <Button variant="outline" onClick={() => setImportDate(weekdays[0])} title="Import z Excel">
-            <FileUp className="h-4 w-4 mr-1.5" />
-            Import
-          </Button>
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
+            className="border-border text-foreground hover:bg-secondary rounded-full px-5"
+            onClick={handleWeeklyPrint}
+          >
+            Tlač A4
+          </Button>
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5"
             onClick={() => setWizardOpen(true)}
             disabled={regenerating}
-            title="AI sprievodca tvorbou menu na celý týždeň"
           >
             {regenerating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Wand2 className="h-4 w-4 mr-1.5" />}
-            AI Týždeň
-          </Button>
-          <Button onClick={handlePublishAll} variant="default">
-            Publikovať všetky koncepty
+            AI týždeň
           </Button>
         </div>
       </div>
@@ -504,11 +484,11 @@ export default function DailyMenu() {
         </div>
       )}
 
-      {/* Day cards */}
+      {/* Day cards — two-column grid matching Figma */}
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Načítavam menu...</div>
       ) : (hasAnyItems || menus.length > 0) ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {weekdays.map((date) => (
             <DayMenuCard
               key={formatDateKey(date)}
@@ -533,6 +513,31 @@ export default function DailyMenu() {
           ))}
         </div>
       ) : null}
+
+      {/* Publikovanie section */}
+      {hasAnyItems && (
+        <div className="rounded-xl border border-border bg-card/60 p-6">
+          <h2 className="font-serif text-xl font-bold text-foreground mb-4">Publikovanie</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={handlePublishAll}
+              className="flex items-center justify-between py-3.5 px-4 rounded-lg border border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
+            >
+              <span className="text-sm text-foreground/90">Všetky koncepty pripravené</span>
+              <span className="text-xs font-mono font-medium px-2.5 py-1 rounded-full bg-primary/20 text-primary">
+                {menus.filter(m => m.status === "draft" && m.menu_items.length > 0).length} dní
+              </span>
+            </button>
+            <button
+              onClick={() => setWizardOpen(true)}
+              className="flex items-center justify-between py-3.5 px-4 rounded-lg border border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
+            >
+              <span className="text-sm text-foreground/90">AI návrh vegánskeho menu</span>
+              <span className="text-xs font-mono font-medium px-2.5 py-1 rounded-full bg-primary/20 text-primary">NÁVRH</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Dish picker */}
       <DishPickerDialog
