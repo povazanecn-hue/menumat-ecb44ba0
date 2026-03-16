@@ -41,6 +41,7 @@ export function RecipeDetailDialog({
       setPrepTime(recipe.prep_time_minutes ?? "");
       setCookTime(recipe.cook_time_minutes ?? "");
       setServings(recipe.servings ?? 1);
+      setWastePercent((recipe as any).waste_percent ?? 0);
       setIsLocked(recipe.is_locked);
       setSourceMetadata(recipe.source_metadata ?? "");
     } else if (!isLoading) {
