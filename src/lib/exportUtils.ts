@@ -183,3 +183,56 @@ export async function exportWebEmbed(menu: ExportMenu): Promise<{ url: string; e
   return result;
 }
 
+// ─── Instagram Story (1080×1920) ───
+export function exportInstagramStory(menu: ExportMenu, template: string = "country") {
+  const groups = groupItems(menu.menu_items);
+  const dateLabel = formatDate(menu.menu_date);
+
+  const bgGradient = template === "modern"
+    ? "linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)"
+    : template === "minimal"
+      ? "linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%)"
+      : "linear-gradient(180deg, #3b2a1a 0%, #5c3d2e 30%, #f5e6d3 100%)";
+  const textColor = template === "modern" ? "#e0e0e0" : template === "minimal" ? "#222" : "#f5e6d3";
+  const accentColor = template === "modern" ? "#e94560" : template === "minimal" ? "#333" : "#d4a574";
+  const headerFont = template === "modern" ? "Arial, sans-serif" : "'Playfair Display', Georgia, serif";
+  const bodyFont = template === "modern" ? "Arial, sans-serif" : "'Source Sans 3', sans-serif";
+
+  let rows = "";
+  for (const [cat, items] of Object.entries(groups)) {
+    rows += `<div style="margin-bottom:24px;">
+      <div style="font-family:${headerFont};font-size:28px;font-weight:700;color:${accentColor};margin-bottom:8px;text-transform:uppercase;letter-spacing:3px;text-align:center;">${DISH_CATEGORIES[cat] || cat}</div>`;
+    for (const item of items) {
+      rows += `<div style="text-align:center;font-family:${bodyFont};font-size:22px;padding:6px 0;color:${textColor};">
+        <div><strong>${item.dish.name}</strong></div>
+        <div style="font-size:26px;font-weight:700;color:${accentColor};margin-top:2px;">${getPrice(item)}</div>
+      </div>`;
+    }
+    rows += `</div>`;
+  }
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>*{margin:0;padding:0;box-sizing:border-box;}</style></head>
+<body style="width:1080px;height:1920px;background:${bgGradient};color:${textColor};display:flex;flex-direction:column;justify-content:center;padding:60px 80px;">
+<div style="text-align:center;margin-bottom:40px;">
+  <div style="font-family:${headerFont};font-size:48px;font-weight:700;letter-spacing:4px;">DENNÉ MENU</div>
+  <div style="font-family:${bodyFont};font-size:24px;margin-top:12px;opacity:0.8;">${dateLabel}</div>
+  <div style="width:80px;height:3px;background:${accentColor};margin:16px auto;"></div>
+</div>
+${rows}
+<div style="text-align:center;margin-top:auto;padding-top:30px;">
+  <div style="font-family:${bodyFont};font-size:16px;opacity:0.4;">menumat.app</div>
+</div>
+</body></html>`;
+
+  const storyWindow = window.open("", "_blank", "width=540,height=960");
+  if (storyWindow) {
+    storyWindow.document.write(`<html><head><style>body{margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#111;}</style></head><body>
+    <div style="width:540px;height:960px;overflow:hidden;transform-origin:top left;">
+      <div style="transform:scale(0.5);width:1080px;height:1920px;">${html.replace(/<!DOCTYPE html>.*<body/s, '<div').replace(/<\/body>.*<\/html>/, '</div>')}</div>
+    </div></body></html>`);
+    storyWindow.document.close();
+  }
+}
+
