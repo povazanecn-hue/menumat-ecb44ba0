@@ -1,269 +1,142 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  UtensilsCrossed, Carrot, CalendarDays, FileOutput,
-  ArrowRight, BookOpen, TrendingUp, TrendingDown, AlertTriangle, Flame,
-} from "lucide-react";
+import { Sparkles, Send, ShoppingCart, FileOutput, BarChart3 } from "lucide-react";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { sk } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
-import { WeekCalendar } from "@/components/dashboard/WeekCalendar";
-import { CostTrendChart } from "@/components/dashboard/CostTrendChart";
-import { AlertsSection } from "@/components/dashboard/AlertsSection";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { PopularDishes } from "@/components/dashboard/PopularDishes";
-import { OliviaInsights } from "@/components/dashboard/OliviaInsights";
-import { FORMAT_LABELS } from "@/components/dashboard/types";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const { data, isLoading } = useDashboardData();
   const { restaurantName } = useRestaurant();
   const navigate = useNavigate();
 
-  const stats = [
-    { label: "Jedlá", value: data?.dishCount ?? 0, icon: UtensilsCrossed, desc: "v databáze" },
-    { label: "Ingrediencie", value: data?.ingredientCount ?? 0, icon: Carrot, desc: "registrovaných" },
-    { label: "Dnešné menu", value: data?.menuStatus ?? "—", icon: CalendarDays, desc: format(new Date(), "EEEE d.M.", { locale: sk }), badge: data?.menuStatusColor },
-    { label: "Exporty", value: data?.exportsThisWeek ?? 0, icon: FileOutput, desc: "tento týždeň" },
+  const kpiCards = [
+    { label: "JEDLA", value: data?.dishCount ?? 0, warn: false },
+    { label: "INGREDIENCIE", value: data?.ingredientCount ?? 0, warn: false },
+    { label: "DNES MENU", value: data?.hasTodayMenu ? (data?.weekDays?.find(d => {
+      const today = new Date();
+      return d.dateObj.toDateString() === today.toDateString();
+    })?.itemCount ?? 0) : 0, warn: false },
+    { label: "BEZ CENY", value: data?.noPricedCount ?? 0, warn: (data?.noPricedCount ?? 0) > 0 },
   ];
 
-  const insightStats = [
-    {
-      label: "Recepty",
-      value: `${data?.recipeCount ?? 0}`,
-      icon: BookOpen,
-      desc: `${data?.recipeCoverage ?? 0}% pokrytie`,
-      onClick: () => navigate("/recipes"),
-    },
-    {
-      label: "Priem. marža",
-      value: `${data?.avgMargin ?? 0}%`,
-      icon: data?.avgMargin && data.avgMargin < 30 ? TrendingDown : TrendingUp,
-      desc: data?.avgMargin && data.avgMargin < 30 ? "pod 30% — zvážte úpravu" : "zdravá úroveň",
-      warn: data?.avgMargin != null && data.avgMargin < 30,
-    },
-    {
-      label: "Bez ceny",
-      value: data?.noPricedCount ?? 0,
-      icon: AlertTriangle,
-      desc: "jedál bez nákladov",
-      warn: (data?.noPricedCount ?? 0) > 0,
-      onClick: () => navigate("/dishes"),
-    },
+  // Build weekly overview from weekDays data
+  const dayNames = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"];
+
+  const oliviaActions = [
+    { label: "Generuj nákupný zoznam", badge: "AUTO", badgeStyle: "bg-primary/20 text-primary" },
+    { label: "Export TV + PDF + Excel", badge: "READY", badgeStyle: "bg-primary/20 text-primary" },
+    { label: "Návrh marže pre menu", badge: `${data?.avgMargin ?? 0}%`, badgeStyle: "bg-primary/20 text-primary" },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-serif text-2xl font-bold text-foreground">
-          {restaurantName ? `${restaurantName} — Dashboard` : "Dashboard"}
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">Prehľad vašej reštaurácie</p>
-      </div>
-
-      {/* Actionable Alerts */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-lg flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            Upozornenia
-            {data?.alerts && data.alerts.length > 0 && (
-              <Badge variant="destructive" className="text-[10px] ml-1">
-                {data.alerts.length}
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AlertsSection alerts={data?.alerts} isLoading={isLoading} />
-        </CardContent>
-      </Card>
-
-      {/* Primary Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((s) =>
-          isLoading ? (
-            <Card key={s.label}><CardContent className="p-6"><Skeleton className="h-16 w-full" /></CardContent></Card>
-          ) : (
-            <Card key={s.label} className="border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-                <s.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {s.badge ? (
-                  <Badge variant={s.badge} className="text-sm">{s.value}</Badge>
-                ) : (
-                  <div className="text-2xl font-bold font-mono">{s.value}</div>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">{s.desc}</p>
-              </CardContent>
-            </Card>
-          )
-        )}
-      </div>
-
-      {/* Business Insights Row */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {insightStats.map((s) =>
-          isLoading ? (
-            <Card key={s.label}><CardContent className="p-6"><Skeleton className="h-12 w-full" /></CardContent></Card>
-          ) : (
-            <Card
-              key={s.label}
-              className={cn(
-                "border-border transition-all",
-                s.warn && "border-destructive/30 bg-destructive/5",
-                s.onClick && "cursor-pointer hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
-              )}
-              onClick={s.onClick}
-            >
-              <CardContent className="flex items-center gap-3 py-3 px-4">
-                <div className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-full shrink-0",
-                  s.warn ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"
-                )}>
-                  <s.icon className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-lg font-bold font-mono">{s.value}</div>
-                  <p className="text-[11px] text-muted-foreground">{s.desc}</p>
-                </div>
-                <span className="text-xs text-muted-foreground font-medium">{s.label}</span>
-              </CardContent>
-            </Card>
-          )
-        )}
-      </div>
-
-      {/* Weekly Calendar */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-serif text-lg">Týždenný prehľad menu</CardTitle>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/daily-menu")} className="text-xs">
-            Denné menu <ArrowRight className="h-3 w-3 ml-1" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <WeekCalendar weekDays={data?.weekDays} isLoading={isLoading} />
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left column: Cost Trend + Popular Dishes */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-serif text-lg flex items-center gap-2">
-                Trend nákladov vs. cien
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Badge variant="outline" className="text-[10px]">4 týždne</Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Priemerné náklady (s DPH) a predajné ceny jedál za posledné 4 týždne.
-                  </TooltipContent>
-                </Tooltip>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CostTrendChart data={data?.costTrend} isLoading={isLoading} />
-              <div className="flex items-center gap-4 justify-center mt-3 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-2 w-6 rounded-sm bg-destructive" /> Náklady
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-2 w-6 rounded-sm bg-primary" /> Cena
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-serif text-lg flex items-center gap-2">
-                <Flame className="h-4 w-4 text-primary" />
-                Populárne jedlá
-                <Badge variant="outline" className="text-[10px]">30 dní</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PopularDishes dishes={data?.popularDishes} isLoading={isLoading} />
-            </CardContent>
-          </Card>
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">Variant A amber glass overview</p>
         </div>
-
-        {/* Right column: Olivia Insights + Quick Actions */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-serif text-lg">Olivia — Insights</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OliviaInsights
-                context={data ? {
-                  avgMargin: data.avgMargin,
-                  noPricedCount: data.noPricedCount,
-                  dishCount: data.dishCount,
-                  alerts: data.alerts.map(a => ({ title: a.title })),
-                } : undefined}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-serif text-lg">Rýchle akcie</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <QuickActions />
-            </CardContent>
-          </Card>
+        <div className="flex items-center gap-3">
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium rounded-full px-5"
+            onClick={() => navigate("/daily-menu")}
+          >
+            <Sparkles className="h-4 w-4 mr-1.5" />
+            AI týždeň
+          </Button>
+          <Button
+            variant="outline"
+            className="border-border text-foreground hover:bg-secondary rounded-full px-5"
+          >
+            Publikovať všetko
+          </Button>
         </div>
       </div>
 
-      {/* Recent Exports */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-serif text-lg">Posledné exporty</CardTitle>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/exports")} className="text-xs">
-            Všetky <ArrowRight className="h-3 w-3 ml-1" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}</div>
-          ) : !data?.recentExports.length ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Zatiaľ žiadne exporty.</p>
-          ) : (
-            <div className="space-y-2">
-              {data.recentExports.map((exp: any) => (
-                <div key={exp.id} className="flex items-center justify-between text-sm border-b border-border/50 pb-2 last:border-0">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-[10px]">
-                      {FORMAT_LABELS[exp.format] ?? exp.format}
-                    </Badge>
-                    <span className="text-muted-foreground text-xs">
-                      {exp.menu?.menu_date
-                        ? format(new Date(exp.menu.menu_date + "T00:00:00"), "d.M.yyyy")
-                        : "—"}
-                    </span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(exp.created_at), "d.M. HH:mm")}
-                  </span>
-                </div>
-              ))}
+      {/* KPI Cards */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {kpiCards.map((kpi) =>
+          isLoading ? (
+            <div key={kpi.label} className="rounded-xl border border-border bg-card/60 p-5">
+              <Skeleton className="h-14 w-full" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+          ) : (
+            <div
+              key={kpi.label}
+              className="rounded-xl border border-border bg-card/60 p-5 transition-all hover:border-primary/20"
+            >
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
+                {kpi.label}
+              </p>
+              <p className={cn(
+                "text-4xl font-serif font-bold",
+                kpi.warn ? "text-destructive" : "text-foreground"
+              )}>
+                {kpi.value}
+              </p>
+            </div>
+          )
+        )}
+      </div>
+
+      {/* Two-column: Weekly Overview + AI Olivia */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Weekly Overview - takes 3 cols */}
+        <div className="lg:col-span-3 rounded-xl border border-border bg-card/60 p-6">
+          <h2 className="font-serif text-xl font-bold text-foreground mb-5">Týždenný prehľad</h2>
+          <div className="space-y-0">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="py-3 border-b border-border/50 last:border-0">
+                  <Skeleton className="h-5 w-full" />
+                </div>
+              ))
+            ) : (
+              data?.weekDays?.map((day, i) => (
+                <button
+                  key={day.date}
+                  onClick={() => navigate(`/daily-menu?date=${day.date}`)}
+                  className="w-full flex items-center justify-between py-3.5 px-4 rounded-lg border border-border/40 bg-card/30 mb-2 last:mb-0 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
+                >
+                  <span className="text-sm text-foreground/90">
+                    <span className="font-medium">{dayNames[i]}:</span>{" "}
+                    <span className="text-muted-foreground">
+                      {day.itemCount > 0 ? `${day.itemCount} jedál` : "—"}
+                    </span>
+                  </span>
+                  <span className="text-sm font-mono text-muted-foreground">
+                    {day.itemCount > 0 ? `${day.itemCount * 2} porcií` : ""}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* AI Olivia - takes 2 cols */}
+        <div className="lg:col-span-2 rounded-xl border border-border bg-card/60 p-6">
+          <h2 className="font-serif text-xl font-bold text-foreground mb-1">AI Olivia</h2>
+          <p className="text-sm text-muted-foreground mb-5">Rýchle akcie a návrhy marže.</p>
+          <div className="space-y-3">
+            {oliviaActions.map((action) => (
+              <button
+                key={action.label}
+                className="w-full flex items-center justify-between py-3.5 px-4 rounded-lg border border-border/40 bg-card/30 hover:border-primary/30 hover:bg-card/60 transition-all text-left"
+              >
+                <span className="text-sm text-foreground/90">{action.label}</span>
+                <span className={cn(
+                  "text-xs font-mono font-medium px-2.5 py-1 rounded-full",
+                  action.badgeStyle
+                )}>
+                  {action.badge}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
