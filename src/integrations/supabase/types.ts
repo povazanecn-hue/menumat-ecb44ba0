@@ -515,6 +515,7 @@ export type Database = {
           servings: number | null
           source_metadata: string | null
           updated_at: string
+          waste_percent: number
         }
         Insert: {
           ai_confidence?: number | null
@@ -528,6 +529,7 @@ export type Database = {
           servings?: number | null
           source_metadata?: string | null
           updated_at?: string
+          waste_percent?: number
         }
         Update: {
           ai_confidence?: number | null
@@ -541,6 +543,7 @@ export type Database = {
           servings?: number | null
           source_metadata?: string | null
           updated_at?: string
+          waste_percent?: number
         }
         Relationships: [
           {
