@@ -18,6 +18,7 @@ const moreLinks = [
   { label: "Jedálny lístok", path: "/permanent-menu", icon: ClipboardList },
   { label: "Nástenka", path: "/nastenka", icon: ClipboardCheck },
   { label: "Nákupný zoznam", path: "/shopping-list", icon: ShoppingCart },
+  { label: "Analytika", path: "/analytics", icon: BarChart3 },
   { label: "Šablóny", path: "/templates", icon: Palette },
   { label: "Nastavenia", path: "/settings", icon: Settings },
 ];
