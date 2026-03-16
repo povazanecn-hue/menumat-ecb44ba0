@@ -41,9 +41,9 @@
     --destructive: 12 85% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Border: warm gold line */
-    --border: 38 100% 80% / 0.25;
-    --input: 38 100% 80% / 0.18;
+    /* Border: warm brown-gold tint (solid for Tailwind compat) */
+    --border: 25 25% 16%;
+    --input: 25 22% 19%;
     --ring: 38 81% 67%;
 
     --radius: 0.75rem;
