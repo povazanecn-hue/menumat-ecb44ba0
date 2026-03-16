@@ -63,8 +63,8 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/dashboard"}
-                      className="text-sidebar-foreground/70 hover:text-sidebar-primary transition-colors"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium border-l-2 border-sidebar-primary"
+                      className="text-sidebar-foreground/70 hover:text-sidebar-primary transition-colors rounded-xl"
+                      activeClassName="text-foreground border border-sidebar-border bg-sidebar-accent shadow-[inset_0_0_0_1px_rgba(255,234,194,0.18)] font-medium"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -87,8 +87,8 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink
                       to={item.url}
-                      className="text-sidebar-foreground/70 hover:text-sidebar-primary transition-colors"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium border-l-2 border-sidebar-primary"
+                      className="text-sidebar-foreground/70 hover:text-sidebar-primary transition-colors rounded-xl"
+                      activeClassName="text-foreground border border-sidebar-border bg-sidebar-accent shadow-[inset_0_0_0_1px_rgba(255,234,194,0.18)] font-medium"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
