@@ -49,6 +49,7 @@ export function RecipeDetailDialog({
       setPrepTime("");
       setCookTime("");
       setServings(1);
+      setWastePercent(0);
       setIsLocked(false);
       setSourceMetadata("");
     }
