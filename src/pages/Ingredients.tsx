@@ -316,6 +316,15 @@ export default function Ingredients() {
                         onUsePrice={(price) => handleUsePrice(ing.id, price)}
                         currentBasePrice={ing.base_price}
                       />
+                      {/* Price history chart */}
+                      {ing.supplier_prices.length >= 2 && (
+                        <div className="mt-4 pt-3 border-t border-border/40">
+                          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
+                            História cien
+                          </span>
+                          <PriceHistoryChart prices={ing.supplier_prices} unit={ing.unit} />
+                        </div>
+                      )}
                     </CollapsibleContent>
                   </CardContent>
                 </Collapsible>
