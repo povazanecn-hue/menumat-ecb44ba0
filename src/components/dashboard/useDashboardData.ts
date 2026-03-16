@@ -35,6 +35,7 @@ export function useDashboardData() {
         supabase.from("dishes").select("id, name, cost, vat_rate, final_price, recommended_price, created_at").eq("restaurant_id", restaurantId).order("created_at", { ascending: true }),
         supabase.from("ingredients").select("id, name, base_price").eq("restaurant_id", restaurantId),
         supabase.from("supplier_prices").select("id, supplier_name, ingredient_id, is_promo, price, valid_from, valid_to, ingredient:ingredients!inner(restaurant_id, name)").eq("ingredient.restaurant_id", restaurantId).eq("is_promo", true),
+        supabase.from("menu_items").select("dish_id, dish:dishes!inner(name, restaurant_id), menu:menus!inner(menu_date, restaurant_id)").eq("dish.restaurant_id", restaurantId).eq("menu.restaurant_id", restaurantId).gte("menu.menu_date", thirtyDaysAgo),
       ]);
 
       const todayMenu = todayMenuRes.data;
