@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { PageHeader } from "@/components/ui/page-header";
 import { GlassPanel, GlassRow } from "@/components/ui/glass-panel";
+import { DashboardQuickActions } from "@/components/dashboard/DashboardQuickActions";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
