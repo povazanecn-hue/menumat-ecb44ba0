@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ChevronDown, ChevronRight, DollarSign, Globe, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,8 @@ import { IngredientFormDialog, IngredientFormData } from "@/components/ingredien
 import { SupplierPriceDialog, SupplierPriceFormData } from "@/components/ingredients/SupplierPriceDialog";
 import { SupplierPriceTable } from "@/components/ingredients/SupplierPriceTable";
 import { WebPriceSearchDialog } from "@/components/ingredients/WebPriceSearchDialog";
+import { PriceHistoryChart } from "@/components/ingredients/PriceHistoryChart";
+import { AiAlternativeDialog } from "@/components/ingredients/AiAlternativeDialog";
 
 export default function Ingredients() {
   const { data: ingredients = [], isLoading } = useIngredients();
