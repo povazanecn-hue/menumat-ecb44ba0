@@ -22,6 +22,7 @@ import Settings from "@/pages/Settings";
 import PermanentMenu from "@/pages/PermanentMenu";
 import Landing from "@/pages/Landing";
 import Nastenka from "@/pages/Nastenka";
+import Analytics from "@/pages/Analytics";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
