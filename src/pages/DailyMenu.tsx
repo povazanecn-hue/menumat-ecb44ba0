@@ -426,46 +426,26 @@ export default function DailyMenu() {
         </div>
       )}
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">Denné menu</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Týždenný prehľad pondelok – piatok
-          </p>
+          <h1 className="font-serif text-3xl font-bold text-foreground">Denne menu</h1>
+          <p className="text-muted-foreground text-sm mt-1">Týždenný prehľad pondelok až piatok</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {/* NEW: Wizard trigger buttons */}
-          <Button onClick={() => setWizardOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Nové menu
-          </Button>
-          {hasAnyItems && (
-            <>
-              <Button variant="outline" onClick={handleQuickExportShoppingList} title="Exportovať nákupný zoznam">
-                <ShoppingCart className="h-4 w-4 mr-1.5" />
-                Nákup
-              </Button>
-              <Button variant="outline" onClick={handleWeeklyPrint} title="Tlač týždňa na A4">
-                <Printer className="h-4 w-4 mr-1.5" />
-                Tlač A4
-              </Button>
-            </>
-          )}
-          <Button variant="outline" onClick={() => setImportDate(weekdays[0])} title="Import z Excel">
-            <FileUp className="h-4 w-4 mr-1.5" />
-            Import
-          </Button>
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
+            className="border-border text-foreground hover:bg-secondary rounded-full px-5"
+            onClick={handleWeeklyPrint}
+          >
+            Tlač A4
+          </Button>
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5"
             onClick={() => setWizardOpen(true)}
             disabled={regenerating}
-            title="AI sprievodca tvorbou menu na celý týždeň"
           >
             {regenerating ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Wand2 className="h-4 w-4 mr-1.5" />}
-            AI Týždeň
-          </Button>
-          <Button onClick={handlePublishAll} variant="default">
-            Publikovať všetky koncepty
+            AI týždeň
           </Button>
         </div>
       </div>
