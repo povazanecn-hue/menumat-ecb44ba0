@@ -162,6 +162,22 @@ export function useDashboardData() {
         });
       }
 
+      // Popular dishes (top 5 by menu usage in last 30 days)
+      const popularMap = new Map<string, { name: string; count: number }>();
+      for (const item of (popularDishesRes.data ?? []) as any[]) {
+        const id = item.dish_id;
+        const existing = popularMap.get(id);
+        if (existing) {
+          existing.count++;
+        } else {
+          popularMap.set(id, { name: item.dish?.name ?? "—", count: 1 });
+        }
+      }
+      const popularDishes = Array.from(popularMap.entries())
+        .map(([id, { name, count }]) => ({ id, name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
       return {
         dishCount,
         ingredientCount: ingredientRes.count ?? 0,
@@ -177,6 +193,7 @@ export function useDashboardData() {
         noPricedCount,
         avgMargin: Math.round(avgMargin),
         alerts,
+        popularDishes,
       };
     },
     enabled: !!restaurantId,
