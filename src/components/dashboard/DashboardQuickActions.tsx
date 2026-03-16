@@ -84,6 +84,10 @@ export function DashboardQuickActions({ avgMargin, dishCount, hasTodayMenu }: Da
         const result = await exportTV(menu as any);
         window.open(result.url, "_blank");
         toast({ title: "✅ TV displej otvorený", description: "Odkaz na FullHD zobrazenie" });
+      } else if (format === "instagram") {
+        const { exportInstagramStory } = await import("@/lib/exportUtils");
+        exportInstagramStory(menu as any);
+        toast({ title: "✅ Instagram Story otvorená", description: "1080×1920 formát" });
       }
     } catch (err: any) {
       toast({ title: "Chyba exportu", description: err.message, variant: "destructive" });
