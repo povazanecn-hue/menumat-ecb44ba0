@@ -1,24 +1,26 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRestaurant } from "@/hooks/useRestaurant";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Store, Sparkles, Palette, Check, ChevronRight, ChevronLeft } from "lucide-react";
+import { Store, Sparkles, TrendingUp, ClipboardCheck, Monitor, ChevronRight, ChevronLeft } from "lucide-react";
 import { LogoBrand } from "@/components/LogoBrand";
 import { OnboardingStepper } from "@/components/onboarding/OnboardingStepper";
 import { StepRestaurant } from "@/components/onboarding/StepRestaurant";
-import { StepMenuStructure, type MenuSlots } from "@/components/onboarding/StepMenuStructure";
-import { StepMenuStyle } from "@/components/onboarding/StepMenuStyle";
-import { StepFinish } from "@/components/onboarding/StepFinish";
+import { StepMenuStructure } from "@/components/onboarding/StepMenuStructure";
+import { StepPricing } from "@/components/onboarding/StepPricing";
+import { StepSummary } from "@/components/onboarding/StepSummary";
+import { StepMenuPreview } from "@/components/onboarding/StepMenuPreview";
+import { useOnboardingStore } from "@/store/useOnboardingStore";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STEPS = [
-  { id: "info", label: "Základné Údaje", icon: Store },
-  { id: "structure", label: "Menu & Špeciality", icon: Sparkles },
-  { id: "style", label: "Ceny & Marže", icon: Palette },
-  { id: "finish", label: "Dokončenie", icon: Check },
+  { id: "info", label: "Reštaurácia", icon: Store },
+  { id: "structure", label: "Menu", icon: Sparkles },
+  { id: "pricing", label: "Ceny", icon: TrendingUp },
+  { id: "summary", label: "Súhrn", icon: ClipboardCheck },
+  { id: "preview", label: "Náhľad", icon: Monitor },
 ] as const;
 
 export default function Onboarding() {
@@ -27,59 +29,82 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [step, setStep] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
+  const store = useOnboardingStore();
+  const step = store.currentStep;
 
-  // Step 1 – Restaurant info
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-
-  // Step 2 – Menu structure
-  const [selectedDays, setSelectedDays] = useState<string[]>(["mon", "tue", "wed", "thu", "fri"]);
-  const [slots, setSlots] = useState<MenuSlots>({ mains: 5, soups: 2, desserts: 2, drinks: 2 });
-
-  // Step 3 – Style
-  const [selectedTemplate, setSelectedTemplate] = useState("classic");
-
-  const [restaurantCreated, setRestaurantCreated] = useState(false);
   const userRole = (user?.user_metadata?.app_role as string) || "owner";
 
   const handleCreateRestaurant = async () => {
-    if (!user || !name.trim()) return;
-    setSubmitting(true);
+    if (!user || !store.restaurantName.trim()) return;
+    store.setSubmitting(true);
     try {
       const { error } = await supabase.rpc("create_restaurant_with_owner", {
-        _name: name,
-        _address: address || null,
+        _name: store.restaurantName,
+        _address: store.address || null,
         _role: userRole as any,
       });
       if (error) throw error;
-      setRestaurantCreated(true);
+      store.setRestaurantCreated(true);
       await refetch();
-      toast({ title: "Reštaurácia vytvorená!", description: `${name} je pripravená.` });
+      toast({ title: "Reštaurácia vytvorená!", description: `${store.restaurantName} je pripravená.` });
     } catch (error: any) {
       toast({ title: "Chyba", description: error.message, variant: "destructive" });
     } finally {
-      setSubmitting(false);
+      store.setSubmitting(false);
+    }
+  };
+
+  const saveSettings = async () => {
+    if (!store.restaurantCreated) return;
+    try {
+      // Save wizard defaults + margin + VAT to restaurant settings
+      const { data: memberships } = await supabase
+        .from("restaurant_members")
+        .select("restaurant_id")
+        .eq("user_id", user!.id)
+        .limit(1);
+
+      if (memberships && memberships.length > 0) {
+        const rid = memberships[0].restaurant_id;
+        await supabase.from("restaurants").update({
+          settings: {
+            default_margin: store.defaultMargin,
+            vat_rate: store.vatRate,
+            non_repeat_days: 14,
+            wizard_defaults: {
+              slots: { soups: store.slots.soups, mains: store.slots.mains, desserts: store.slots.desserts, drinks: store.slots.drinks } as Record<string, number>,
+              selectedDays: store.selectedDays.map((d) => {
+                const map: Record<string, number> = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 0 };
+                return map[d] ?? 1;
+              }),
+            },
+          } as any,
+        }).eq("id", rid);
+      }
+    } catch (e) {
+      console.error("Failed to save settings:", e);
     }
   };
 
   const canNext = () => {
-    if (step === 0) return name.trim().length > 0;
-    if (step === 1) return selectedDays.length > 0;
+    if (step === 0) return store.restaurantName.trim().length > 0;
+    if (step === 1) return store.selectedDays.length > 0;
     return true;
   };
 
   const handleNext = async () => {
-    if (step === 0) {
-      // Create restaurant at step 1 transition
-      if (!restaurantCreated) {
-        await handleCreateRestaurant();
-      }
-      setStep(1);
-    } else if (step < 3) {
-      setStep(step + 1);
+    if (step === 0 && !store.restaurantCreated) {
+      await handleCreateRestaurant();
+    }
+    if (step === 3) {
+      // Save settings before preview
+      await saveSettings();
+    }
+    if (step < 4) {
+      store.nextStep();
     } else {
+      // Final step — go to dashboard
+      await saveSettings();
       navigate("/dashboard");
     }
   };
@@ -110,28 +135,46 @@ export default function Onboarding() {
                 transition={{ duration: 0.2 }}
               >
                 {step === 0 && (
-                  <StepRestaurant name={name} setName={setName} address={address} setAddress={setAddress} />
+                  <StepRestaurant
+                    name={store.restaurantName}
+                    setName={store.setRestaurantName}
+                    address={store.address}
+                    setAddress={store.setAddress}
+                  />
                 )}
                 {step === 1 && (
                   <StepMenuStructure
-                    selectedDays={selectedDays}
-                    setSelectedDays={setSelectedDays}
-                    slots={slots}
-                    setSlots={setSlots}
+                    selectedDays={store.selectedDays}
+                    setSelectedDays={store.setSelectedDays}
+                    slots={store.slots}
+                    setSlots={store.setSlots}
                   />
                 )}
                 {step === 2 && (
-                  <StepMenuStyle
-                    selectedTemplate={selectedTemplate}
-                    setSelectedTemplate={setSelectedTemplate}
+                  <StepPricing
+                    defaultMargin={store.defaultMargin}
+                    setDefaultMargin={store.setDefaultMargin}
+                    vatRate={store.vatRate}
+                    setVatRate={store.setVatRate}
                   />
                 )}
                 {step === 3 && (
-                  <StepFinish
-                    restaurantName={name}
-                    selectedDays={selectedDays}
-                    slots={slots}
-                    templateId={selectedTemplate}
+                  <StepSummary
+                    restaurantName={store.restaurantName}
+                    selectedDays={store.selectedDays}
+                    slots={store.slots}
+                    defaultMargin={store.defaultMargin}
+                    vatRate={store.vatRate}
+                    templateId={store.selectedTemplate}
+                  />
+                )}
+                {step === 4 && (
+                  <StepMenuPreview
+                    selectedDays={store.selectedDays}
+                    slots={store.slots}
+                    restaurantName={store.restaurantName}
+                    previewDayIndex={store.previewDayIndex}
+                    setPreviewDayIndex={store.setPreviewDayIndex}
                   />
                 )}
               </motion.div>
@@ -143,7 +186,7 @@ export default function Onboarding() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setStep(step - 1)}
+                  onClick={() => store.prevStep()}
                   className="text-muted-foreground hover:text-foreground"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
@@ -154,16 +197,16 @@ export default function Onboarding() {
               )}
               <Button
                 onClick={handleNext}
-                disabled={!canNext() || submitting}
+                disabled={!canNext() || store.submitting}
                 className="min-w-[140px] rounded-full bg-gradient-to-r from-[hsl(var(--gold-gradient-from))] to-[hsl(var(--gold-gradient-to))] text-primary-foreground font-semibold"
               >
-                {submitting
+                {store.submitting
                   ? "Spracovávam..."
-                  : step === 3
+                  : step === 4
                     ? "Prejsť na Dashboard"
                     : "Pokračovať"
                 }
-                {!submitting && <ChevronRight className="h-4 w-4 ml-1" />}
+                {!store.submitting && <ChevronRight className="h-4 w-4 ml-1" />}
               </Button>
             </div>
           </div>
