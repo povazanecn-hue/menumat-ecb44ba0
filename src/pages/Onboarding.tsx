@@ -72,13 +72,13 @@ export default function Onboarding() {
             vat_rate: store.vatRate,
             non_repeat_days: 14,
             wizard_defaults: {
-              slots: store.slots,
+              slots: { soups: store.slots.soups, mains: store.slots.mains, desserts: store.slots.desserts, drinks: store.slots.drinks } as Record<string, number>,
               selectedDays: store.selectedDays.map((d) => {
                 const map: Record<string, number> = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 0 };
                 return map[d] ?? 1;
               }),
             },
-          },
+          } as any,
         }).eq("id", rid);
       }
     } catch (e) {
