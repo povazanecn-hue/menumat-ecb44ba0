@@ -1,8 +1,8 @@
 # Known Issues & Tech Debt — MENUMAT
 
 ## Bezpecnost
-- [ ] POZOR: .env subor je commitnuty v repo — skontrolovat ci neobsahuje ostre API kluce!
-      Riesenie: pridat .env do .gitignore, vytvorit .env.example
+- [x] OPRAVENE (2026-03-09): .env bol commitnuty v repo — odstranený z git trackingu pomocou `git rm --cached .env`.
+      .gitignore uz obsahuje .env pravidlo. .env.example existuje ako sablona.
 
 ## Tech Debt
 - [ ] Doplnit architecture.md po preskumani src/
