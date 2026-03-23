@@ -6,7 +6,7 @@
       ⚠️ AKCIA POTREBNA: Rotuj Supabase anon key na https://supabase.com/dashboard
         (starý kľúč bol exponovaný v git histórii)
 - [x] .gitignore rozšírený: `.env.*` je blokovaný, `.env.example` je povolený
-- [i] Repo zostáva PUBLIC (úmyselne) — potrebné pre third-party konektory a servery.
+- Repo zostáva PUBLIC (úmyselne) — potrebné pre third-party konektory a servery.
       Bezpečnosť je riešená cez Supabase RLS politiky a rotáciu kľúčov.
 
 ## Tech Debt
