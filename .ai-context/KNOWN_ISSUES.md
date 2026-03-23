@@ -1,8 +1,13 @@
 # Known Issues & Tech Debt — MENUMAT
 
 ## Bezpecnost
-- [ ] POZOR: .env subor je commitnuty v repo — skontrolovat ci neobsahuje ostre API kluce!
-      Riesenie: pridat .env do .gitignore, vytvorit .env.example
+- [x] OPRAVENE: .env bol commitnuty v repo s ostrymi Supabase kľúčmi.
+      Riesenie: `git rm --cached .env` — súbor je teraz untracked.
+      ⚠️ AKCIA POTREBNA: Rotuj Supabase anon key na https://supabase.com/dashboard
+        (starý kľúč bol exponovaný v git histórii)
+- [x] .gitignore rozšírený: `.env.*` je blokovaný, `.env.example` je povolený
+- Repo zostáva PUBLIC (úmyselne) — potrebné pre third-party konektory a servery.
+      Bezpečnosť je riešená cez Supabase RLS politiky a rotáciu kľúčov.
 
 ## Tech Debt
 - [ ] Doplnit architecture.md po preskumani src/
